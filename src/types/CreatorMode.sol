@@ -10,7 +10,6 @@ enum CreatorMode {
     HOLDERS, // 1
     BUYBACK, // 2
     BUYBACK_BURN // 3
-
 }
 
 // Highest valid enum value, used for range validation on untrusted uint8 input.

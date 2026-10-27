@@ -41,7 +41,9 @@ library Events {
 
     /// @param toCreatorSide amount routed to the creator-side bucket (per mode).
     /// @param toPlatform amount routed to the platform bucket.
-    event FeeTaken(address indexed token, address indexed payer, uint256 stockFee, uint256 toCreatorSide, uint256 toPlatform);
+    event FeeTaken(
+        address indexed token, address indexed payer, uint256 stockFee, uint256 toCreatorSide, uint256 toPlatform
+    );
 
     event FeeClaimed(address indexed token, address indexed recipient, uint256 amount);
     event HolderClaimed(address indexed token, address indexed holder, uint256 amount);

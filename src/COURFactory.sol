@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
-import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
+import { Ownable, Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
+import { LibClone } from "solady/utils/LibClone.sol";
 
-import {IUnlockCallback} from "v4-core/interfaces/callback/IUnlockCallback.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
-import {Currency} from "v4-core/types/Currency.sol";
-import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
-import {ModifyLiquidityParams} from "v4-core/types/PoolOperation.sol";
-import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {LiquidityAmounts} from "v4-periphery/src/libraries/LiquidityAmounts.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { IUnlockCallback } from "v4-core/interfaces/callback/IUnlockCallback.sol";
+import { TickMath } from "v4-core/libraries/TickMath.sol";
+import { BalanceDelta } from "v4-core/types/BalanceDelta.sol";
+import { Currency } from "v4-core/types/Currency.sol";
+import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { ModifyLiquidityParams } from "v4-core/types/PoolOperation.sol";
+import { LiquidityAmounts } from "v4-periphery/src/libraries/LiquidityAmounts.sol";
 
-import {COURToken} from "./COURToken.sol";
-import {ICOURFactory} from "./interfaces/ICOURFactory.sol";
-import {ICOURCurve} from "./interfaces/ICOURCurve.sol";
-import {ICOURFeeVault} from "./interfaces/ICOURFeeVault.sol";
-import {ICOURPriceReader} from "./interfaces/ICOURPriceReader.sol";
-import {CreatorMode, CREATOR_MODE_MAX} from "./types/CreatorMode.sol";
-import {TokenConfig} from "./types/TokenConfig.sol";
-import {CurveMath} from "./libraries/CurveMath.sol";
-import {Constants} from "./libraries/Constants.sol";
-import {Errors} from "./libraries/Errors.sol";
-import {Events} from "./libraries/Events.sol";
-import {PoolKeyLib} from "./libraries/PoolKeyLib.sol";
+import { COURToken } from "./COURToken.sol";
+import { ICOURCurve } from "./interfaces/ICOURCurve.sol";
+import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
+import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
+import { ICOURPriceReader } from "./interfaces/ICOURPriceReader.sol";
+import { Constants } from "./libraries/Constants.sol";
+import { CurveMath } from "./libraries/CurveMath.sol";
+import { Errors } from "./libraries/Errors.sol";
+import { Events } from "./libraries/Events.sol";
+import { PoolKeyLib } from "./libraries/PoolKeyLib.sol";
+import { CREATOR_MODE_MAX, CreatorMode } from "./types/CreatorMode.sol";
+import { TokenConfig } from "./types/TokenConfig.sol";
 
 /// @title COURFactory
 /// @notice Launches COUR tokens on the bonding curve and graduates them into Uniswap v4 pools with the
@@ -91,12 +91,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
     // --------------------------------------------------------------- launch
 
     /// @inheritdoc ICOURFactory
-    function createToken(CreateParams calldata p)
-        external
-        payable
-        nonReentrant
-        returns (address token, address curve)
-    {
+    function createToken(CreateParams calldata p) external payable nonReentrant returns (address token, address curve) {
         if (msg.value != launchFee) revert Errors.WrongLaunchFee();
         if (launchesPaused) revert Errors.LaunchesPaused();
         if (!stockAllowed[p.stock]) revert Errors.StockNotAllowed();
@@ -117,9 +112,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         // Deploy the token (CREATE2, deterministic via salt). HOLDERS mode wires the dividend vault.
         address holderRewards = mode == CreatorMode.HOLDERS ? address(feeVaultC) : address(0);
         token = address(
-            new COURToken{salt: p.salt}(
-                p.name, p.symbol, p.metadataURI, curve, p.stock, msg.sender, holderRewards
-            )
+            new COURToken{ salt: p.salt }(p.name, p.symbol, p.metadataURI, curve, p.stock, msg.sender, holderRewards)
         );
 
         CurveMath.LaunchParams memory lp = CurveMath.computeLaunchParams(priceX18, stockDec, startMcUsd, gradMcUsd);
@@ -158,7 +151,15 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         }
 
         emit Events.TokenLaunched(
-            token, curve, msg.sender, p.stock, p.creatorFeeBps, p.creatorMode, feeRecipient, CurveMath.priceX18(lp.vS0, lp.vT0), p.metadataURI
+            token,
+            curve,
+            msg.sender,
+            p.stock,
+            p.creatorFeeBps,
+            p.creatorMode,
+            feeRecipient,
+            CurveMath.priceX18(lp.vS0, lp.vT0),
+            p.metadataURI
         );
     }
 
@@ -177,8 +178,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         IERC20(stock).safeTransferFrom(msg.sender, address(this), stockRaised);
         IERC20(token).safeTransferFrom(msg.sender, address(this), tokenLeftover);
 
-        (uint256 amount0, uint256 amount1) =
-            tokenIsZero ? (tokenLeftover, stockRaised) : (stockRaised, tokenLeftover);
+        (uint256 amount0, uint256 amount1) = tokenIsZero ? (tokenLeftover, stockRaised) : (stockRaised, tokenLeftover);
 
         // Initialize the pool at exactly the reserve ratio (= graduation price).
         uint160 sqrtPriceX96 = uint160(FixedPointMathLib.sqrt(FixedPointMathLib.fullMulDiv(amount1, 1 << 192, amount0)));
@@ -190,7 +190,11 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         // forge-lint: disable-next-line(divide-before-multiply)
         int24 tickUpper = (TickMath.MAX_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING;
         uint128 L = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96, TickMath.getSqrtPriceAtTick(tickLower), TickMath.getSqrtPriceAtTick(tickUpper), amount0, amount1
+            sqrtPriceX96,
+            TickMath.getSqrtPriceAtTick(tickLower),
+            TickMath.getSqrtPriceAtTick(tickUpper),
+            amount0,
+            amount1
         );
 
         poolManagerC.unlock(abi.encode(GradCallback(key, tickLower, tickUpper, int256(uint256(L)))));
@@ -205,9 +209,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
             feeVaultC.creditPlatform(stock, stockDust);
         }
 
-        emit Events.Graduated(
-            token, _poolId[token], tokenLeftover - tokenDust, stockRaised - stockDust, 0
-        );
+        emit Events.Graduated(token, _poolId[token], tokenLeftover - tokenDust, stockRaised - stockDust, 0);
     }
 
     /// @inheritdoc IUnlockCallback
@@ -216,7 +218,9 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         GradCallback memory g = abi.decode(data, (GradCallback));
         (BalanceDelta delta,) = poolManagerC.modifyLiquidity(
             g.key,
-            ModifyLiquidityParams({tickLower: g.tickLower, tickUpper: g.tickUpper, liquidityDelta: g.liquidity, salt: bytes32(0)}),
+            ModifyLiquidityParams({
+                tickLower: g.tickLower, tickUpper: g.tickUpper, liquidityDelta: g.liquidity, salt: bytes32(0)
+            }),
             ""
         );
         int128 a0 = delta.amount0();

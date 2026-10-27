@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {Currency} from "v4-core/types/Currency.sol";
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {Constants} from "./Constants.sol";
+import { Constants } from "./Constants.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
+import { Currency } from "v4-core/types/Currency.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
 
 /// @title PoolKeyLib
 /// @notice Canonical construction of the one legitimate COUR pool key for a (token, stock) pair:

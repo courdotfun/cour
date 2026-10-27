@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {Constants} from "./Constants.sol";
+import { Constants } from "./Constants.sol";
 
 /// @title LaunchTax
 /// @notice Pons-style anti-snipe tax that decays over the first 5 seconds. Buys only; creator exempt.

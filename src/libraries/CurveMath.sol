@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
-import {Constants} from "./Constants.sol";
+import { Constants } from "./Constants.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 
 /// @title CurveMath
 /// @notice Virtual constant-product (x*y=k) bonding-curve math, priced in the stock token.

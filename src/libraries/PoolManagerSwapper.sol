@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {IUnlockCallback} from "v4-core/interfaces/callback/IUnlockCallback.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {Currency} from "v4-core/types/Currency.sol";
-import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
-import {SwapParams} from "v4-core/types/PoolOperation.sol";
-import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { IUnlockCallback } from "v4-core/interfaces/callback/IUnlockCallback.sol";
+import { TickMath } from "v4-core/libraries/TickMath.sol";
+import { BalanceDelta } from "v4-core/types/BalanceDelta.sol";
+import { Currency } from "v4-core/types/Currency.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { SwapParams } from "v4-core/types/PoolOperation.sol";
 
 /// @title PoolManagerSwapper
 /// @notice Abstract base giving a contract the ability to perform exact-input swaps directly against
@@ -49,7 +49,7 @@ abstract contract PoolManagerSwapper is IUnlockCallback {
         uint160 limit = d.zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1;
         BalanceDelta delta = _pm.swap(
             d.key,
-            SwapParams({zeroForOne: d.zeroForOne, amountSpecified: -int256(d.amountIn), sqrtPriceLimitX96: limit}),
+            SwapParams({ zeroForOne: d.zeroForOne, amountSpecified: -int256(d.amountIn), sqrtPriceLimitX96: limit }),
             ""
         );
 

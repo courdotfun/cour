@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {CreatorMode} from "../types/CreatorMode.sol";
+import { CreatorMode } from "../types/CreatorMode.sol";
 
 /// @title ICOURFeeVault
 /// @notice Holds and routes the creator fee (taken in the stock token) per the 80/20 split and the

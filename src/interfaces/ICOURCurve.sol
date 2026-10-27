@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {TokenConfig} from "../types/TokenConfig.sol";
+import { TokenConfig } from "../types/TokenConfig.sol";
 
 /// @title ICOURCurve
 /// @notice Virtual constant-product bonding curve (one EIP-1167 clone per token), priced in stock.

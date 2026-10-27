@@ -10,7 +10,6 @@ interface ICOURPriceReader {
         NONE,
         USDG, // direct STOCK/USDG pool
         WETH // STOCK/WETH pool priced via WETH/USDG
-
     }
 
     /// @notice USD per *whole* stock token, scaled by 1e18 (raw-unit aware), plus the source used.

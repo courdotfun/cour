@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {CreatorMode} from "./CreatorMode.sol";
+import { CreatorMode } from "./CreatorMode.sol";
 
 /// @notice Per-token launch configuration, snapshotted immutably at creation.
 /// @dev Curve params (vS0, vT0, k, vTStop) are computed once from the launch stock price so

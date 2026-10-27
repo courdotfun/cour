@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Ownable, Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {PoolManagerSwapper} from "./libraries/PoolManagerSwapper.sol";
-import {ICOURFeeVault} from "./interfaces/ICOURFeeVault.sol";
-import {ICOURFactory} from "./interfaces/ICOURFactory.sol";
-import {ICOURCurve} from "./interfaces/ICOURCurve.sol";
-import {ICOURPriceReader} from "./interfaces/ICOURPriceReader.sol";
-import {ICOURHook} from "./interfaces/ICOURHook.sol";
-import {CreatorMode} from "./types/CreatorMode.sol";
-import {Constants} from "./libraries/Constants.sol";
-import {Errors} from "./libraries/Errors.sol";
-import {Events} from "./libraries/Events.sol";
-import {PoolKeyLib} from "./libraries/PoolKeyLib.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
+import { ICOURCurve } from "./interfaces/ICOURCurve.sol";
+import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
+import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
+import { ICOURHook } from "./interfaces/ICOURHook.sol";
+import { ICOURPriceReader } from "./interfaces/ICOURPriceReader.sol";
+import { Constants } from "./libraries/Constants.sol";
+import { Errors } from "./libraries/Errors.sol";
+import { Events } from "./libraries/Events.sol";
+import { PoolKeyLib } from "./libraries/PoolKeyLib.sol";
+import { PoolManagerSwapper } from "./libraries/PoolManagerSwapper.sol";
+import { CreatorMode } from "./types/CreatorMode.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
 
 /// @title COURFeeVault
 /// @notice Custodies and routes the creator fee (always taken in the stock token) for every launched
@@ -181,8 +181,8 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
     }
 
     function _eligible(TokenData storage t, address a) internal view returns (bool) {
-        return a != address(0) && a != Constants.DEAD && a != address(this) && a != router
-            && a != address(_pm) && a != t.curve;
+        return a != address(0) && a != Constants.DEAD && a != address(this) && a != router && a != address(_pm)
+            && a != t.curve;
     }
 
     // --------------------------------------------------------------- claims

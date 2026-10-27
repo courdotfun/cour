@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 
-import {ICOURCurve} from "./interfaces/ICOURCurve.sol";
-import {ICOURFactory} from "./interfaces/ICOURFactory.sol";
-import {ICOURFeeVault} from "./interfaces/ICOURFeeVault.sol";
-import {TokenConfig} from "./types/TokenConfig.sol";
-import {CreatorMode} from "./types/CreatorMode.sol";
-import {CurveMath} from "./libraries/CurveMath.sol";
-import {LaunchTax} from "./libraries/LaunchTax.sol";
-import {Constants} from "./libraries/Constants.sol";
-import {Errors} from "./libraries/Errors.sol";
-import {Events} from "./libraries/Events.sol";
+import { ICOURCurve } from "./interfaces/ICOURCurve.sol";
+import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
+import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
+import { Constants } from "./libraries/Constants.sol";
+import { CurveMath } from "./libraries/CurveMath.sol";
+import { Errors } from "./libraries/Errors.sol";
+import { Events } from "./libraries/Events.sol";
+import { LaunchTax } from "./libraries/LaunchTax.sol";
+import { CreatorMode } from "./types/CreatorMode.sol";
+import { TokenConfig } from "./types/TokenConfig.sol";
 
 /// @title COURCurve
 /// @notice Virtual constant-product bonding curve, one EIP-1167 clone per token, priced in the stock

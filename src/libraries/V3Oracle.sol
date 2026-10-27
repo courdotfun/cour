@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
-import {IUniswapV3PoolMinimal} from "../interfaces/IUniswapV3PoolMinimal.sol";
+import { IUniswapV3PoolMinimal } from "../interfaces/IUniswapV3PoolMinimal.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
+import { TickMath } from "v4-core/libraries/TickMath.sol";
 
 /// @title V3Oracle
 /// @notice Minimal, 0.8-native port of Uniswap's OracleLibrary (consult + getQuoteAtTick). No oracle

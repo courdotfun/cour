@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import {ICOURToken} from "./interfaces/ICOURToken.sol";
-import {ICOURFeeVault} from "./interfaces/ICOURFeeVault.sol";
-import {Constants} from "./libraries/Constants.sol";
+import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
+import { ICOURToken } from "./interfaces/ICOURToken.sol";
+import { Constants } from "./libraries/Constants.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /// @title COURToken
 /// @notice Fixed-supply (1e9, 18 decimals) ERC-20 + Permit launched by the COUR factory. The entire

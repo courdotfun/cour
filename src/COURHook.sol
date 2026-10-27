@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {Hooks} from "v4-core/libraries/Hooks.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
-import {Currency} from "v4-core/types/Currency.sol";
-import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
-import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
-import {SwapParams, ModifyLiquidityParams} from "v4-core/types/PoolOperation.sol";
-import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
-import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {SqrtPriceMath} from "v4-core/libraries/SqrtPriceMath.sol";
-import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { Hooks } from "v4-core/libraries/Hooks.sol";
+import { SqrtPriceMath } from "v4-core/libraries/SqrtPriceMath.sol";
+import { StateLibrary } from "v4-core/libraries/StateLibrary.sol";
+import { TickMath } from "v4-core/libraries/TickMath.sol";
+import { BalanceDelta } from "v4-core/types/BalanceDelta.sol";
+import { BeforeSwapDelta, toBeforeSwapDelta } from "v4-core/types/BeforeSwapDelta.sol";
+import { Currency } from "v4-core/types/Currency.sol";
+import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { ModifyLiquidityParams, SwapParams } from "v4-core/types/PoolOperation.sol";
 
-import {ICOURHook} from "./interfaces/ICOURHook.sol";
-import {ICOURFactory} from "./interfaces/ICOURFactory.sol";
-import {ICOURFeeVault} from "./interfaces/ICOURFeeVault.sol";
-import {TokenConfig} from "./types/TokenConfig.sol";
-import {Constants} from "./libraries/Constants.sol";
-import {Errors} from "./libraries/Errors.sol";
-import {Events} from "./libraries/Events.sol";
-import {LaunchTax} from "./libraries/LaunchTax.sol";
+import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
+import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
+import { ICOURHook } from "./interfaces/ICOURHook.sol";
+import { Constants } from "./libraries/Constants.sol";
+import { Errors } from "./libraries/Errors.sol";
+import { Events } from "./libraries/Events.sol";
+import { LaunchTax } from "./libraries/LaunchTax.sol";
+import { TokenConfig } from "./types/TokenConfig.sol";
 
 /// @title COURHook
 /// @notice Uniswap v4 hook that captures the COUR creator fee (always in the stock token) on pool
@@ -117,8 +117,14 @@ contract COURHook is IHooks, ICOURHook {
         if (cfg.stock != stk) revert Errors.BadPoolKey();
 
         PoolId id = key.toId();
-        _pool[id] =
-            PoolInfo({token: tok, stock: stk, feeBps: cfg.creatorFeeBps, launchedAt: cfg.launchedAt, tokenIsZero: tokenIsZero, set: true});
+        _pool[id] = PoolInfo({
+            token: tok,
+            stock: stk,
+            feeBps: cfg.creatorFeeBps,
+            launchedAt: cfg.launchedAt,
+            tokenIsZero: tokenIsZero,
+            set: true
+        });
 
         Obs storage o = _obs[id];
         o.lastTs = uint32(block.timestamp);
@@ -168,11 +174,13 @@ contract COURHook is IHooks, ICOURHook {
     // --------------------------------------------------------------- afterSwap (sell fee)
 
     /// @inheritdoc IHooks
-    function afterSwap(address sender, PoolKey calldata key, SwapParams calldata params, BalanceDelta delta, bytes calldata)
-        external
-        onlyPoolManager
-        returns (bytes4, int128)
-    {
+    function afterSwap(
+        address sender,
+        PoolKey calldata key,
+        SwapParams calldata params,
+        BalanceDelta delta,
+        bytes calldata
+    ) external onlyPoolManager returns (bytes4, int128) {
         PoolId id = key.toId();
         PoolInfo memory info = _pool[id];
         if (!info.set) revert Errors.BadPoolKey();
@@ -195,7 +203,15 @@ contract COURHook is IHooks, ICOURHook {
         return (IHooks.afterSwap.selector, int128(int256(fee)));
     }
 
-    function _notify(address token, address, /*stock*/ address payer, uint256 fee) internal {
+    function _notify(
+        address token,
+        address,
+        /*stock*/
+        address payer,
+        uint256 fee
+    )
+        internal
+    {
         uint256 plat = (fee * Constants.PLATFORM_SHARE_BPS) / Constants.BPS;
         ICOURFeeVault(feeVault).notify(token, fee);
         emit Events.FeeTaken(token, payer, fee, fee - plat, plat);
@@ -305,7 +321,14 @@ contract COURHook is IHooks, ICOURHook {
     }
 
     /// @inheritdoc ICOURHook
-    function poolStockReserve(address token, address /*stock*/ ) external view returns (uint256) {
+    function poolStockReserve(
+        address token,
+        address /*stock*/
+    )
+        external
+        view
+        returns (uint256)
+    {
         PoolId id = PoolId.wrap(factory.poolIdOf(token));
         PoolInfo memory info = _pool[id];
         if (!info.set) return 0;

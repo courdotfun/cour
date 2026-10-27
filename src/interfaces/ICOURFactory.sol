@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {TokenConfig} from "../types/TokenConfig.sol";
-import {ICOURPriceReader} from "./ICOURPriceReader.sol";
+import { TokenConfig } from "../types/TokenConfig.sol";
+import { ICOURPriceReader } from "./ICOURPriceReader.sol";
 
 /// @title ICOURFactory
 /// @notice Launches COUR tokens and graduates them into Uniswap v4 pools with the COUR hook.
