@@ -181,7 +181,10 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         (uint256 amount0, uint256 amount1) = tokenIsZero ? (tokenLeftover, stockRaised) : (stockRaised, tokenLeftover);
 
         // Initialize the pool at exactly the reserve ratio (= graduation price).
-        uint160 sqrtPriceX96 = uint160(FixedPointMathLib.sqrt(FixedPointMathLib.fullMulDiv(amount1, 1 << 192, amount0)));
+        // Use X128 encoding (sqrt(ratioX128) << 32) rather than X192: the latter overflows uint256 when
+        // the raw reserve ratio exceeds 2^64, which happens for low-decimal stock vs an 18-decimal token.
+        uint256 ratioX128 = FixedPointMathLib.fullMulDiv(amount1, 1 << 128, amount0);
+        uint160 sqrtPriceX96 = uint160(FixedPointMathLib.sqrt(ratioX128) << 32);
         poolManagerC.initialize(key, sqrtPriceX96);
 
         // Full-range liquidity.

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IStockToken8056} from "../../src/interfaces/IStockToken8056.sol";
+import { IStockToken8056 } from "../../src/interfaces/IStockToken8056.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @notice Mock Robinhood stock token: configurable decimals, ERC-8056 multiplier, and a pause switch
 ///         that makes transfers revert (simulating an issuer corporate-action pause).

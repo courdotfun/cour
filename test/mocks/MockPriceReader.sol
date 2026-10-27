@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {ICOURPriceReader} from "../../src/interfaces/ICOURPriceReader.sol";
+import { ICOURPriceReader } from "../../src/interfaces/ICOURPriceReader.sol";
 
 /// @notice Simple price oracle stub for system tests (the real COURPriceReader is exercised against a
 ///         MockV3Pool in its own unit test). Lets tests set a USD price and reference liquidity directly.
@@ -36,7 +36,7 @@ contract MockPriceReader is ICOURPriceReader {
         return m == 0 ? 1e18 : m;
     }
 
-    function bumpCardinality(address, uint16) external {}
+    function bumpCardinality(address, uint16) external { }
 
-    function setRefPool(address, address, RefKind) external {}
+    function setRefPool(address, address, RefKind) external { }
 }

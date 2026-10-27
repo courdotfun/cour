@@ -82,7 +82,7 @@ contract COURCurve is ICOURCurve, ReentrancyGuardTransient {
         returns (uint256 tokensOut, uint256 stockUsed)
     {
         bool privileged = msg.sender == feeVaultAddr; // buyback: no fee, no tax
-        return _buy(stockIn, minTokensOut, to, deadline, !privileged, !privileged);
+        return _buy(stockIn, minTokensOut, to, deadline, !privileged, !privileged, true);
     }
 
     /// @inheritdoc ICOURCurve
@@ -92,14 +92,19 @@ contract COURCurve is ICOURCurve, ReentrancyGuardTransient {
         returns (uint256 tokensOut, uint256 stockUsed)
     {
         if (msg.sender != factoryAddr) revert Errors.OnlyFactory();
-        // Fee applies; launch tax does NOT (atomic creator buy inside createToken).
-        return _buy(stockIn, minTokensOut, to, block.timestamp, true, false);
+        // Fee applies; launch tax does NOT (atomic creator buy inside createToken). Must not graduate.
+        return _buy(stockIn, minTokensOut, to, block.timestamp, true, false, false);
     }
 
-    function _buy(uint256 gross, uint256 minTokensOut, address to, uint256 deadline, bool chargeFee, bool chargeTax)
-        internal
-        returns (uint256 tokensOut, uint256 stockUsed)
-    {
+    function _buy(
+        uint256 gross,
+        uint256 minTokensOut,
+        address to,
+        uint256 deadline,
+        bool chargeFee,
+        bool chargeTax,
+        bool allowGraduation
+    ) internal returns (uint256 tokensOut, uint256 stockUsed) {
         if (block.timestamp > deadline) revert Errors.Expired();
         if (graduated) revert Errors.Graduated();
         if (gross == 0) revert Errors.ZeroAmount();
@@ -111,6 +116,7 @@ contract COURCurve is ICOURCurve, ReentrancyGuardTransient {
         uint256 net = gross - fee - tax;
 
         CurveMath.BuyResult memory r = CurveMath.buy(_vS, _vT, _k, _vTStop, net);
+        if (r.graduates && !allowGraduation) revert Errors.InitialBuyTooLarge();
         tokensOut = r.tokensOut;
         if (tokensOut < minTokensOut) revert Errors.Slippage();
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {IUniswapV3PoolMinimal} from "../../src/interfaces/IUniswapV3PoolMinimal.sol";
+import { IUniswapV3PoolMinimal } from "../../src/interfaces/IUniswapV3PoolMinimal.sol";
 
 /// @notice Mock Uniswap v3 pool returning a configurable constant tick so the PriceReader's TWAP math
 ///         can be unit-tested without a fork. `observe` yields tickCumulatives consistent with `curTick`.
@@ -31,12 +31,7 @@ contract MockV3Pool is IUniswapV3PoolMinimal {
         return 1e18;
     }
 
-    function slot0()
-        external
-        view
-        override
-        returns (uint160, int24 tick, uint16, uint16, uint16, uint8, bool)
-    {
+    function slot0() external view override returns (uint160, int24 tick, uint16, uint16, uint16, uint8, bool) {
         return (0, curTick, 0, 0, 0, 0, true);
     }
 
