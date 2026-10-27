@@ -2,5 +2,40 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+test = "test"
+script = "script"
+solc_version = "0.8.26"
+evm_version = "cancun"        # transient storage (TSTORE/TLOAD) required by v4-core & COUR guards
+optimizer = true
+optimizer_runs = 800
+via_ir = false
+ffi = false
+fs_permissions = [{ access = "read", path = "./script/config" }, { access = "read-write", path = "./docs" }]
+gas_reports = ["COURFactory", "COURCurve", "COURHook", "COURFeeVault", "COURRouter"]
+fuzz = { runs = 1000 }
+invariant = { runs = 256, depth = 32, fail_on_revert = false }
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+# Heavy CI profile: more fuzz/invariant runs
+[profile.ci]
+fuzz = { runs = 10000 }
+invariant = { runs = 512, depth = 64, fail_on_revert = false }
+
+# Deep profile for occasional long runs
+[profile.deep]
+fuzz = { runs = 50000 }
+invariant = { runs = 1024, depth = 128 }
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = true
+int_types = "long"
+multiline_func_header = "attributes_first"
+sort_imports = true
+
+[rpc_endpoints]
+rh_mainnet = "${RH_RPC_URL}"
+rh_testnet = "${RH_TESTNET_RPC_URL}"
+
+[etherscan]
+rh_mainnet = { key = "${BLOCKSCOUT_API_KEY}", url = "https://robinhoodchain.blockscout.com/api", chain = 4663 }
