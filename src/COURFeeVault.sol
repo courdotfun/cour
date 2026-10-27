@@ -98,7 +98,7 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
         address creator,
         uint16, /* creatorFeeBps (enforced by factory; fee amounts arrive pre-computed via notify) */
         CreatorMode mode,
-        address feeRecipient
+        address feeRecipient_
     ) external {
         if (msg.sender != address(factory)) revert Errors.OnlyFactory();
         TokenData storage t = _td[token];
@@ -107,7 +107,7 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
         t.stock = stock;
         t.creator = creator;
         t.curve = factory.curveOf(token);
-        t.feeRecipient = feeRecipient == address(0) ? creator : feeRecipient;
+        t.feeRecipient = feeRecipient_ == address(0) ? creator : feeRecipient_;
         t.mode = mode;
         t.stockDecimals = IERC20Metadata(stock).decimals();
     }

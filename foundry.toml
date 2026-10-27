@@ -8,7 +8,7 @@ solc_version = "0.8.26"
 evm_version = "cancun"        # transient storage (TSTORE/TLOAD) required by v4-core & COUR guards
 optimizer = true
 optimizer_runs = 800
-via_ir = false
+via_ir = true           # v4 hook math + curve locals exceed the stack without IR
 ffi = false
 fs_permissions = [{ access = "read", path = "./script/config" }, { access = "read-write", path = "./docs" }]
 gas_reports = ["COURFactory", "COURCurve", "COURHook", "COURFeeVault", "COURRouter"]
@@ -27,7 +27,8 @@ invariant = { runs = 1024, depth = 128 }
 
 [lint]
 # Oracle/tick math and v4 BalanceDelta use well-known safe int narrowing casts; see docs/DECISIONS.md.
-exclude_lints = ["unsafe-typecast"]
+# block-timestamp: spec mandates block.timestamp (sub-second blocks make block numbers unusable).
+exclude_lints = ["unsafe-typecast", "block-timestamp"]
 
 [fmt]
 line_length = 120

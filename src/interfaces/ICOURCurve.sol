@@ -9,6 +9,12 @@ interface ICOURCurve {
     /// @notice Initialize the clone. Only the factory, once.
     function initialize(TokenConfig calldata cfg) external;
 
+    /// @notice Tax-free (fee still applies) creator initial buy performed atomically in createToken.
+    ///         Only the factory. Stock is pulled from the factory.
+    function initialBuy(uint256 stockIn, uint256 minTokensOut, address to)
+        external
+        returns (uint256 tokensOut, uint256 stockUsed);
+
     /// @notice Buy tokens with `stockIn` gross stock (fee + launch tax applied inside).
     /// @return tokensOut tokens delivered to `to`.
     /// @return stockUsed gross stock actually consumed (may be < stockIn if the buy graduates with a refund).
