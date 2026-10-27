@@ -4,6 +4,9 @@ out/
 broadcast/
 !broadcast/**/dry-run/
 
+# Dependencies (reproduce with ./bootstrap.sh)
+lib/
+
 # Env & secrets
 .env
 .env.*
