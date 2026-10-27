@@ -146,6 +146,27 @@ contract CoverageTest is BaseTest {
         assertGt(ICOURHook(address(hook)).poolStockReserve(token, address(stock)), 0);
     }
 
+    function test_hook_twap_anchor_rollover() public {
+        (address token, address curve) = _launch(stock, 500, CreatorMode.CREATOR, 0);
+        _graduate(curve);
+        bytes32 pid = factory.poolIdOf(token);
+
+        // Advance past the TWAP window and swap repeatedly so the obs anchor rolls over (prevAnchor set).
+        for (uint256 i; i < 3; i++) {
+            vm.warp(block.timestamp + 400); // > HOOK_TWAP_WINDOW (300s)
+            stock.mint(bob, 5e18);
+            vm.startPrank(bob);
+            stock.approve(address(router), 5e18);
+            router.buy(token, 5e18, 0, block.timestamp);
+            vm.stopPrank();
+        }
+        vm.warp(block.timestamp + 400);
+        hook.consult(pid, 300); // now uses the prevAnchor reference branch
+        (uint256 spot, uint256 twap) = hook.priceInfo(token);
+        assertGt(spot, 0);
+        assertGt(twap, 0);
+    }
+
     // ---- vault edge cases ----
 
     function test_vault_zero_claims_and_guards() public {
