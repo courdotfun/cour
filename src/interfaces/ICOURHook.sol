@@ -10,4 +10,7 @@ interface ICOURHook {
 
     /// @notice Pool spot price (stock per token, 1e18) and TWAP price for the buyback deviation guard.
     function priceInfo(address token) external view returns (uint256 spotX18, uint256 twapX18);
+
+    /// @notice Best-effort stock-side reserve of the graduated full-range pool (for the 2% buyback cap).
+    function poolStockReserve(address token, address stock) external view returns (uint256);
 }

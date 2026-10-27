@@ -25,6 +25,10 @@ invariant = { runs = 512, depth = 64, fail_on_revert = false }
 fuzz = { runs = 50000 }
 invariant = { runs = 1024, depth = 128 }
 
+[lint]
+# Oracle/tick math and v4 BalanceDelta use well-known safe int narrowing casts; see docs/DECISIONS.md.
+exclude_lints = ["unsafe-typecast"]
+
 [fmt]
 line_length = 120
 tab_width = 4
