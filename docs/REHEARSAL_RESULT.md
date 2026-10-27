@@ -7,9 +7,9 @@ Token: CTEST / mNVDA | fee 5% | mode BUYBACK_BURN | start $4,000 -> grad $60,000
 | Initial buy (15 NVDA, tax-free) tokens | 267354596 |
 | dt=0 sniper blocked (99% tax) | yes |
 | 5 NVDA buy @ dt=1 tokens | 45840187 |
-| 5 NVDA buy @ dt=2 tokens | 40895399 |
-| 5 NVDA buy @ dt>=5 tokens | 49552809 |
-| Big buy tokens out | 342653118 |
+| 5 NVDA buy @ dt=2 tokens | 52656464 |
+| 5 NVDA buy @ dt>=5 tokens | 47995609 |
+| Big buy tokens out | 344179855 |
 | Big buy stock used (of 2000) | 96 |
 | Graduated | yes |
 | Pool buy (20 NVDA) tokens out | 27022253 |

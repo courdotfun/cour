@@ -85,6 +85,38 @@ contract PriceReaderTest is Test {
         reader.setRefPool(address(stock), address(0x1), ICOURPriceReader.RefKind.USDG);
     }
 
+    function test_admin_paths() public {
+        reader.setTwapWindow(600);
+        assertEq(reader.twapWindow(), 600);
+        reader.setAuthorizedSetter(address(0xF00));
+        assertEq(reader.authorizedSetter(), address(0xF00));
+        MockV3Pool pool = new MockV3Pool(address(1), address(2), 0);
+        reader.bumpCardinality(address(pool), 500);
+        assertEq(pool.cardinalityNext(), 500);
+        vm.expectRevert();
+        reader.setTwapWindow(10); // < 60
+    }
+
+    function test_weth_route_without_pool_reverts() public {
+        MockStock s = new MockStock("NV", "NV", 18);
+        MockV3Pool stockWeth = new MockV3Pool(address(s), address(weth), 0);
+        reader.setRefPool(address(s), address(stockWeth), ICOURPriceReader.RefKind.WETH);
+        // wethUsdgPool not set -> TwapNotReady
+        vm.expectRevert(Errors.TwapNotReady.selector);
+        reader.stockUsd(address(s));
+    }
+
+    function test_refLiquidityUsd_weth_and_zero() public {
+        MockStock s = new MockStock("NV", "NV", 18);
+        assertEq(reader.refLiquidityUsd(address(s)), 0); // unconfigured
+        MockV3Pool wethUsdg = new MockV3Pool(address(weth), address(usdg), 0);
+        MockV3Pool stockWeth = new MockV3Pool(address(s), address(weth), 0);
+        reader.setWethUsdgPool(address(wethUsdg));
+        reader.setRefPool(address(s), address(stockWeth), ICOURPriceReader.RefKind.WETH);
+        weth.mint(address(stockWeth), 100e18);
+        assertGt(reader.refLiquidityUsd(address(s)), 0);
+    }
+
     function test_uiMultiplier_passthrough_and_default() public {
         MockStock stock = new MockStock("NV", "NV", 18);
         stock.setUiMultiplier(2e18);
