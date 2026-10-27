@@ -1,0 +1,80 @@
+	Event emitted after the call(s):
+	- Events.StockSet(stock,allowed,refPool,uint8(kind)) (src/COURFactory.sol#248)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+INFO:Detectors:
+Detector: timestamp
+COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURCurve.sol#108)
+	- fee + tax >= gross (src/COURCurve.sol#115)
+	- r.graduates && ! allowGraduation (src/COURCurve.sol#119)
+	- tokensOut < minTokensOut (src/COURCurve.sol#121)
+	- refund > 0 (src/COURCurve.sol#139)
+	- feeTotal > 0 (src/COURCurve.sol#145)
+COURCurve.sell(uint256,uint256,address,uint256) (src/COURCurve.sol#156-184) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURCurve.sol#161)
+COURCurve.progressBps() (src/COURCurve.sol#227-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- bps > Constants.BPS (src/COURCurve.sol#232)
+COURHook.beforeSwap(address,PoolKey,SwapParams,bytes) (src/COURHook.sol#139-172) uses timestamp for comparisons
+	Dangerous comparisons:
+	- fee == 0 (src/COURHook.sol#165)
+COURHook._updateObs(PoolId) (src/COURHook.sol#274-289) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nowTs > o.lastTs (src/COURHook.sol#277)
+	- nowTs - o.anchorTs >= Constants.HOOK_TWAP_WINDOW (src/COURHook.sol#280)
+COURHook.consult(bytes32,uint32) (src/COURHook.sol#292-303) uses timestamp for comparisons
+	Dangerous comparisons:
+	- span == 0 (src/COURHook.sol#301)
+	- nowTs > o.lastTs (src/COURHook.sol#296)
+	- o.prevAnchorTs != 0 (src/COURHook.sol#298)
+	- o.prevAnchorTs != 0 (src/COURHook.sol#299)
+	- nowTs > refTs (src/COURHook.sol#300)
+COURHook.priceInfo(address) (src/COURHook.sol#306-321) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nowTs > o.lastTs (src/COURHook.sol#315)
+	- nowTs > refTs (src/COURHook.sol#318)
+	- span == 0 (src/COURHook.sol#319)
+COURRouter.buy(address,uint256,uint256,uint256) (src/COURRouter.sol#45-56) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#50)
+COURRouter.sell(address,uint256,uint256,uint256) (src/COURRouter.sol#59-70) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#64)
+COURRouter.buyWithETH(address,uint256,uint256) (src/COURRouter.sol#74-100) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#80)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: cyclomatic-complexity
+COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) has a high cyclomatic complexity (13).
+COURFactory.createToken(ICOURFactory.CreateParams) (src/COURFactory.sol#94-164) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+INFO:Detectors:
+Detector: dead-code
+COURFactory._pay(Currency,uint256) (src/COURFactory.sol#236-240) is never used and should be removed
+COURFeeVault._accrue(address,address) (src/COURFeeVault.sol#174-181) is never used and should be removed
+COURFeeVault._checkDeviation(address) (src/COURFeeVault.sol#299-304) is never used and should be removed
+COURFeeVault._poolStockReserve(address,address) (src/COURFeeVault.sol#307-309) is never used and should be removed
+COURRouter._buy(address,address,uint256,uint256,uint256) (src/COURRouter.sol#124-139) is never used and should be removed
+COURRouter._sell(address,address,uint256,uint256,uint256) (src/COURRouter.sol#141-156) is never used and should be removed
+COURRouter._sweep(address,address) (src/COURRouter.sol#159-162) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+INFO:Detectors:
+Detector: constable-states
+COURFeeVault._wired (src/COURFeeVault.sol#52) should be constant 
+COURFeeVault.factory (src/COURFeeVault.sol#47) should be constant 
+COURFeeVault.hook (src/COURFeeVault.sol#48) should be constant 
+COURFeeVault.priceReader (src/COURFeeVault.sol#51) should be constant 
+COURFeeVault.router (src/COURFeeVault.sol#49) should be constant 
+COURFeeVault.treasury (src/COURFeeVault.sol#50) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+INFO:Detectors:
+Detector: immutable-states
+COURFactory.gradMcUsd (src/COURFactory.sol#52) should be immutable 
+COURFactory.launchFee (src/COURFactory.sol#54) should be immutable 
+COURFactory.minRefLiqUsd (src/COURFactory.sol#53) should be immutable 
+COURFactory.startMcUsd (src/COURFactory.sol#51) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+INFO:Slither:. analyzed (85 contracts with 102 detectors), 79 result(s) found

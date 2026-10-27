@@ -47,7 +47,7 @@ contract RehearsalTest is BaseTest {
         vm.startPrank(alice);
         stock.approve(curve, 5e18);
         try ICOURCurve(curve).buy(5e18, 0, alice, block.timestamp) { }
-            catch {
+        catch {
             dt0Reverts = true;
         }
         vm.stopPrank();
