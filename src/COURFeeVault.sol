@@ -219,6 +219,13 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
         emit Events.PlatformClaimed(stock, treasury, amount);
     }
 
+    /// @inheritdoc ICOURFeeVault
+    /// @dev Stock must already have been transferred to the vault by the factory.
+    function creditPlatform(address stock, uint256 amount) external {
+        if (msg.sender != address(factory)) revert Errors.OnlyFactory();
+        platformOwed[stock] += amount;
+    }
+
     // --------------------------------------------------------------- recipient transfer
 
     /// @inheritdoc ICOURFeeVault

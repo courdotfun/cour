@@ -38,6 +38,9 @@ interface ICOURFeeVault {
     /// @notice Send accrued platform fees for a stock to the treasury. Anyone may call.
     function claimPlatform(address stock) external returns (uint256 amount);
 
+    /// @notice Credit already-transferred stock to the platform bucket (graduation dust). Only the factory.
+    function creditPlatform(address stock, uint256 amount) external;
+
     /// @notice Two-step creator-recipient transfer.
     function setFeeRecipient(address token, address newRecipient) external;
     function acceptFeeRecipient(address token) external;

@@ -305,7 +305,7 @@ contract COURHook is IHooks, ICOURHook {
     }
 
     /// @inheritdoc ICOURHook
-    function poolStockReserve(address token, address stock) external view returns (uint256) {
+    function poolStockReserve(address token, address /*stock*/ ) external view returns (uint256) {
         PoolId id = PoolId.wrap(factory.poolIdOf(token));
         PoolInfo memory info = _pool[id];
         if (!info.set) return 0;
@@ -313,7 +313,9 @@ contract COURHook is IHooks, ICOURHook {
         uint128 L = poolManager.getLiquidity(id);
         if (L == 0) return 0;
 
+        // forge-lint: disable-next-line(divide-before-multiply)
         int24 minT = (TickMath.MIN_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING;
+        // forge-lint: disable-next-line(divide-before-multiply)
         int24 maxT = (TickMath.MAX_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING;
         uint160 sqrtA = TickMath.getSqrtPriceAtTick(minT);
         uint160 sqrtB = TickMath.getSqrtPriceAtTick(maxT);
