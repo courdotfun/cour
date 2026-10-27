@@ -7,7 +7,7 @@ script = "script"
 solc_version = "0.8.26"
 evm_version = "cancun"        # transient storage (TSTORE/TLOAD) required by v4-core & COUR guards
 optimizer = true
-optimizer_runs = 800
+optimizer_runs = 44444444        # matches v4-core; resolves Pool.sol Yul stack-too-deep under via_ir
 via_ir = true           # v4 hook math + curve locals exceed the stack without IR
 ffi = false
 fs_permissions = [{ access = "read", path = "./script/config" }, { access = "read-write", path = "./docs" }]

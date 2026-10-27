@@ -106,8 +106,9 @@ contract COURCurve is ICOURCurve, ReentrancyGuardTransient {
 
         uint256 tax = chargeTax ? LaunchTax.taxOn(gross, _launchedAt, block.timestamp) : 0;
         uint256 fee = chargeFee ? FixedPointMathLib.mulDivUp(gross, _feeBps, Constants.BPS) : 0;
-        uint256 net = gross - fee - tax; // reverts on underflow if fee+tax > gross (impossible: bps<=1000, tax<=99%)
-        if (net == 0) revert Errors.ZeroAmount();
+        // In the first launch second the 99% tax + fee can exceed the gross; reject cleanly (anti-snipe).
+        if (fee + tax >= gross) revert Errors.ZeroAmount();
+        uint256 net = gross - fee - tax;
 
         CurveMath.BuyResult memory r = CurveMath.buy(_vS, _vT, _k, _vTStop, net);
         tokensOut = r.tokensOut;
