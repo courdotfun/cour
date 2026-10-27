@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {Test} from "forge-std/Test.sol";
-import {MockStock} from "../mocks/MockStock.sol";
-import {MockERC20} from "../mocks/MockERC20.sol";
-import {ICOURCurve} from "../../src/interfaces/ICOURCurve.sol";
+import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
+import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockStock } from "../mocks/MockStock.sol";
+import { Test } from "forge-std/Test.sol";
 
 /// @notice Drives random buys/sells against one launched (CREATOR-mode) token for invariant testing.
 ///         Stays pre-graduation by capping buy sizes; actions that revert are ignored (fail_on_revert=false).
@@ -39,7 +39,7 @@ contract CurveHandler is Test {
         stock.approve(address(curve), amt);
         try curve.buy(amt, 0, a, block.timestamp) {
             ghostStockIn += amt;
-        } catch {}
+        } catch { }
         vm.stopPrank();
     }
 
@@ -51,7 +51,7 @@ contract CurveHandler is Test {
         uint256 amt = bound(amtSeed, 1, bal);
         vm.startPrank(a);
         token.approve(address(curve), amt);
-        try curve.sell(amt, 0, a, block.timestamp) {} catch {}
+        try curve.sell(amt, 0, a, block.timestamp) { } catch { }
         vm.stopPrank();
     }
 }

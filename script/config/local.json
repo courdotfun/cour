@@ -1,0 +1,4 @@
+{
+  "chainId": 31337,
+  "note": "Local anvil: deploy a fresh v4 PoolManager, mock stock + mock v3 reference pool (see DeployTestnet.s.sol)."
+}

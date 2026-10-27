@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {BaseTest} from "../utils/BaseTest.sol";
-import {MockStock} from "../mocks/MockStock.sol";
-import {MockERC20} from "../mocks/MockERC20.sol";
-import {ICOURFactory} from "../../src/interfaces/ICOURFactory.sol";
-import {ICOURCurve} from "../../src/interfaces/ICOURCurve.sol";
-import {CreatorMode} from "../../src/types/CreatorMode.sol";
-import {Errors} from "../../src/libraries/Errors.sol";
+import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
+import { ICOURFactory } from "../../src/interfaces/ICOURFactory.sol";
+import { Errors } from "../../src/libraries/Errors.sol";
+import { CreatorMode } from "../../src/types/CreatorMode.sol";
+import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockStock } from "../mocks/MockStock.sol";
+import { BaseTest } from "../utils/BaseTest.sol";
 
 /// @notice Anti-snipe launch tax on the curve, and the tax-free creator initial buy.
 contract LaunchTaxFlowTest is BaseTest {

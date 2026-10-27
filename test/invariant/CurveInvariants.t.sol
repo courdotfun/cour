@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {BaseTest} from "../utils/BaseTest.sol";
-import {CurveHandler} from "./CurveHandler.sol";
-import {MockStock} from "../mocks/MockStock.sol";
-import {MockERC20} from "../mocks/MockERC20.sol";
-import {ICOURCurve} from "../../src/interfaces/ICOURCurve.sol";
-import {CreatorMode} from "../../src/types/CreatorMode.sol";
-import {Constants} from "../../src/libraries/Constants.sol";
+import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
+import { Constants } from "../../src/libraries/Constants.sol";
+import { CreatorMode } from "../../src/types/CreatorMode.sol";
+import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockStock } from "../mocks/MockStock.sol";
+import { BaseTest } from "../utils/BaseTest.sol";
+import { CurveHandler } from "./CurveHandler.sol";
 
 /// @notice Handler-based invariants on the bonding curve (CREATOR mode, pre-graduation).
 contract CurveInvariantsTest is BaseTest {
