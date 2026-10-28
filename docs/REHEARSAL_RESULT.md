@@ -2,16 +2,49 @@
 
 Token: CTEST / mNVDA | fee 5% | mode BUYBACK_BURN | start $4,000 -> grad $60,000 mcap
 
+Every trade is shown so the numbers reconcile. Units: stock & tokens in WHOLE units (/1e18). `net` = net stock into the curve (buys) or net stock paid out (sells, shown as -). `tokensOut` = tokens delivered (buys) or tokens sold back (sells, shown as -). `dt` = seconds since launch. `prog%` = curve progress. `mcap$` = fully-diluted mcap USD.
+
+| # | action | dt | gross | fee | tax | net | tokensOut | vS | vT | prog% | mcap$ |
+|--|--|--|--|--|--|--|--|--|--|--|--|
+| 1 | launch+initialBuy(15, tax-free) | 0 | 15 | 0 | 0 | 15 | 267354596 | 57 | 804073974 | 33.63 | 7102 |
+| 2 | dt=0 sniper BLOCKED (revert) | 0 | 5 | - | - | - | - | - | - | - |
+| 3 | buy sniper dt=1 | 1 | 5 | 0 | 1 | 3 | 45840187 | 60 | 758233787 | 39.40 | 7986 |
+| 4 | buy sniper dt=2 | 1 | 5 | 0 | 1 | 3 | 40895399 | 64 | 717338387 | 44.55 | 8923 |
+| 5 | buy dt>=5 (no tax) | 5 | 5 | 0 | 0 | 4 | 49552809 | 68 | 667785578 | 50.78 | 10297 |
+| 6 | random buy #0 | 5 | 1 | 0 | 0 | 0 | 9100226 | 69 | 658685351 | 51.93 | 10583 |
+| 7 | random sell #1 | 5 | 10223849 | 0 | 0 | -1 | -10223849 | 68 | 668909201 | 50.64 | 10262 |
+| 8 | random buy #2 | 5 | 1 | 0 | 0 | 0 | 9130667 | 69 | 659778534 | 51.79 | 10548 |
+| 9 | random sell #3 | 5 | 7667887 | 0 | 0 | -0 | -7667887 | 68 | 667446421 | 50.82 | 10307 |
+| 10 | random buy #4 | 5 | 1 | 0 | 0 | 0 | 9091048 | 69 | 658355373 | 51.97 | 10594 |
+| 11 | random sell #5 | 5 | 5750915 | 0 | 0 | -0 | -5750915 | 69 | 664106289 | 51.24 | 10411 |
+| 12 | random buy #6 | 5 | 1 | 0 | 0 | 0 | 9000899 | 70 | 655105389 | 52.38 | 10699 |
+| 13 | random sell #7 | 5 | 4313186 | 0 | 0 | -0 | -4313186 | 69 | 659418575 | 51.83 | 10560 |
+| 14 | random buy #8 | 5 | 1 | 0 | 0 | 0 | 8875128 | 70 | 650543447 | 52.95 | 10850 |
+| 15 | random sell #9 | 5 | 3234889 | 0 | 0 | -0 | -3234889 | 70 | 653778337 | 52.54 | 10742 |
+| 16 | random buy #10 | 5 | 1 | 0 | 0 | 0 | 8724958 | 71 | 645053379 | 53.64 | 11035 |
+| 17 | random sell #11 | 5 | 2426167 | 0 | 0 | -0 | -2426167 | 70 | 647479546 | 53.34 | 10953 |
+| 18 | random buy #12 | 5 | 1 | 0 | 0 | 0 | 8558748 | 71 | 638920798 | 54.41 | 11248 |
+| 19 | random sell #13 | 5 | 1819625 | 0 | 0 | -0 | -1819625 | 71 | 640740424 | 54.18 | 11184 |
+| 20 | random buy #14 | 5 | 1 | 0 | 0 | 0 | 8382665 | 72 | 632357758 | 55.24 | 11483 |
+| 21 | random sell #15 | 5 | 1364719 | 0 | 0 | -0 | -1364719 | 72 | 633722477 | 55.07 | 11433 |
+| 22 | random buy #16 | 5 | 1 | 0 | 0 | 0 | 8201217 | 73 | 625521259 | 56.10 | 11735 |
+| 23 | random sell #17 | 5 | 1023539 | 0 | 0 | -0 | -1023539 | 73 | 626544799 | 55.97 | 11697 |
+| 24 | random buy #18 | 5 | 1 | 0 | 0 | 0 | 8017667 | 74 | 618527131 | 56.98 | 12002 |
+| 25 | random sell #19 | 5 | 767654 | 0 | 0 | -0 | -767654 | 74 | 619294786 | 56.88 | 11972 |
+| 26 | BIG BUY -> GRADUATE (used 96 of 2000, refund rest) | 5 | 2000 | 0 | 0 | 2000 | 342653118 | 165 | 276641667 | 100.00 | 59999 |
+
+### Token reconciliation at graduation
+
+- Total sold on the curve (= `vT0 - vTStop`): **794786903** whole tokens (the invariant ~794,786,904 the OLD report under-counted by ~36.75M).
+- Held by all buyers (creator+alice+bob+carol): **794786903**  (== total sold).
+- Into the v4 pool: **205213096**, burned-to-DEAD dust: **1147** (raw).
+- Identity: pool + DEAD == TOTAL_SUPPLY - sold == 205213096 whole tokens. No tokens are lost.
+
+### Post-graduation
+
 | Step | Value |
-|---|---|
-| Initial buy (15 NVDA, tax-free) tokens | 267354596 |
-| dt=0 sniper blocked (99% tax) | yes |
-| 5 NVDA buy @ dt=1 tokens | 45840187 |
-| 5 NVDA buy @ dt=2 tokens | 52656464 |
-| 5 NVDA buy @ dt>=5 tokens | 47995609 |
-| Big buy tokens out | 344179855 |
-| Big buy stock used (of 2000) | 96 |
-| Graduated | yes |
+|--|--|
+| dt=0 sniper blocked | yes |
 | Pool buy (20 NVDA) tokens out | 27022253 |
 | Pool sell stock out | 18 |
 | Tokens burned via buyback | 1653239 |
