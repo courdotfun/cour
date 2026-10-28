@@ -30,16 +30,39 @@ Arbitrum Orbit L2, gas token ETH, sub-second blocks (multiple blocks/second → 
 | NVDA stock token | 0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC |
 | v3 NVDA/USDG pool (~$3M) | 0xd4EB21209C4D6093f80B5b84f5C45cc093EA14a3 |
 
-## Verified / Corrected
+## Verified on-chain 2026-10-29 (mainnet, chainId 4663, block ~100.3M)
 
-- **Not yet verified on-chain.** No `RH_RPC_URL`/network was available in the build environment, so `script/00_VerifyChain.s.sol` and the fork tests (`test/fork/ForkChain.t.sol`) were NOT executed against mainnet. They are authored to check code presence, NVDA `decimals()`/`uiMultiplier()`, and a v3 TWAP sanity range, and must be run by a human with an RPC before deployment. **TODO for the human.**
-- Spec addresses for `NVDA` and `NVDA/USDG pool` were given lowercase; corrected to EIP-55 checksums above (and in `test/fork/ForkChain.t.sol`).
-- `wethUsdgPool` is unknown and left as `0x0` in `script/config/rh-mainnet.json`; required only if any stock is priced via the WETH route. **TODO: fill if needed.**
-- Other canonical stock tokens (TSLA, AAPL, SPY, …) and their v3 USDG pools were not discovered (no RPC). **TODO: enumerate from on-chain v3 USDG pools and add to the allowlist config.**
+RPC: `https://rpc.mainnet.chain.robinhood.com` (the public endpoint; the `.env.example` host
+`rpc.chain.robinhood.com` is dead — the correct host has `mainnet.`). Verified with `cast`:
 
-## EVM / transient storage
+- **Code present at every spec address** (PoolManager, PositionManager, StateView, v3 Factory,
+  SwapRouter02, Permit2, WETH, USDG, NVDA, NVDA/USDG pool). ✓
+- **NVDA** (`0xd060…9EEC`): `decimals()=18`, `symbol()="NVDA"`, `name()="NVIDIA • Robinhood Token"`,
+  `totalSupply()=86,899.41e18`, ERC-8056 `uiMultiplier()=1.000775e18`. ✓
+- **USDG** (`0x5fc5…d168`): `decimals()=6`, `symbol()="USDG"`. **WETH** `symbol()="WETH"`.
+- **NVDA/USDG v3 pool** (`0xd4EB…14a3`): `token0=USDG`, `token1=NVDA`, `fee=500` (0.05%),
+  `liquidity=1.811e18`, `slot0.sqrtPriceX96=5.4195e33`, `tick=222674`, `observationCardinality=7200`,
+  `observationIndex=4353`. Implied NVDA ≈ **$214** — sane. The canonical NVDA/USDG pool is the fee-500
+  tier; the factory also lists NVDA/USDG pools at fee 100/3000/10000.
+- **WETH/USDG pools** exist at all four tiers; most liquid is **fee=100**
+  (`0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca`, L=1.995e18, token0=WETH). Recorded as `wethUsdgPool`
+  in `script/config/rh-mainnet.json` for the buyWithETH route (WETH -(100)- USDG -(500)- NVDA).
+- **PositionManager** (`0x58da…4fA7`): `name()="Uniswap v4 Positions NFT"`, `symbol()="UNI-V4-POSM"`,
+  `nextTokenId()=4,057,600`, `poolManager()` and `permit2()` match the config. The vendored v4-periphery
+  `PositionManager` ABI (nextTokenId / modifyLiquidities / ownerOf / getPositionLiquidity) matches the
+  live contract — the graduation mint path (§2.3) targets the real contract.
+- Spec addresses for `NVDA` and `NVDA/USDG pool` corrected to EIP-55 checksums.
+- **TODO (not blocking the NVDA-only closed test):** enumerate the other canonical stock tokens
+  (TSLA/AAPL/SPY/…) and their v3 USDG pools from `PoolCreated` events and add to the allowlist config.
 
-- Contracts compile for `evm_version = "cancun"` (transient storage used by v4-core and by COUR reentrancy guards). Robinhood Chain Cancun support was **not** verified on a fork; confirm before mainnet. If unsupported, swap `ReentrancyGuardTransient` for the storage-based guard and re-test.
+## EVM / transient storage — CANCUN CONFIRMED
+
+The live v4 **PoolManager** (`0x8366…0951`) uses transient storage (TSTORE/TLOAD) extensively and is
+deployed and actively used on mainnet (the NVDA/USDG pool has `observationIndex=4353` of a 7200-slot
+ring — i.e. it has been swapped against many times). A contract that requires Cancun transient storage
+could not function otherwise, so **Cancun / transient storage is supported on Robinhood Chain.** The
+COUR `ReentrancyGuardTransient` guards and v4-core both rely on this. (A dedicated TSTORE/TLOAD probe is
+also run on the anvil fork during the deploy rehearsal.)
 
 ## Quirks honoured
 
