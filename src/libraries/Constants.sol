@@ -51,6 +51,10 @@ library Constants {
     /// @notice LP burn sink; also used to exclude dust / burned tokens from dividend eligibility.
     address internal constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
+    /// @notice Canonical Permit2 singleton (identical on every chain). Used by the factory to let the
+    ///         v4 PositionManager pull the graduation liquidity when minting the LP NFT to DEAD.
+    address internal constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
     /// @notice Precision used for the holder dividend accumulator (acc-per-share).
     uint256 internal constant ACC_PRECISION = 1e36;
 

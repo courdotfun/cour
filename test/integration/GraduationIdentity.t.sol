@@ -71,7 +71,9 @@ contract GraduationIdentityTest is BaseTest {
         uint256 bobBal = MockERC20(token).balanceOf(bob);
         if (bobBal > 0) _sellCurve(curve, token, bob, bobBal / 2);
 
-        // Big buy crosses the stop -> graduation in the same tx (with refund).
+        // Big buy crosses the stop -> graduation in the same tx (with refund). The LP position NFT that
+        // graduation will mint has id == nextTokenId() captured now (single mint in the batch).
+        uint256 posId = posm.nextTokenId();
         uint256 big = raise * 2 + warm; // deliberately more than needed -> refund
         stock.mint(carol, big);
         vm.startPrank(carol);
@@ -82,6 +84,10 @@ contract GraduationIdentityTest is BaseTest {
         assertTrue(ICOURCurve(curve).graduated(), "graduated");
         assertLt(used, big, "refund on graduation");
         assertGt(gotBig, 0, "big buy delivered tokens");
+
+        // §2.3: the full-range LP NFT is minted straight to DEAD -> liquidity is permanently burned.
+        assertEq(posm.ownerOf(posId), Constants.DEAD, "LP position NFT owned by DEAD");
+        assertTrue(posm.getPositionLiquidity(posId) > 0, "LP position has liquidity");
 
         // -------- Identity 1: tokens sold == vT0 - vTStop (exact, price/decimals-independent) --------
         // Price/decimals-INDEPENDENT: sold is always vT0 - vTStop (= Q=15 constant). Pin it everywhere.

@@ -2,9 +2,14 @@
 pragma solidity 0.8.26;
 
 import { Test } from "forge-std/Test.sol";
+import { IAllowanceTransfer } from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import { DeployPermit2 } from "permit2/test/utils/DeployPermit2.sol";
 import { PoolManager } from "v4-core/PoolManager.sol";
 import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
 import { Hooks } from "v4-core/libraries/Hooks.sol";
+import { PositionManager } from "v4-periphery/src/PositionManager.sol";
+import { IPositionDescriptor } from "v4-periphery/src/interfaces/IPositionDescriptor.sol";
+import { IWETH9 } from "v4-periphery/src/interfaces/external/IWETH9.sol";
 
 import { COURCurve } from "../../src/COURCurve.sol";
 import { COURFactory } from "../../src/COURFactory.sol";
@@ -22,8 +27,10 @@ import { MockPriceReader } from "../mocks/MockPriceReader.sol";
 import { MockStock } from "../mocks/MockStock.sol";
 
 /// @notice Full-system test harness: real v4 PoolManager, COUR core, hook placed at a flag-valid address.
-abstract contract BaseTest is Test {
+abstract contract BaseTest is Test, DeployPermit2 {
     PoolManager internal pm;
+    PositionManager internal posm;
+    address internal permit2;
     COURFactory internal factory;
     COURCurve internal curveImpl;
     COURHook internal hook;
@@ -48,6 +55,16 @@ abstract contract BaseTest is Test {
         vault = new COURFeeVault(admin, treasury, address(pm));
         vm.stopPrank();
 
+        // Real v4 PositionManager (for graduation LP NFT -> DEAD) + canonical Permit2 (etched).
+        permit2 = deployPermit2();
+        posm = new PositionManager(
+            IPoolManager(address(pm)),
+            IAllowanceTransfer(permit2),
+            100_000,
+            IPositionDescriptor(address(0)),
+            IWETH9(address(0))
+        );
+
         // Hook address must carry exactly the permission bits. Place it via deployCodeTo.
         uint160 flags = uint160(
             Hooks.BEFORE_INITIALIZE_FLAG | Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_SWAP_FLAG
@@ -63,7 +80,7 @@ abstract contract BaseTest is Test {
         hook = COURHook(hookAddr);
 
         factory = new COURFactory(
-            admin, address(pm), address(0), hookAddr, address(vault), address(oracle), address(curveImpl)
+            admin, address(pm), address(posm), hookAddr, address(vault), address(oracle), address(curveImpl)
         );
         require(address(factory) == predictedFactory, "factory predict");
 

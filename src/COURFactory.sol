@@ -9,14 +9,14 @@ import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/Reentran
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { LibClone } from "solady/utils/LibClone.sol";
 
+import { IAllowanceTransfer } from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
-import { IUnlockCallback } from "v4-core/interfaces/callback/IUnlockCallback.sol";
 import { TickMath } from "v4-core/libraries/TickMath.sol";
-import { BalanceDelta } from "v4-core/types/BalanceDelta.sol";
 import { Currency } from "v4-core/types/Currency.sol";
 import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
 import { PoolKey } from "v4-core/types/PoolKey.sol";
-import { ModifyLiquidityParams } from "v4-core/types/PoolOperation.sol";
+import { IPositionManager } from "v4-periphery/src/interfaces/IPositionManager.sol";
+import { Actions } from "v4-periphery/src/libraries/Actions.sol";
 import { LiquidityAmounts } from "v4-periphery/src/libraries/LiquidityAmounts.sol";
 
 import { COURToken } from "./COURToken.sol";
@@ -36,12 +36,12 @@ import { TokenConfig } from "./types/TokenConfig.sol";
 /// @notice Launches COUR tokens on the bonding curve and graduates them into Uniswap v4 pools with the
 ///         COUR hook. Admin (Ownable2Step, later a 48h Timelock behind a multisig) can only gate FUTURE
 ///         launches; it can never touch an existing token's fee, mode, recipient, balances, or trading.
-contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IUnlockCallback {
+contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
     using SafeERC20 for IERC20;
     using PoolIdLibrary for PoolKey;
 
     IPoolManager public immutable poolManagerC;
-    address public immutable positionManager; // reserved for future use; graduation uses modifyLiquidity directly
+    address public immutable positionManager; // v4 PositionManager: mints the graduation LP NFT to DEAD
     address public immutable hookC;
     ICOURFeeVault public immutable feeVaultC;
     ICOURPriceReader public immutable priceReaderC;
@@ -64,13 +64,6 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
     mapping(address => TokenConfig) internal _config;
     mapping(address => bytes32) internal _poolId;
 
-    struct GradCallback {
-        PoolKey key;
-        int24 tickLower;
-        int24 tickUpper;
-        int256 liquidity;
-    }
-
     constructor(
         address owner_,
         address poolManager_,
@@ -81,8 +74,8 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
         address curveImpl_
     ) Ownable(owner_) {
         if (
-            poolManager_ == address(0) || hook_ == address(0) || feeVault_ == address(0) || priceReader_ == address(0)
-                || curveImpl_ == address(0)
+            poolManager_ == address(0) || positionManager_ == address(0) || hook_ == address(0)
+                || feeVault_ == address(0) || priceReader_ == address(0) || curveImpl_ == address(0)
         ) revert Errors.ZeroAddress();
         poolManagerC = IPoolManager(poolManager_);
         positionManager = positionManager_;
@@ -205,10 +198,26 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
             amount1
         );
 
-        poolManagerC.unlock(abi.encode(GradCallback(key, tickLower, tickUpper, int256(uint256(L)))));
+        // Mint the full-range position NFT straight to DEAD via the v4 PositionManager. The NFT is the
+        // only key to the liquidity, so sending it to DEAD permanently burns the LP (no COUR contract
+        // and no address can ever remove it). positionId is the real minted tokenId.
+        uint256 positionId = IPositionManager(positionManager).nextTokenId();
+        _permit2Approve(key.currency0, uint160(amount0));
+        _permit2Approve(key.currency1, uint160(amount1));
+        {
+            bytes memory actions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
+            bytes[] memory params = new bytes[](2);
+            params[0] = abi.encode(
+                key, tickLower, tickUpper, uint256(L), uint128(amount0), uint128(amount1), Constants.DEAD, bytes("")
+            );
+            params[1] = abi.encode(key.currency0, key.currency1);
+            IPositionManager(positionManager).modifyLiquidities(abi.encode(actions, params), block.timestamp);
+        }
 
-        // Burn: the liquidity is owned by this factory, which has NO removeLiquidity path -> permanently locked.
-        // Sweep dust: tokens -> DEAD, stock -> platform bucket.
+        // The PositionManager pulled only what the mint consumed; the remainder stays here as dust.
+        // Clear leftover Permit2 allowances, then sweep: tokens -> DEAD, stock -> platform bucket.
+        _permit2Approve(key.currency0, 0);
+        _permit2Approve(key.currency1, 0);
         uint256 tokenDust = IERC20(token).balanceOf(address(this));
         uint256 stockDust = IERC20(stock).balanceOf(address(this));
         if (tokenDust > 0) IERC20(token).safeTransfer(Constants.DEAD, tokenDust);
@@ -217,31 +226,15 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
             feeVaultC.creditPlatform(stock, stockDust);
         }
 
-        emit Events.Graduated(token, _poolId[token], tokenLeftover - tokenDust, stockRaised - stockDust, 0);
+        emit Events.Graduated(token, _poolId[token], tokenLeftover - tokenDust, stockRaised - stockDust, positionId);
     }
 
-    /// @inheritdoc IUnlockCallback
-    function unlockCallback(bytes calldata data) external returns (bytes memory) {
-        if (msg.sender != address(poolManagerC)) revert Errors.OnlyFactory();
-        GradCallback memory g = abi.decode(data, (GradCallback));
-        (BalanceDelta delta,) = poolManagerC.modifyLiquidity(
-            g.key,
-            ModifyLiquidityParams({
-                tickLower: g.tickLower, tickUpper: g.tickUpper, liquidityDelta: g.liquidity, salt: bytes32(0)
-            }),
-            ""
-        );
-        int128 a0 = delta.amount0();
-        int128 a1 = delta.amount1();
-        if (a0 < 0) _pay(g.key.currency0, uint256(uint128(-a0)));
-        if (a1 < 0) _pay(g.key.currency1, uint256(uint128(-a1)));
-        return "";
-    }
-
-    function _pay(Currency currency, uint256 amount) private {
-        poolManagerC.sync(currency);
-        IERC20(Currency.unwrap(currency)).safeTransfer(address(poolManagerC), amount);
-        poolManagerC.settle();
+    /// @dev Approve `amount` of `currency` for the PositionManager to pull via Permit2 (two-step:
+    ///      ERC20 allowance to Permit2, then Permit2 allowance to the PositionManager).
+    function _permit2Approve(Currency currency, uint160 amount) private {
+        address t = Currency.unwrap(currency);
+        IERC20(t).forceApprove(Constants.PERMIT2, amount);
+        IAllowanceTransfer(Constants.PERMIT2).approve(t, positionManager, amount, uint48(block.timestamp + 1));
     }
 
     // --------------------------------------------------------------- admin
