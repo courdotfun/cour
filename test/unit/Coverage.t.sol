@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import { COURFactory } from "../../src/COURFactory.sol";
+import { COURFeeVault } from "../../src/COURFeeVault.sol";
+import { COURPriceReader } from "../../src/COURPriceReader.sol";
+import { COURRouter } from "../../src/COURRouter.sol";
 import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
 import { ICOURHook } from "../../src/interfaces/ICOURHook.sol";
 import { Errors } from "../../src/libraries/Errors.sol";
@@ -198,6 +202,50 @@ contract CoverageTest is BaseTest {
         vm.prank(alice);
         vm.expectRevert(Errors.OnlyFactory.selector);
         vault.creditPlatform(address(stock), 1);
+    }
+
+    // ---- access guards ----
+
+    function test_graduate_only_curve() public {
+        (address token,) = _launch(stock, 500, CreatorMode.CREATOR, 0);
+        vm.expectRevert(Errors.OnlyCurve.selector);
+        factory.graduate(token); // caller is not the token's curve
+    }
+
+    function test_initialBuy_only_factory() public {
+        (, address curve) = _launch(stock, 500, CreatorMode.CREATOR, 0);
+        vm.prank(alice);
+        vm.expectRevert(Errors.OnlyFactory.selector);
+        ICOURCurve(curve).initialBuy(1e18, 0, alice);
+    }
+
+    function test_notify_only_hook_or_curve() public {
+        (address token,) = _launch(stock, 500, CreatorMode.CREATOR, 0);
+        vm.prank(alice);
+        vm.expectRevert(Errors.OnlyHookOrCurve.selector);
+        vault.notify(token, 1);
+        // unregistered token also reverts
+        vm.prank(alice);
+        vm.expectRevert(Errors.OnlyHookOrCurve.selector);
+        vault.notify(address(0xBEEF), 1);
+    }
+
+    function test_hook_priceInfo_bad_pool_key() public {
+        vm.expectRevert(Errors.BadPoolKey.selector);
+        ICOURHook(address(hook)).priceInfo(address(0xBEEF)); // unknown token -> info not set
+    }
+
+    function test_constructors_zero_address() public {
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        new COURFactory(
+            admin, address(pm), address(0), address(hook), address(vault), address(oracle), address(curveImpl)
+        );
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        new COURFeeVault(admin, address(0), address(pm)); // zero treasury
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        new COURRouter(admin, address(pm), address(0), address(v3Router), address(weth)); // zero factory
+        vm.expectRevert(Errors.ZeroAddress.selector);
+        new COURPriceReader(admin, address(0), address(weth)); // zero usdg
     }
 
     function test_vault_recipient_guards() public {
