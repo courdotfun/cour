@@ -54,6 +54,10 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
     uint256 public launchFee = Constants.LAUNCH_FEE;
     bool public launchesPaused;
 
+    // Launch allowlist: gates NEW launches only. Enabled by default (closed test phase on mainnet).
+    bool public override launchAllowlistEnabled = true;
+    mapping(address => bool) public override launchAllowlist;
+
     mapping(address => bool) public override stockAllowed;
     mapping(address => bool) public override isCOURToken;
     mapping(address => address) public override curveOf;
@@ -94,6 +98,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
     function createToken(CreateParams calldata p) external payable nonReentrant returns (address token, address curve) {
         if (msg.value != launchFee) revert Errors.WrongLaunchFee();
         if (launchesPaused) revert Errors.LaunchesPaused();
+        if (launchAllowlistEnabled && !launchAllowlist[msg.sender]) revert Errors.NotAllowlisted();
         if (!stockAllowed[p.stock]) revert Errors.StockNotAllowed();
         if (p.creatorFeeBps < Constants.CREATOR_FEE_MIN_BPS || p.creatorFeeBps > Constants.CREATOR_FEE_MAX_BPS) {
             revert Errors.FeeOutOfRange();
@@ -265,6 +270,18 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient, IU
     function setLaunchesPaused(bool paused) external onlyOwner {
         launchesPaused = paused;
         emit Events.LaunchesPausedSet(paused);
+    }
+
+    /// @inheritdoc ICOURFactory
+    function setLaunchAllowlist(address account, bool allowed) external onlyOwner {
+        launchAllowlist[account] = allowed;
+        emit Events.LaunchAllowlistSet(account, allowed);
+    }
+
+    /// @inheritdoc ICOURFactory
+    function setLaunchAllowlistEnabled(bool enabled) external onlyOwner {
+        launchAllowlistEnabled = enabled;
+        emit Events.LaunchAllowlistEnabledSet(enabled);
     }
 
     // --------------------------------------------------------------- views

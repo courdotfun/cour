@@ -56,4 +56,6 @@ library Events {
     event LaunchParamsSet(uint256 startMcUsd, uint256 gradMcUsd, uint256 minRefLiqUsd, uint256 launchFee);
     event LaunchesPausedSet(bool paused);
     event TreasurySet(address indexed treasury);
+    event LaunchAllowlistSet(address indexed account, bool allowed);
+    event LaunchAllowlistEnabledSet(bool enabled);
 }

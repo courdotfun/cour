@@ -113,6 +113,49 @@ contract AdminTest is BaseTest {
         factory.setLaunchesPaused(true);
     }
 
+    function test_launch_allowlist() public {
+        vm.startPrank(admin);
+        factory.setStock(address(stock), true, address(0), ICOURPriceReader.RefKind.NONE);
+        factory.setLaunchAllowlistEnabled(true);
+        vm.stopPrank();
+        assertTrue(factory.launchAllowlistEnabled(), "enabled");
+
+        // Creator not on the allowlist -> revert.
+        vm.prank(creator);
+        vm.expectRevert(Errors.NotAllowlisted.selector);
+        factory.createToken(_params(address(stock), 500, 0, 0));
+
+        // Allowlist the creator -> launch succeeds.
+        vm.prank(admin);
+        factory.setLaunchAllowlist(creator, true);
+        assertTrue(factory.launchAllowlist(creator), "allowlisted");
+        vm.prank(creator);
+        (address token, address curve) = factory.createToken(_params(address(stock), 500, 0, 0));
+        assertTrue(token != address(0), "launched");
+
+        // Allowlist gates LAUNCHES ONLY: a non-allowlisted user can still TRADE the existing token.
+        vm.warp(block.timestamp + 6); // past the anti-snipe window
+        uint256 got = _buyCurve(curve, stock, bob, 1e18);
+        assertGt(got, 0, "trading unaffected by allowlist");
+
+        // Disabling the allowlist lets anyone launch again.
+        vm.prank(admin);
+        factory.setLaunchAllowlistEnabled(false);
+        assertFalse(factory.launchAllowlistEnabled(), "disabled");
+        vm.prank(bob);
+        (address t2,) = factory.createToken(_params(address(stock), 600, 0, 0));
+        assertTrue(t2 != address(0), "open launch");
+    }
+
+    function test_allowlist_only_owner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        factory.setLaunchAllowlist(alice, true);
+        vm.prank(alice);
+        vm.expectRevert();
+        factory.setLaunchAllowlistEnabled(false);
+    }
+
     function test_admin_cannot_change_existing_token() public {
         vm.prank(admin);
         factory.setStock(address(stock), true, address(0), ICOURPriceReader.RefKind.NONE);

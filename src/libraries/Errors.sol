@@ -21,6 +21,7 @@ library Errors {
     error LaunchesPaused();
     error InitialBuyTooLarge();
     error WrongMode();
+    error NotAllowlisted();
 
     // --- trading ---
     error Slippage();

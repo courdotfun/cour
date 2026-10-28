@@ -71,6 +71,11 @@ abstract contract BaseTest is Test {
 
         vm.prank(admin);
         vault.wire(address(factory), hookAddr, address(router), address(oracle));
+
+        // The launch allowlist ships enabled (closed test phase); disable it for the general test
+        // harness so existing suites launch freely. The allowlist itself is exercised in Admin.t.sol.
+        vm.prank(admin);
+        factory.setLaunchAllowlistEnabled(false);
     }
 
     // ----------------------------------------------------------------- helpers

@@ -40,4 +40,10 @@ interface ICOURFactory {
     function setLaunchParams(uint256 startMcUsd, uint256 gradMcUsd, uint256 minRefLiqUsd, uint256 launchFee) external;
     function setLaunchesPaused(bool paused) external;
     function stockAllowed(address stock) external view returns (bool);
+
+    /// @notice Gate NEW launches to an allowlist of creators (existing tokens are unaffected).
+    function setLaunchAllowlist(address account, bool allowed) external;
+    function setLaunchAllowlistEnabled(bool enabled) external;
+    function launchAllowlistEnabled() external view returns (bool);
+    function launchAllowlist(address account) external view returns (bool);
 }
