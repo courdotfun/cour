@@ -1,53 +1,81 @@
-# Deploy Runbook
+# Deploy Runbook (Robinhood Chain mainnet, chainId 4663)
 
 ## 0. Prerequisites
-- Foundry (this repo built with forge 1.7.1), `git`.
+- Foundry (built with forge 1.7.1), `git`.
 - `./bootstrap.sh` to fetch dependencies (`lib/` is gitignored).
-- Fill `.env` from `.env.example`: `RH_RPC_URL`, `DEPLOYER_PK`, `TREASURY`, `MULTISIG`, optional `BLOCKSCOUT_API_KEY`.
+- Fill `.env` from `.env.example`:
+  - `RH_RPC_URL=https://rpc.mainnet.chain.robinhood.com` (the bare `rpc.chain.robinhood.com` is DEAD)
+  - `DEPLOYER_PK`, `DEPLOYER_ADDRESS`, `TREASURY` (defaults to the deployer for tests)
+  - `ETHERSCAN_API_KEY` (for robin.etherscan.io), optional `BLOCKSCOUT_API_KEY`
+- Fund the deployer with ETH on mainnet (gas + ~$180 for the smoke-test swaps).
 
-## 1. Verify the chain (required first)
+## 1. Verify the chain (verified 2026-10-29; see CHAIN_FACTS.md)
 ```
-forge script script/00_VerifyChain.s.sol --rpc-url $RH_RPC_URL
+forge test --match-path 'test/fork/*' -vv        # runs against RH_RPC_URL (mainnet fork)
 ```
-Confirms every §2 address has code, prints NVDA decimals and the NVDA/USDG pool tick. Record results in `docs/CHAIN_FACTS.md` under "Verified / Corrected". Also confirm the chain supports Cancun/transient storage.
+Confirms every spec address has code, NVDA metadata/ERC-8056, the NVDA/USDG TWAP (~$214), and that
+graduation mints the LP NFT to DEAD against the REAL PositionManager. Cancun/TSTORE is confirmed by the
+live v4 PoolManager. (`script/00_VerifyChain.s.sol` is the script equivalent.)
 
-## 2. Deploy core (order enforced by the script)
+## 2. Rehearse the WHOLE flow on a fork first (no real funds)
 ```
-forge script script/01_DeployCore.s.sol --rpc-url $RH_RPC_URL           # dry-run
-forge script script/01_DeployCore.s.sol --rpc-url $RH_RPC_URL --broadcast
+bash script/run_fork_rehearsal.sh
 ```
-Deploys, in one nonce sequence: PriceReader → FeeVault → CurveImpl → Hook (CREATE2, salt mined by HookMiner for the permission bits) → Factory (address predicted & asserted) → Router; then wires the vault and sets the factory as the PriceReader's authorized setter. Note the printed addresses.
+Forks mainnet with anvil, funds the deployer locally, then runs deploy → configure → smoke
+(launch → buys → sell → graduate → LP-NFT-to-DEAD → pool swaps → buyback → claims → HOLDERS launch),
+advancing time past the 5s anti-snipe window. Output: `docs/REHEARSAL_FORK_RESULT.md`.
 
-## 3. Configure stocks
-Set `COUR_FACTORY` and `COUR_PRICE_READER` in `.env`, fill `wethUsdgPool` in `script/config/rh-mainnet.json` if using the WETH route, then:
+## 3. Deploy core (mainnet)
 ```
-forge script script/02_ConfigureStocks.s.sol --rpc-url $RH_RPC_URL --broadcast
+forge script script/01_DeployCore.s.sol --rpc-url $RH_RPC_URL            # dry-run
+forge script script/01_DeployCore.s.sol --rpc-url $RH_RPC_URL --broadcast --slow
 ```
-Bumps v3 observation cardinality (wait for the TWAP window to fill before launching) and allowlists NVDA with its USDG reference pool. Repeat per additional stock.
+Deploys in one nonce sequence: PriceReader → FeeVault → CurveImpl → Hook (CREATE2, HookMiner salt) →
+Factory (address predicted & asserted) → Router; wires the vault; sets the factory as the PriceReader's
+authorized setter. Writes `deployments/4663.json` (commit it).
 
-## 4. Rehearse on a fork (recommended)
+## 4. Configure the closed test phase
 ```
-anvil --fork-url $RH_RPC_URL --chain-id 4663 &
-forge script script/03_LaunchRehearsal.s.sol --rpc-url http://127.0.0.1:8545
+forge script script/02_ConfigureStocks.s.sol --rpc-url $RH_RPC_URL --broadcast --slow
 ```
-(Fork-free equivalent, always runnable: `forge test --match-test test_rehearsal` → writes `docs/REHEARSAL_RESULT.md`.)
+Bumps v3 cardinality (the live NVDA/USDG pool is already mature, so the 1800s TWAP is available),
+allowlists NVDA with its USDG ref pool, sets the WETH→USDG→NVDA ETH-in path, allowlists ONLY the
+deployer, and sets CHEAP TEST launch params (start $40 / grad $600). The launch allowlist ships enabled.
 
-## 5. Hand over ownership
-Deploy/confirm a Safe multisig on Robinhood Chain, set `MULTISIG`, `COUR_FEE_VAULT`:
+## 5. Smoke test (mainnet)
+```
+bash script/run_mainnet_smoke.sh
+```
+Runs phase A (acquire NVDA + launch CTEST/CTEST2), waits >5s, phase B (trade → graduate → verify the LP
+NFT is owned by DEAD → pool swaps → buyback → claimPlatform → HOLDERS claimHolder), then restores params
+to 4000/60000 (allowlist stays enabled). Tx hashes land in `broadcast/*/4663/run-latest.json`.
+Result write-up: `docs/MAINNET_SMOKE_RESULT.md`.
+
+## 6. Verify contracts on robin.etherscan.io (Etherscan API v2)
+Robinhood's explorer is Etherscan-powered; use the v2 multichain endpoint with `chainid=4663`:
+```
+forge verify-contract <addr> src/COURFactory.sol:COURFactory \
+  --verifier etherscan --verifier-url 'https://api.etherscan.io/v2/api?chainid=4663' \
+  --etherscan-api-key $ETHERSCAN_API_KEY --constructor-args <abi-encoded-args> --watch
+```
+Blockscout fallback:
+```
+forge verify-contract <addr> src/COURFactory.sol:COURFactory \
+  --verifier blockscout --verifier-url https://robinhoodchain.blockscout.com/api --chain 4663 \
+  --constructor-args <abi-encoded-args>
+```
+Repeat for hook/curveImpl/vault/router/priceReader. Use `cast abi-encode` for constructor args.
+(The method that actually worked is recorded in MAINNET_SMOKE_RESULT.md after the run.)
+
+## 7. Hand over ownership (NOT part of the closed test; do when a multisig exists)
+Deploy/confirm a Safe multisig, set `MULTISIG`, then:
 ```
 forge script script/04_HandOver.s.sol --rpc-url $RH_RPC_URL --broadcast
 ```
-Deploys a 48h `TimelockController` (proposer/executor = multisig) and initiates `Ownable2Step` transfer of factory/reader/vault. The timelock must then `acceptOwnership()` on each via a scheduled multisig op.
-
-## 6. Verify contracts on Blockscout
-```
-forge verify-contract <addr> src/COURFactory.sol:COURFactory \
-  --verifier blockscout --verifier-url https://robinhoodchain.blockscout.com/api \
-  --chain 4663 --constructor-args <abi-encoded-args>
-```
-Repeat for each contract (hook/curve/vault/router/reader). Use `cast abi-encode` for constructor args.
+Deploys a 48h TimelockController (proposer/executor = multisig) and initiates the Ownable2Step transfer
+of factory/reader/vault/router; the timelock then `acceptOwnership()` on each via a scheduled op.
 
 ## Notes
-- Never commit `.env` or print the private key.
-- `launchFee = 0`; creators pay only gas.
-- If transient storage is unsupported on-chain, swap `ReentrancyGuardTransient` for the storage guard and re-test before step 2.
+- Never commit `.env` or print the private key. `launchFee = 0`; creators pay only gas.
+- Keep the launch allowlist ENABLED until the public opening is explicitly decided.
+- Transient storage (Cancun) is confirmed on-chain; no fallback guard needed.

@@ -1,6 +1,6 @@
 # COUR — Phase 1 (contracts)
 
-COUR is a token launchpad on **Robinhood Chain** where every new token is paired with a **Robinhood Stock Token** (NVDA, TSLA, AAPL, SPY, …) instead of ETH. A creator launches a fixed-supply (1,000,000,000 / 18dp) token on a virtual constant-product bonding curve priced in the stock token, from **$4,000 to $60,000** market cap. On sell-out the token **graduates in the same tx** into a Uniswap v4 TOKEN/STOCK pool with the COUR hook, full-range liquidity is added, and the LP is **burned** (irremovable). A single **creator fee** (1–10%, immutable, taken in the stock) is split 80% creator-side / 20% platform, routed by one of four creator modes. Anti-snipe launch tax decays over the first 5 seconds.
+COUR is a token launchpad on **Robinhood Chain** where every new token is paired with a **Robinhood Stock Token** (NVDA, TSLA, AAPL, SPY, …) instead of ETH. A creator launches a fixed-supply (1,000,000,000 / 18dp) token on a virtual constant-product bonding curve priced in the stock token, from **$4,000 to $60,000** market cap. On sell-out the token **graduates in the same tx** into a Uniswap v4 TOKEN/STOCK pool with the COUR hook; full-range liquidity is minted as a v4 PositionManager NFT **sent to `0x…dEaD`** (the LP is burned — irremovable). A single **creator fee** (1–10%, immutable, taken in the stock) is split 80% creator-side / 20% platform, routed by one of four creator modes. Anti-snipe launch tax decays over the first 5 seconds.
 
 Phase 1 is **contracts only** — no frontend, indexer, or backend.
 
@@ -18,7 +18,13 @@ FOUNDRY_PROFILE=ci forge test            # 10k fuzz runs
 Toolchain: Foundry, Solidity 0.8.26, `evm_version = cancun`, `via_ir = true`, `optimizer_runs = 44444444` (matches v4-core; see docs/DECISIONS.md).
 
 ## Deploy
-See `docs/DEPLOY.md` (00_VerifyChain → 01_DeployCore → 02_ConfigureStocks → 03_LaunchRehearsal → 04_HandOver).
+See `docs/DEPLOY.md`. Flow: verify chain (`test/fork/*`) → fork rehearsal (`script/run_fork_rehearsal.sh`)
+→ `01_DeployCore` → `02_ConfigureStocks` (test phase) → `run_mainnet_smoke.sh` → `06_RestoreParams` →
+verify on robin.etherscan.io → (later) `04_HandOver` to a multisig+Timelock.
+
+### Mainnet (Robinhood Chain, chainId 4663)
+RPC `https://rpc.mainnet.chain.robinhood.com`. Contract addresses are written to `deployments/4663.json`
+on deploy (populated during the §7 closed test). The launch **allowlist is enabled** (closed test phase).
 
 ## Docs
 `docs/SPEC.md` (source of truth), `ARCHITECTURE.md`, `CHAIN_FACTS.md`, `DECISIONS.md`, `RISKS.md`, `AUDIT_SCOPE.md`, `DEPLOY.md`, `REPORT.md` (Bahasa Indonesia), `REHEARSAL_RESULT.md`.

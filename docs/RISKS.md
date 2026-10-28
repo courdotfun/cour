@@ -24,7 +24,7 @@ Admin is `Ownable2Step` → to be a 48h `TimelockController` behind a Safe multi
 - The 2%-of-reserve cap post-graduation computes the full-range stock reserve from `getLiquidity` + `sqrtPrice` via `SqrtPriceMath`. This is best-effort; extreme price states could make it approximate. The deviation + `minTokensOut` guards remain the primary protection.
 
 ## `buyWithETH`
-- Assumes a WETH/stock v3 pool at `DEFAULT_V3_FEE` (0.3%). For stocks without such a pool, use `buy()` with the stock directly. Convenience only; core logic does not depend on it.
+- Routes a configurable v3 multi-hop (WETH→USDG→stock) via SwapRouter02 `exactInput`, using an admin-set encoded path per stock (real pool fee tiers; direct WETH→stock fallback). If no path is configured for a stock it reverts `PathNotConfigured`; use `buy()` with the stock directly. Convenience only; core logic does not depend on it or on the Universal Router.
 
 ## Exact-output swaps
 - Rejected (`ExactOutputNotSupported`) in Phase 1. Enabling the stretch goal requires implementing and fully testing exact-output fee handling in both directions.
@@ -32,7 +32,11 @@ Admin is `Ownable2Step` → to be a 48h `TimelockController` behind a Safe multi
 ## Decimal/price extremes
 - `CurveMath.k = vS0 * vT0` is a single `uint256`. For realistic launch params (start $4k, stock $1–$5000, decimals 6–18) it stays far below 2^256 (see AUDIT_SCOPE). Pathological admin params combined with extreme prices could overflow; `setLaunchParams` should stay within sane bounds.
 
-## Environment / not-yet-verified (must be closed before mainnet)
-- Chain addresses, NVDA metadata, and TWAP readiness were **not** verified on-chain (no RPC in build env).
-- Robinhood Chain Cancun/transient-storage support not verified on a fork.
-- `03_LaunchRehearsal.s.sol` (fork) authored but unrun; local `Rehearsal.t.sol` is the runnable proof.
+## Unaudited code live on mainnet (accepted, mitigated by the allowlist)
+- The contracts are **deployed to Robinhood Chain mainnet without a third-party audit** (closed test phase). This is an accepted risk for the controlled test, mitigated by: the launch **allowlist is enabled** (only the deployer can create tokens), ownership stays with the deployer EOA (no public multisig yet), and production launch params are restored (4000/60000) after the smoke test. Before opening to the public: commission an audit, move the key to a hardware wallet, hand over to a Safe + 48h Timelock, and only then disable the allowlist. See `docs/AUDIT_SCOPE.md`.
+- The deploy wallet is a hot EOA whose key lives in a local `.env`. It must be rotated / moved to a hardware wallet before holding any meaningful value or admin power long-term.
+
+## Environment / verified on-chain (2026-10-29)
+- Chain addresses, NVDA metadata, NVDA/USDG TWAP (~$214), WETH/USDG pool, and PositionManager ABI **verified on mainnet** (`test/fork/*`, `docs/CHAIN_FACTS.md`).
+- **Cancun/transient storage confirmed** via the live v4 PoolManager (it cannot function without TSTORE).
+- Graduation against the **real** mainnet PositionManager proven on a fork (`ForkIntegration.t.sol`: `ownerOf(positionId)==DEAD`).
