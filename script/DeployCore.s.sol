@@ -69,7 +69,7 @@ abstract contract CourDeployer is Script {
         ); // [4]
         require(address(d.factory) == predictedFactory, "factory predict mismatch");
 
-        d.router = new COURRouter(poolManager, address(d.factory), v3Router, weth);
+        d.router = new COURRouter(deployer, poolManager, address(d.factory), v3Router, weth);
 
         // Wire permissions (post-deploy; does not affect the factory's CREATE address).
         d.feeVault.wire(address(d.factory), hookAddr, address(d.router), address(d.priceReader));

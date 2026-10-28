@@ -58,4 +58,5 @@ library Events {
     event TreasurySet(address indexed treasury);
     event LaunchAllowlistSet(address indexed account, bool allowed);
     event LaunchAllowlistEnabledSet(bool enabled);
+    event EthInPathSet(address indexed stock, bytes path);
 }

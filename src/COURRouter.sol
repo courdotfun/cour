@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import { Ownable, Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
@@ -11,8 +12,8 @@ import { PoolKey } from "v4-core/types/PoolKey.sol";
 import { ICOURCurve } from "./interfaces/ICOURCurve.sol";
 import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
 import { IV3SwapRouter, IWETH } from "./interfaces/IExternal.sol";
-import { Constants } from "./libraries/Constants.sol";
 import { Errors } from "./libraries/Errors.sol";
+import { Events } from "./libraries/Events.sol";
 import { PoolKeyLib } from "./libraries/PoolKeyLib.sol";
 import { TokenConfig } from "./types/TokenConfig.sol";
 
@@ -20,23 +21,33 @@ import { TokenConfig } from "./types/TokenConfig.sol";
 /// @notice Single convenience entrypoint the frontend targets: buys/sells route to the bonding curve
 ///         before graduation and to the v4 pool after. Swaps hit the PoolManager directly via `unlock`
 ///         (never the forked Universal Router). The router custodies no funds between transactions.
-contract COURRouter is ReentrancyGuardTransient, PoolManagerSwapper {
+contract COURRouter is Ownable2Step, ReentrancyGuardTransient, PoolManagerSwapper {
     using SafeERC20 for IERC20;
-
-    /// @dev Default v3 fee tier assumed for ETH->stock convenience routing (validate per-stock on fork).
-    uint24 public constant DEFAULT_V3_FEE = 3000;
 
     ICOURFactory public immutable factory;
     IV3SwapRouter public immutable v3Router;
     IWETH public immutable weth;
 
-    constructor(address poolManager_, address factory_, address v3Router_, address weth_)
+    /// @notice Per-stock encoded Uniswap v3 path for ETH-in routing: token(20)|fee(3)|token(20)[|fee|token].
+    ///         Admin sets the real path (multi-hop WETH->USDG->stock, or direct WETH->stock as a fallback)
+    ///         with the actual pool fee tiers — never a hardcoded tier. MUST start with WETH and end with
+    ///         the stock token.
+    mapping(address => bytes) public ethInPath;
+
+    constructor(address owner_, address poolManager_, address factory_, address v3Router_, address weth_)
+        Ownable(owner_)
         PoolManagerSwapper(poolManager_)
     {
         if (factory_ == address(0)) revert Errors.ZeroAddress();
         factory = ICOURFactory(factory_);
         v3Router = IV3SwapRouter(v3Router_);
         weth = IWETH(weth_);
+    }
+
+    /// @notice Configure the v3 path used by buyWithETH for a stock. Encode with the real pool fee tiers.
+    function setEthInPath(address stock, bytes calldata path) external onlyOwner {
+        ethInPath[stock] = path;
+        emit Events.EthInPathSet(stock, path);
     }
 
     // --------------------------------------------------------------- buy / sell
@@ -69,8 +80,10 @@ contract COURRouter is ReentrancyGuardTransient, PoolManagerSwapper {
         _sweep(token, msg.sender);
     }
 
-    /// @notice Buy `token` with native ETH: ETH -> WETH -> stock (v3) -> token.
-    /// @dev Best-effort convenience path assuming a WETH/stock v3 pool at DEFAULT_V3_FEE exists; see RISKS.md.
+    /// @notice Buy `token` with native ETH, routed ETH -> WETH -> (v3 multi-hop) -> stock -> token.
+    /// @dev Uses the admin-configured v3 path for the stock (fee tiers come from the real pools, not a
+    ///      hardcoded tier). The final slippage bound (`minOut`) is enforced on the COUR buy; the router
+    ///      refunds every residual (ETH/WETH/stock/token) so it never custodies funds between txs.
     function buyWithETH(address token, uint256 minOut, uint256 deadline)
         external
         payable
@@ -80,23 +93,31 @@ contract COURRouter is ReentrancyGuardTransient, PoolManagerSwapper {
         if (block.timestamp > deadline) revert Errors.Expired();
         if (msg.value == 0) revert Errors.ZeroAmount();
         address stock = factory.tokenConfig(token).stock;
+        bytes memory path = ethInPath[stock];
+        if (path.length == 0) revert Errors.PathNotConfigured();
 
         weth.deposit{ value: msg.value }();
         weth.approve(address(v3Router), msg.value);
-        uint256 stockIn = v3Router.exactInputSingle(
-            IV3SwapRouter.ExactInputSingleParams({
-                tokenIn: address(weth),
-                tokenOut: stock,
-                fee: DEFAULT_V3_FEE,
+        uint256 stockIn = v3Router.exactInput(
+            IV3SwapRouter.ExactInputParams({
+                path: path,
                 recipient: address(this),
                 amountIn: msg.value,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
+                amountOutMinimum: 0 // final bound enforced below on the COUR buy
             })
         );
+        weth.approve(address(v3Router), 0);
         tokensOut = _buy(token, stock, stockIn, minOut, deadline);
+
+        // Refund every residual so the router holds nothing after the tx.
         _sweep(stock, msg.sender);
         _sweep(token, msg.sender);
+        _sweep(address(weth), msg.sender);
+        uint256 ethLeft = address(this).balance;
+        if (ethLeft > 0) {
+            (bool ok,) = msg.sender.call{ value: ethLeft }("");
+            if (!ok) revert Errors.RouterHasFunds();
+        }
     }
 
     // --------------------------------------------------------------- quotes

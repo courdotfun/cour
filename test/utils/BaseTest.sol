@@ -25,6 +25,8 @@ import { CreatorMode } from "../../src/types/CreatorMode.sol";
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockPriceReader } from "../mocks/MockPriceReader.sol";
 import { MockStock } from "../mocks/MockStock.sol";
+import { MockV3Router } from "../mocks/MockV3Router.sol";
+import { MockWETH } from "../mocks/MockWETH.sol";
 
 /// @notice Full-system test harness: real v4 PoolManager, COUR core, hook placed at a flag-valid address.
 abstract contract BaseTest is Test, DeployPermit2 {
@@ -37,7 +39,8 @@ abstract contract BaseTest is Test, DeployPermit2 {
     COURFeeVault internal vault;
     COURRouter internal router;
     MockPriceReader internal oracle;
-    MockERC20 internal weth;
+    MockWETH internal weth;
+    MockV3Router internal v3Router;
 
     address internal admin = makeAddr("admin");
     address internal treasury = makeAddr("treasury");
@@ -48,7 +51,8 @@ abstract contract BaseTest is Test, DeployPermit2 {
 
     function _deploySystem() internal {
         pm = new PoolManager(admin);
-        weth = new MockERC20("Wrapped ETH", "WETH", 18);
+        weth = new MockWETH();
+        v3Router = new MockV3Router(30e18); // 30 stock out per 1 WETH in
         oracle = new MockPriceReader();
 
         vm.startPrank(admin);
@@ -84,7 +88,7 @@ abstract contract BaseTest is Test, DeployPermit2 {
         );
         require(address(factory) == predictedFactory, "factory predict");
 
-        router = new COURRouter(address(pm), address(factory), address(0), address(weth));
+        router = new COURRouter(admin, address(pm), address(factory), address(v3Router), address(weth));
 
         vm.prank(admin);
         vault.wire(address(factory), hookAddr, address(router), address(oracle));

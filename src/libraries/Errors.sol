@@ -42,4 +42,5 @@ library Errors {
 
     // --- router ---
     error RouterHasFunds();
+    error PathNotConfigured();
 }

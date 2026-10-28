@@ -11,16 +11,15 @@ interface IWETH {
 }
 
 /// @notice Minimal Uniswap v3 SwapRouter02 subset used for ETH->stock convenience routing.
+/// @dev SwapRouter02 (0xCaf6…5cb2) drops the per-call `deadline` from the params (the router enforces
+///      its own deadline). `path` is the standard v3 encoded path: token(20) | fee(3) | token(20) | ...
 interface IV3SwapRouter {
-    struct ExactInputSingleParams {
-        address tokenIn;
-        address tokenOut;
-        uint24 fee;
+    struct ExactInputParams {
+        bytes path;
         address recipient;
         uint256 amountIn;
         uint256 amountOutMinimum;
-        uint160 sqrtPriceLimitX96;
     }
 
-    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
+    function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut);
 }
