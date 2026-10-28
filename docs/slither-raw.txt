@@ -1,0 +1,342 @@
+'forge clean' running (wd: C:\Users\Lenovo\cour)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: C:\Users\Lenovo\cour)
+ERROR:ContractSolcParsing:Impossible to generate IR for COURCurve.initialize (src/COURCurve.sol#57-74):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURCurve.initialBuy (src/COURCurve.sol#89-97):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURCurve._buy (src/COURCurve.sol#99-153):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURCurve.sell (src/COURCurve.sol#156-184):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFactory.constructor (src/COURFactory.sol#67-86):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFactory.createToken (src/COURFactory.sol#91-162):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFactory.graduate (src/COURFactory.sol#167-230):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFactory.setLaunchParams (src/COURFactory.sol#250-260):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.constructor (src/COURFeeVault.sol#61-67):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.wire (src/COURFeeVault.sol#72-80):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.setTreasury (src/COURFeeVault.sol#82-86):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.registerToken (src/COURFeeVault.sol#95-113):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.notify (src/COURFeeVault.sol#119-144):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.claim (src/COURFeeVault.sol#191-199):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.claimHolder (src/COURFeeVault.sol#202-211):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.creditPlatform (src/COURFeeVault.sol#224-227):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.setFeeRecipient (src/COURFeeVault.sol#232-237):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.acceptFeeRecipient (src/COURFeeVault.sol#240-247):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault.executeBuyback (src/COURFeeVault.sol#252-297):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURFeeVault._checkDeviation (src/COURFeeVault.sol#299-304):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter.constructor (src/COURRouter.sol#33-40):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter.buy (src/COURRouter.sol#45-56):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter.sell (src/COURRouter.sol#59-70):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter.buyWithETH (src/COURRouter.sol#74-100):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter._buy (src/COURRouter.sol#124-139):
+ 'NoneType' object has no attribute 'parameters'
+ERROR:ContractSolcParsing:Impossible to generate IR for COURRouter._sell (src/COURRouter.sol#141-156):
+ 'NoneType' object has no attribute 'parameters'
+INFO:Detectors:
+Detector: uninitialized-state
+COURCurve.token (src/COURCurve.sol#34) is never initialized. It is used in:
+	- COURCurve._graduate() (src/COURCurve.sol#188-195)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve.stock (src/COURCurve.sol#35) is never initialized. It is used in:
+	- COURCurve._graduate() (src/COURCurve.sol#188-195)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve.creator (src/COURCurve.sol#36) is never initialized. It is used in:
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._feeBps (src/COURCurve.sol#37) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213)
+	- COURCurve.quoteStockForTokens(uint256) (src/COURCurve.sol#216-222)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._launchedAt (src/COURCurve.sol#38) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._stockDecimals (src/COURCurve.sol#39) is never initialized. It is used in:
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._mode (src/COURCurve.sol#40) is never initialized. It is used in:
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._vS (src/COURCurve.sol#41) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213)
+	- COURCurve.quoteStockForTokens(uint256) (src/COURCurve.sol#216-222)
+	- COURCurve.vS() (src/COURCurve.sol#235-237)
+COURCurve._vT (src/COURCurve.sol#42) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213)
+	- COURCurve.quoteStockForTokens(uint256) (src/COURCurve.sol#216-222)
+	- COURCurve.progressBps() (src/COURCurve.sol#227-233)
+	- COURCurve.vT() (src/COURCurve.sol#239-241)
+COURCurve._k (src/COURCurve.sol#43) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213)
+	- COURCurve.quoteStockForTokens(uint256) (src/COURCurve.sol#216-222)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._vTStop (src/COURCurve.sol#44) is never initialized. It is used in:
+	- COURCurve.quoteBuy(uint256) (src/COURCurve.sol#200-206)
+	- COURCurve.progressBps() (src/COURCurve.sol#227-233)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._vS0 (src/COURCurve.sol#45) is never initialized. It is used in:
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURCurve._vT0 (src/COURCurve.sol#46) is never initialized. It is used in:
+	- COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213)
+	- COURCurve.progressBps() (src/COURCurve.sol#227-233)
+	- COURCurve.config() (src/COURCurve.sol#244-258)
+COURFactory.poolManagerC (src/COURFactory.sol#43) is never initialized. It is used in:
+	- COURFactory.poolManager() (src/COURFactory.sol#302-304)
+COURFactory.positionManager (src/COURFactory.sol#44) is never initialized. It is used in:
+	- COURFactory._permit2Approve(Currency,uint160) (src/COURFactory.sol#234-238)
+COURFactory.hookC (src/COURFactory.sol#45) is never initialized. It is used in:
+	- COURFactory.hook() (src/COURFactory.sol#290-292)
+COURFactory.feeVaultC (src/COURFactory.sol#46) is never initialized. It is used in:
+	- COURFactory.feeVault() (src/COURFactory.sol#294-296)
+COURFactory.priceReaderC (src/COURFactory.sol#47) is never initialized. It is used in:
+	- COURFactory.setStock(address,bool,address,ICOURPriceReader.RefKind) (src/COURFactory.sol#243-247)
+	- COURFactory.priceReader() (src/COURFactory.sol#298-300)
+COURFactory.curveOf (src/COURFactory.sol#63) is never initialized. It is used in:
+	- COURFactory.graduate(address) (src/COURFactory.sol#167-230)
+COURFactory._config (src/COURFactory.sol#64) is never initialized. It is used in:
+	- COURFactory.tokenConfig(address) (src/COURFactory.sol#282-284)
+COURFactory._poolId (src/COURFactory.sol#65) is never initialized. It is used in:
+	- COURFactory.poolIdOf(address) (src/COURFactory.sol#286-288)
+COURFeeVault.factory (src/COURFeeVault.sol#47) is never initialized. It is used in:
+	- COURFeeVault.registerToken(address,address,address,uint16,CreatorMode,address) (src/COURFeeVault.sol#95-113)
+	- COURFeeVault.creditPlatform(address,uint256) (src/COURFeeVault.sol#224-227)
+COURFeeVault.hook (src/COURFeeVault.sol#48) is never initialized. It is used in:
+	- COURFeeVault._checkDeviation(address) (src/COURFeeVault.sol#299-304)
+	- COURFeeVault._poolStockReserve(address,address) (src/COURFeeVault.sol#307-309)
+COURFeeVault.router (src/COURFeeVault.sol#49) is never initialized. It is used in:
+	- COURFeeVault._eligible(COURFeeVault.TokenData,address) (src/COURFeeVault.sol#183-186)
+COURFeeVault.treasury (src/COURFeeVault.sol#50) is never initialized. It is used in:
+	- COURFeeVault.claimPlatform(address) (src/COURFeeVault.sol#214-220)
+COURFeeVault._wired (src/COURFeeVault.sol#52) is never initialized. It is used in:
+	- COURFeeVault.wire(address,address,address,address) (src/COURFeeVault.sol#72-80)
+COURFeeVault._td (src/COURFeeVault.sol#56) is never initialized. It is used in:
+	- COURFeeVault.notify(address,uint256) (src/COURFeeVault.sol#119-144)
+	- COURFeeVault.beforeBalanceChange(address,address,uint256) (src/COURFeeVault.sol#149-163)
+	- COURFeeVault._accrue(address,address) (src/COURFeeVault.sol#174-181)
+	- COURFeeVault.claim(address) (src/COURFeeVault.sol#191-199)
+	- COURFeeVault.claimHolder(address) (src/COURFeeVault.sol#202-211)
+	- COURFeeVault.setFeeRecipient(address,address) (src/COURFeeVault.sol#232-237)
+	- COURFeeVault.acceptFeeRecipient(address) (src/COURFeeVault.sol#240-247)
+	- COURFeeVault.executeBuyback(address,uint256,uint256) (src/COURFeeVault.sol#252-297)
+	- COURFeeVault.creatorOwed(address) (src/COURFeeVault.sol#313-315)
+	- COURFeeVault.buybackOwed(address) (src/COURFeeVault.sol#317-319)
+	- COURFeeVault.feeRecipient(address) (src/COURFeeVault.sol#321-323)
+	- COURFeeVault.eligibleSupply(address) (src/COURFeeVault.sol#325-327)
+	- COURFeeVault.modeOf(address) (src/COURFeeVault.sol#329-331)
+	- COURFeeVault.pendingHolder(address,address) (src/COURFeeVault.sol#334-341)
+COURRouter.factory (src/COURRouter.sol#29) is never initialized. It is used in:
+	- COURRouter.quoteBuy(address,uint256) (src/COURRouter.sol#104-111)
+	- COURRouter.quoteSell(address,uint256) (src/COURRouter.sol#113-120)
+	- COURRouter._buy(address,address,uint256,uint256,uint256) (src/COURRouter.sol#124-139)
+	- COURRouter._sell(address,address,uint256,uint256,uint256) (src/COURRouter.sol#141-156)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+INFO:Detectors:
+Detector: divide-before-multiply
+COURHook.poolStockReserve(address,address) (src/COURHook.sol#324-355) performs a multiplication on the result of a division:
+	- minT = (TickMath.MIN_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING (src/COURHook.sol#340)
+COURHook.poolStockReserve(address,address) (src/COURHook.sol#324-355) performs a multiplication on the result of a division:
+	- maxT = (TickMath.MAX_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING (src/COURHook.sol#342)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+INFO:Detectors:
+Detector: incorrect-equality
+COURHook.beforeSwap(address,PoolKey,SwapParams,bytes) (src/COURHook.sol#139-172) uses a dangerous strict equality:
+	- fee == 0 (src/COURHook.sol#165)
+COURHook.consult(bytes32,uint32) (src/COURHook.sol#292-303) uses a dangerous strict equality:
+	- span == 0 (src/COURHook.sol#301)
+COURHook.priceInfo(address) (src/COURHook.sol#306-321) uses a dangerous strict equality:
+	- span == 0 (src/COURHook.sol#319)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: locked-ether
+Contract locking ether found:
+	Contract COURFactory (src/COURFactory.sol#39-305) has payable functions:
+	 - ICOURFactory.createToken(ICOURFactory.CreateParams) (src/interfaces/ICOURFactory.sol#23)
+	 - COURFactory.createToken(ICOURFactory.CreateParams) (src/COURFactory.sol#91-162)
+	But does not have a function to withdraw the ether
+Contract locking ether found:
+	Contract COURRouter (src/COURRouter.sol#23-165) has payable functions:
+	 - COURRouter.buyWithETH(address,uint256,uint256) (src/COURRouter.sol#74-100)
+	 - COURRouter.receive() (src/COURRouter.sol#164)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+INFO:Detectors:
+Detector: uninitialized-local
+COURHook.beforeInitialize(address,PoolKey,uint160).tokenIsZero (src/COURHook.sol#108) is a local variable never initialized
+COURHook.beforeInitialize(address,PoolKey,uint160).tok (src/COURHook.sol#106) is a local variable never initialized
+COURHook.beforeInitialize(address,PoolKey,uint160).stk (src/COURHook.sol#107) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+INFO:Detectors:
+Detector: unused-return
+COURCurve.quoteSell(uint256) (src/COURCurve.sol#209-213) ignores return value by (gross,None,None) = CurveMath.sell(_vS,_vT,_k,_vT0,tokensIn) (src/COURCurve.sol#210)
+COURHook._updateObs(PoolId) (src/COURHook.sol#274-289) ignores return value by (None,tick,None,None) = poolManager.getSlot0(id) (src/COURHook.sol#287)
+COURHook.priceInfo(address) (src/COURHook.sol#306-321) ignores return value by (sqrtP,None,None,None) = poolManager.getSlot0(id) (src/COURHook.sol#310)
+COURHook.poolStockReserve(address,address) (src/COURHook.sol#324-355) ignores return value by (sqrtP,None,None,None) = poolManager.getSlot0(id) (src/COURHook.sol#335)
+COURPriceReader._meanTick(address,uint32) (src/COURPriceReader.sol#135-147) ignores return value by (tc) = IUniswapV3PoolMinimal(pool).observe(sa) (src/COURPriceReader.sol#139-146)
+COURRouter.quoteBuy(address,uint256) (src/COURRouter.sol#104-111) ignores return value by (tokensOut,None,None) = curve.quoteBuy(stockIn) (src/COURRouter.sol#107)
+COURRouter.quoteSell(address,uint256) (src/COURRouter.sol#113-120) ignores return value by (stockOut,None) = curve.quoteSell(tokensIn) (src/COURRouter.sol#116)
+COURRouter._buy(address,address,uint256,uint256,uint256) (src/COURRouter.sol#124-139) ignores return value by (tokensOut,None) = curve.buy(stockIn,minOut,msg.sender,deadline) (src/COURRouter.sol#131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+INFO:Detectors:
+Detector: shadowing-local
+ICOURFeeVault.registerToken(address,address,address,uint16,CreatorMode,address).feeRecipient (src/interfaces/ICOURFeeVault.sol#17) shadows:
+	- ICOURFeeVault.feeRecipient(address) (src/interfaces/ICOURFeeVault.sol#53) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+INFO:Detectors:
+Detector: events-maths
+COURPriceReader.setTwapWindow(uint32) (src/COURPriceReader.sol#54-57) should emit an event for: 
+	- twapWindow = w (src/COURPriceReader.sol#56) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+INFO:Detectors:
+Detector: missing-zero-check
+COURCurve.constructor(address,address).factory_ (src/COURCurve.sol#48) lacks a zero-check on :
+		- factoryAddr = factory_ (src/COURCurve.sol#49)
+COURCurve.constructor(address,address).feeVault_ (src/COURCurve.sol#48) lacks a zero-check on :
+		- feeVaultAddr = feeVault_ (src/COURCurve.sol#50)
+COURHook.constructor(address,address,address).feeVault_ (src/COURHook.sol#70) lacks a zero-check on :
+		- feeVault = feeVault_ (src/COURHook.sol#73)
+COURPriceReader.setAuthorizedSetter(address).setter (src/COURPriceReader.sol#46) lacks a zero-check on :
+		- authorizedSetter = setter (src/COURPriceReader.sol#47)
+COURPriceReader.setWethUsdgPool(address).pool (src/COURPriceReader.sol#50) lacks a zero-check on :
+		- wethUsdgPool = pool (src/COURPriceReader.sol#51)
+COURToken.constructor(string,string,string,address,address,address,address).curve_ (src/COURToken.sol#32) lacks a zero-check on :
+		- curve = curve_ (src/COURToken.sol#38)
+COURToken.constructor(string,string,string,address,address,address,address).stock_ (src/COURToken.sol#33) lacks a zero-check on :
+		- stock = stock_ (src/COURToken.sol#39)
+COURToken.constructor(string,string,string,address,address,address,address).creator_ (src/COURToken.sol#34) lacks a zero-check on :
+		- creator = creator_ (src/COURToken.sol#40)
+COURToken.constructor(string,string,string,address,address,address,address).holderRewards_ (src/COURToken.sol#35) lacks a zero-check on :
+		- holderRewards = holderRewards_ (src/COURToken.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+INFO:Detectors:
+Detector: reentrancy-events
+Reentrancy in COURHook._notify(address,address,address,uint256) (src/COURHook.sol#206-218):
+	External calls:
+	- ICOURFeeVault(feeVault).notify(token,fee) (src/COURHook.sol#216)
+	Event emitted after the call(s):
+	- Events.FeeTaken(token,payer,fee,fee - plat,plat) (src/COURHook.sol#217)
+Reentrancy in COURHook.afterSwap(address,PoolKey,SwapParams,BalanceDelta,bytes) (src/COURHook.sol#177-204):
+	External calls:
+	- poolManager.take(stockCurrency,feeVault,fee) (src/COURHook.sol#200)
+	- _notify(info.token,info.stock,sender,fee) (src/COURHook.sol#201)
+		- ICOURFeeVault(feeVault).notify(token,fee) (src/COURHook.sol#216)
+	Event emitted after the call(s):
+	- Events.FeeTaken(token,payer,fee,fee - plat,plat) (src/COURHook.sol#217)
+		- _notify(info.token,info.stock,sender,fee) (src/COURHook.sol#201)
+Reentrancy in COURHook.beforeSwap(address,PoolKey,SwapParams,bytes) (src/COURHook.sol#139-172):
+	External calls:
+	- poolManager.take(stockCurrency,feeVault,fee) (src/COURHook.sol#168)
+	- _notify(info.token,info.stock,sender,fee) (src/COURHook.sol#169)
+		- ICOURFeeVault(feeVault).notify(token,fee) (src/COURHook.sol#216)
+	Event emitted after the call(s):
+	- Events.FeeTaken(token,payer,fee,fee - plat,plat) (src/COURHook.sol#217)
+		- _notify(info.token,info.stock,sender,fee) (src/COURHook.sol#169)
+Reentrancy in COURFactory.setStock(address,bool,address,ICOURPriceReader.RefKind) (src/COURFactory.sol#243-247):
+	External calls:
+	- priceReaderC.setRefPool(stock,refPool,kind) (src/COURFactory.sol#245)
+	Event emitted after the call(s):
+	- Events.StockSet(stock,allowed,refPool,uint8(kind)) (src/COURFactory.sol#246)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+INFO:Detectors:
+Detector: timestamp
+COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURCurve.sol#108)
+COURCurve.sell(uint256,uint256,address,uint256) (src/COURCurve.sol#156-184) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURCurve.sol#161)
+COURHook.beforeSwap(address,PoolKey,SwapParams,bytes) (src/COURHook.sol#139-172) uses timestamp for comparisons
+	Dangerous comparisons:
+	- fee == 0 (src/COURHook.sol#165)
+COURHook._updateObs(PoolId) (src/COURHook.sol#274-289) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nowTs > o.lastTs (src/COURHook.sol#277)
+	- nowTs - o.anchorTs >= Constants.HOOK_TWAP_WINDOW (src/COURHook.sol#280)
+COURHook.consult(bytes32,uint32) (src/COURHook.sol#292-303) uses timestamp for comparisons
+	Dangerous comparisons:
+	- span == 0 (src/COURHook.sol#301)
+	- nowTs > o.lastTs (src/COURHook.sol#296)
+	- o.prevAnchorTs != 0 (src/COURHook.sol#298)
+	- o.prevAnchorTs != 0 (src/COURHook.sol#299)
+	- nowTs > refTs (src/COURHook.sol#300)
+COURHook.priceInfo(address) (src/COURHook.sol#306-321) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nowTs > o.lastTs (src/COURHook.sol#315)
+	- nowTs > refTs (src/COURHook.sol#318)
+	- span == 0 (src/COURHook.sol#319)
+COURRouter.buy(address,uint256,uint256,uint256) (src/COURRouter.sol#45-56) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#50)
+COURRouter.sell(address,uint256,uint256,uint256) (src/COURRouter.sol#59-70) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#64)
+COURRouter.buyWithETH(address,uint256,uint256) (src/COURRouter.sol#74-100) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > deadline (src/COURRouter.sol#80)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: cyclomatic-complexity
+COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) has a high cyclomatic complexity (13).
+COURFactory.createToken(ICOURFactory.CreateParams) (src/COURFactory.sol#91-162) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+INFO:Detectors:
+Detector: dead-code
+COURCurve._graduate() (src/COURCurve.sol#188-195) is never used and should be removed
+COURFactory._permit2Approve(Currency,uint160) (src/COURFactory.sol#234-238) is never used and should be removed
+COURFeeVault._accrue(address,address) (src/COURFeeVault.sol#174-181) is never used and should be removed
+COURFeeVault._checkDeviation(address) (src/COURFeeVault.sol#299-304) is never used and should be removed
+COURFeeVault._poolStockReserve(address,address) (src/COURFeeVault.sol#307-309) is never used and should be removed
+COURRouter._buy(address,address,uint256,uint256,uint256) (src/COURRouter.sol#124-139) is never used and should be removed
+COURRouter._sell(address,address,uint256,uint256,uint256) (src/COURRouter.sol#141-156) is never used and should be removed
+COURRouter._sweep(address,address) (src/COURRouter.sol#159-162) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+INFO:Detectors:
+Detector: constable-states
+COURCurve._feeBps (src/COURCurve.sol#37) should be constant 
+COURCurve._k (src/COURCurve.sol#43) should be constant 
+COURCurve._launchedAt (src/COURCurve.sol#38) should be constant 
+COURCurve._stockDecimals (src/COURCurve.sol#39) should be constant 
+COURCurve._vS (src/COURCurve.sol#41) should be constant 
+COURCurve._vS0 (src/COURCurve.sol#45) should be constant 
+COURCurve._vT (src/COURCurve.sol#42) should be constant 
+COURCurve._vT0 (src/COURCurve.sol#46) should be constant 
+COURCurve._vTStop (src/COURCurve.sol#44) should be constant 
+COURCurve.creator (src/COURCurve.sol#36) should be constant 
+COURCurve.stock (src/COURCurve.sol#35) should be constant 
+COURCurve.token (src/COURCurve.sol#34) should be constant 
+COURFeeVault._wired (src/COURFeeVault.sol#52) should be constant 
+COURFeeVault.factory (src/COURFeeVault.sol#47) should be constant 
+COURFeeVault.hook (src/COURFeeVault.sol#48) should be constant 
+COURFeeVault.priceReader (src/COURFeeVault.sol#51) should be constant 
+COURFeeVault.router (src/COURFeeVault.sol#49) should be constant 
+COURFeeVault.treasury (src/COURFeeVault.sol#50) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+INFO:Detectors:
+Detector: immutable-states
+COURCurve._initialized (src/COURCurve.sol#32) should be immutable 
+COURFactory.gradMcUsd (src/COURFactory.sol#52) should be immutable 
+COURFactory.launchFee (src/COURFactory.sol#54) should be immutable 
+COURFactory.minRefLiqUsd (src/COURFactory.sol#53) should be immutable 
+COURFactory.startMcUsd (src/COURFactory.sol#51) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+INFO:Slither:. analyzed (99 contracts with 102 detectors), 103 result(s) found

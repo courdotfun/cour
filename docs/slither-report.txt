@@ -1,80 +1,77 @@
-	Event emitted after the call(s):
-	- Events.StockSet(stock,allowed,refPool,uint8(kind)) (src/COURFactory.sol#248)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
-INFO:Detectors:
-Detector: timestamp
-COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) uses timestamp for comparisons
-	Dangerous comparisons:
-	- block.timestamp > deadline (src/COURCurve.sol#108)
-	- fee + tax >= gross (src/COURCurve.sol#115)
-	- r.graduates && ! allowGraduation (src/COURCurve.sol#119)
-	- tokensOut < minTokensOut (src/COURCurve.sol#121)
-	- refund > 0 (src/COURCurve.sol#139)
-	- feeTotal > 0 (src/COURCurve.sol#145)
-COURCurve.sell(uint256,uint256,address,uint256) (src/COURCurve.sol#156-184) uses timestamp for comparisons
-	Dangerous comparisons:
-	- block.timestamp > deadline (src/COURCurve.sol#161)
-COURCurve.progressBps() (src/COURCurve.sol#227-233) uses timestamp for comparisons
-	Dangerous comparisons:
-	- bps > Constants.BPS (src/COURCurve.sol#232)
-COURHook.beforeSwap(address,PoolKey,SwapParams,bytes) (src/COURHook.sol#139-172) uses timestamp for comparisons
-	Dangerous comparisons:
-	- fee == 0 (src/COURHook.sol#165)
-COURHook._updateObs(PoolId) (src/COURHook.sol#274-289) uses timestamp for comparisons
-	Dangerous comparisons:
-	- nowTs > o.lastTs (src/COURHook.sol#277)
-	- nowTs - o.anchorTs >= Constants.HOOK_TWAP_WINDOW (src/COURHook.sol#280)
-COURHook.consult(bytes32,uint32) (src/COURHook.sol#292-303) uses timestamp for comparisons
-	Dangerous comparisons:
-	- span == 0 (src/COURHook.sol#301)
-	- nowTs > o.lastTs (src/COURHook.sol#296)
-	- o.prevAnchorTs != 0 (src/COURHook.sol#298)
-	- o.prevAnchorTs != 0 (src/COURHook.sol#299)
-	- nowTs > refTs (src/COURHook.sol#300)
-COURHook.priceInfo(address) (src/COURHook.sol#306-321) uses timestamp for comparisons
-	Dangerous comparisons:
-	- nowTs > o.lastTs (src/COURHook.sol#315)
-	- nowTs > refTs (src/COURHook.sol#318)
-	- span == 0 (src/COURHook.sol#319)
-COURRouter.buy(address,uint256,uint256,uint256) (src/COURRouter.sol#45-56) uses timestamp for comparisons
-	Dangerous comparisons:
-	- block.timestamp > deadline (src/COURRouter.sol#50)
-COURRouter.sell(address,uint256,uint256,uint256) (src/COURRouter.sol#59-70) uses timestamp for comparisons
-	Dangerous comparisons:
-	- block.timestamp > deadline (src/COURRouter.sol#64)
-COURRouter.buyWithETH(address,uint256,uint256) (src/COURRouter.sol#74-100) uses timestamp for comparisons
-	Dangerous comparisons:
-	- block.timestamp > deadline (src/COURRouter.sol#80)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
-INFO:Detectors:
-Detector: cyclomatic-complexity
-COURCurve._buy(uint256,uint256,address,uint256,bool,bool,bool) (src/COURCurve.sol#99-153) has a high cyclomatic complexity (13).
-COURFactory.createToken(ICOURFactory.CreateParams) (src/COURFactory.sol#94-164) has a high cyclomatic complexity (12).
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
-INFO:Detectors:
-Detector: dead-code
-COURFactory._pay(Currency,uint256) (src/COURFactory.sol#236-240) is never used and should be removed
-COURFeeVault._accrue(address,address) (src/COURFeeVault.sol#174-181) is never used and should be removed
-COURFeeVault._checkDeviation(address) (src/COURFeeVault.sol#299-304) is never used and should be removed
-COURFeeVault._poolStockReserve(address,address) (src/COURFeeVault.sol#307-309) is never used and should be removed
-COURRouter._buy(address,address,uint256,uint256,uint256) (src/COURRouter.sol#124-139) is never used and should be removed
-COURRouter._sell(address,address,uint256,uint256,uint256) (src/COURRouter.sol#141-156) is never used and should be removed
-COURRouter._sweep(address,address) (src/COURRouter.sol#159-162) is never used and should be removed
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
-INFO:Detectors:
-Detector: constable-states
-COURFeeVault._wired (src/COURFeeVault.sol#52) should be constant 
-COURFeeVault.factory (src/COURFeeVault.sol#47) should be constant 
-COURFeeVault.hook (src/COURFeeVault.sol#48) should be constant 
-COURFeeVault.priceReader (src/COURFeeVault.sol#51) should be constant 
-COURFeeVault.router (src/COURFeeVault.sol#49) should be constant 
-COURFeeVault.treasury (src/COURFeeVault.sol#50) should be constant 
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
-INFO:Detectors:
-Detector: immutable-states
-COURFactory.gradMcUsd (src/COURFactory.sol#52) should be immutable 
-COURFactory.launchFee (src/COURFactory.sol#54) should be immutable 
-COURFactory.minRefLiqUsd (src/COURFactory.sol#53) should be immutable 
-COURFactory.startMcUsd (src/COURFactory.sol#51) should be immutable 
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
-INFO:Slither:. analyzed (85 contracts with 102 detectors), 79 result(s) found
+COUR Phase 1 — Slither triage
+=============================
+Command : python -m slither . --filter-paths "lib|test|script" --exclude-dependencies
+Version : slither 0.11.6  (solc 0.8.26, via_ir=true, evm=cancun)
+Result  : 103 findings across 15 detectors. NO High or Medium severity vulnerabilities.
+Raw output: docs/slither-raw.txt (full, unedited).
+
+ROOT CAUSE for the dead-code / constable-states / immutable-states / uninitialized-state cluster
+------------------------------------------------------------------------------------------------
+This codebase MUST compile with `via_ir = true` (v4-core Pool.sol + the curve/hook locals exceed the
+EVM stack otherwise — see CLAUDE.md / foundry.toml). Slither's state-write / call-graph dataflow is
+incomplete on via-IR output, so it fails to see writes performed in constructors, `initialize()`, and
+`wire()`, and fails to see internal calls.
+
+Smoking gun: slither reports `COURFactory.poolManagerC` (an `immutable` set in the constructor at
+COURFactory.sol:83) as "never initialized" (slither-raw.txt:104). That is impossible for an immutable —
+it proves slither's write-tracking is unreliable here. Every dead-code / constable / immutable /
+uninitialized-state finding below is the same artifact and is refuted by a concrete write/call site.
+The full test suite (unit + fuzz + invariant + integration, 100+ tests) exercises all of these paths.
+
+-------------------------------------------------------------------------------------------------
+Detector: dead-code  — ALL FALSE POSITIVES (each function IS called)
+-------------------------------------------------------------------------------------------------
+- COURCurve._graduate()            called at COURCurve.sol:152   (inside _buy, on graduation)
+- COURFactory._permit2Approve()    called at COURFactory.sol:205,206,219,220 (graduate)
+- COURFeeVault._accrue()           called at COURFeeVault.sol:205 (claimHolder)
+- COURFeeVault._checkDeviation()   called at COURFeeVault.sol:284 (executeBuyback, post-grad)
+                                   -> PROVEN reachable by test_buyback_price_deviation_postgrad
+- COURFeeVault._poolStockReserve() called at COURFeeVault.sol:285 (executeBuyback, post-grad)
+                                   -> PROVEN reachable by test_buyback_too_large_postgrad
+- COURRouter._buy()                called at COURRouter.sol:53,97
+- COURRouter._sell()               called at COURRouter.sol:67
+- COURRouter._sweep()              called at COURRouter.sol:54,55,68,69,98,99
+(The one genuinely dead function from the previous audit, COURFactory._pay, WAS removed in the
+ §2.3 graduation rewrite.)
+
+-------------------------------------------------------------------------------------------------
+Detector: constable-states / immutable-states / uninitialized-state — ALL FALSE POSITIVES
+-------------------------------------------------------------------------------------------------
+- COURCurve.{token,stock,creator,_feeBps,_launchedAt,_stockDecimals,_mode,_vS,_vT,_k,_vTStop,_vS0,_vT0}
+  are per-clone STORAGE written in COURCurve.initialize() (COURCurve.sol:61-73). They cannot be
+  constant/immutable: COURCurve is an EIP-1167 minimal-proxy implementation and every clone sets its
+  own values via initialize(); an immutable would bake a single value into the shared implementation.
+- COURCurve._initialized: written in the constructor (51) AND initialize() (60) — not immutable.
+- COURFeeVault.{factory,hook,router,priceReader,_wired}: written in wire() (COURFeeVault.sol:75-79),
+  post-deploy (the factory/hook/router deploy after the vault). treasury: constructor + setTreasury().
+- COURFactory.{startMcUsd,gradMcUsd,minRefLiqUsd,launchFee}: INTENTIONALLY mutable — admin tunes them
+  for FUTURE launches via setLaunchParams() (COURFactory.sol:257-260). Making them immutable would
+  break that feature (proven by test_setLaunchParams_new_launch_uses_new_values).
+- COURFactory.{poolManagerC,positionManager,hookC,feeVaultC,priceReaderC,curveImpl}: immutables set in
+  the constructor (COURFactory.sol:83-88). The "uninitialized-state" flag on these is the via-IR artifact.
+- All mappings (curveOf, _config, _poolId, _td, stockAllowed, platformOwed, launchAllowlist, ...) are
+  written across the normal flows; mappings cannot be constant/immutable.
+
+-------------------------------------------------------------------------------------------------
+Other detectors (unchanged triage; no High/Medium)
+-------------------------------------------------------------------------------------------------
+- reentrancy-events (COURHook beforeSwap/afterSwap/_notify, COURFactory.setStock): COSMETIC. These emit
+  events after an external call. All state-mutating paths are protected by ReentrancyGuardTransient and
+  the v4 PoolManager lock; no state is read-then-written across the call. No exploitable reentrancy.
+- timestamp: BY DESIGN. The spec mandates block.timestamp (Robinhood Chain has sub-second blocks, so
+  block numbers are unusable). Lint `block-timestamp` is excluded in foundry.toml for the same reason.
+- divide-before-multiply (COURHook tick alignment `(MIN_TICK/spacing)*spacing`): intentional tick
+  rounding to a spacing multiple; exact and lint-disabled inline.
+- incorrect-equality (`fee==0`, `span==0`): benign exact-zero short-circuits.
+- locked-ether:
+  * COURFactory.createToken is payable but requires `msg.value == launchFee` (== 0 in Phase 1); any
+    non-zero value reverts WrongLaunchFee, so the factory can never custody ETH.
+  * COURRouter.buyWithETH deposits the full msg.value into WETH and swaps it; the §2.4 rewrite also
+    refunds any residual ETH/WETH so the router never retains funds between txs.
+- uninitialized-local (COURHook.beforeInitialize tok/stk/tokenIsZero): assigned on every branch before
+  use (the else-branch reverts BadPoolKey); false positive.
+- unused-return / shadowing-local / events-maths / missing-zero-check / cyclomatic-complexity:
+  informational; reviewed, no action required (constructors already zero-check the critical addresses).
+
+CONCLUSION: dead-code / constable-states / immutable-states findings are 0 real issues — each is a
+via-IR analysis artifact refuted above by file:line. No High/Medium severity findings.

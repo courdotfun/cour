@@ -147,6 +147,55 @@ contract AdminTest is BaseTest {
         assertTrue(t2 != address(0), "open launch");
     }
 
+    function test_setLaunchParams_new_launch_uses_new_values() public {
+        vm.prank(admin);
+        factory.setStock(address(stock), true, address(0), ICOURPriceReader.RefKind.NONE);
+
+        // Launch A with the defaults (Q=15).
+        vm.prank(creator);
+        (address a,) = factory.createToken(_params(address(stock), 500, 0, 0));
+        TokenConfig memory ca = factory.tokenConfig(a);
+
+        // Change the launch params (Q=5), confirm the getters wrote through.
+        vm.prank(admin);
+        factory.setLaunchParams(1_000, 5_000, 70_000, 0);
+        assertEq(factory.startMcUsd(), 1_000);
+        assertEq(factory.gradMcUsd(), 5_000);
+        assertEq(factory.minRefLiqUsd(), 70_000);
+        assertEq(factory.launchFee(), 0);
+
+        // Launch B now uses the NEW curve shape; A is untouched.
+        vm.prank(creator);
+        (address b,) = factory.createToken(_params(address(stock), 600, 0, 0));
+        TokenConfig memory cb = factory.tokenConfig(b);
+        assertTrue(cb.vT0 != ca.vT0, "new launch uses new Q");
+        assertEq(factory.tokenConfig(a).vT0, ca.vT0, "existing token unchanged");
+    }
+
+    function test_vault_wiring_getters_and_platform_claim() public {
+        // (§2.2c) Getters reflect wiring done in BaseTest.
+        assertEq(address(vault.factory()), address(factory), "factory");
+        assertEq(vault.hook(), address(hook), "hook");
+        assertEq(vault.router(), address(router), "router");
+        assertEq(address(vault.priceReader()), address(oracle), "priceReader");
+        assertEq(vault.treasury(), treasury, "treasury");
+
+        // claimPlatform actually pays the treasury.
+        vm.prank(admin);
+        factory.setStock(address(stock), true, address(0), ICOURPriceReader.RefKind.NONE);
+        vm.prank(creator);
+        (, address curve) = factory.createToken(_params(address(stock), 1000, 0, 0));
+        vm.warp(block.timestamp + 6);
+        _buyCurve(curve, stock, bob, 10e18); // accrues a 20% platform cut
+
+        uint256 owed = vault.platformOwed(address(stock));
+        assertGt(owed, 0, "platform owed");
+        uint256 before = stock.balanceOf(treasury);
+        vault.claimPlatform(address(stock));
+        assertEq(stock.balanceOf(treasury) - before, owed, "treasury received platform fee");
+        assertEq(vault.platformOwed(address(stock)), 0, "platform bucket cleared");
+    }
+
     function test_allowlist_only_owner() public {
         vm.prank(alice);
         vm.expectRevert();
