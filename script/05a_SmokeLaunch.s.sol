@@ -37,9 +37,10 @@ contract SmokeLaunch is Script {
         IWETH(weth).deposit{ value: ethIn }();
         IWETH(weth).approve(v3Router, ethIn);
         bytes memory path = abi.encodePacked(weth, wethFee, usdg, nvdaFee, nvda);
-        uint256 nvdaOut = IV3SwapRouter(v3Router).exactInput(
-            IV3SwapRouter.ExactInputParams({ path: path, recipient: me, amountIn: ethIn, amountOutMinimum: 0 })
-        );
+        uint256 nvdaOut = IV3SwapRouter(v3Router)
+            .exactInput(
+                IV3SwapRouter.ExactInputParams({ path: path, recipient: me, amountIn: ethIn, amountOutMinimum: 0 })
+            );
         console2.log("acquired NVDA (raw)", nvdaOut);
         require(nvdaOut > 0, "no NVDA acquired");
 

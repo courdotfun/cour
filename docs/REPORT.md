@@ -2,8 +2,17 @@
 
 > Bahasa Indonesia (sesuai permintaan). Tanggal: 2026-10-29. Branch: `master`.
 > Ringkasan eksekutif: semua perbaikan kode review manusia (§2.1–2.6) selesai, di-commit per poin, dan
-> dibuktikan dengan test (lokal + fork mainnet). Fakta chain terverifikasi on-chain. Deploy mainnet +
-> smoke test (§7) **menunggu pendanaan wallet** (lihat §7 di bawah).
+> dibuktikan dengan test (lokal + fork mainnet). Fakta chain terverifikasi on-chain. **Seluruh alur deploy
+> + smoke test sudah divalidasi penuh di fork anvil mainnet** (`docs/REHEARSAL_FORK_RESULT.md`): deploy →
+> konfigurasi → swap ETH→USDG→NVDA → launch → graduasi (LP NFT→DEAD via PositionManager asli) →
+> buyback-burn → swap pool → claim platform/holder → restore param. Deploy mainnet nyata (§7)
+> **menunggu pendanaan wallet** — sudah menjadi operasi satu-perintah yang tervalidasi.
+>
+> **Temuan kritis saat rehearsal fork (sudah diperbaiki):** kode PositionManager/Permit2 (§2.3) membuat
+> `COURFactory` = 26.448 byte, **melebihi batas EIP-170 (24.576)** — test lokal/fork TIDAK menegakkan
+> batas ukuran, tapi deploy di node nyata (anvil) menegakkannya. Diperbaiki dengan memindah mekanik
+> graduasi ke `GraduationImpl` yang di-`delegatecall` (factory turun ke 21.264 byte). **Tanpa rehearsal
+> fork, deploy mainnet pasti gagal.**
 
 ## 1. Ringkasan perbaikan (per poin review)
 

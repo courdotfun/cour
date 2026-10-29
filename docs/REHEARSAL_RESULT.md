@@ -37,7 +37,7 @@ Every trade is shown so the numbers reconcile. Units: stock & tokens in WHOLE un
 
 - Total sold on the curve (= `vT0 - vTStop`): **794786903** whole tokens (the invariant ~794,786,904 the OLD report under-counted by ~36.75M).
 - Held by all buyers (creator+alice+bob+carol): **794786903**  (== total sold).
-- Into the v4 pool: **205213096**, burned-to-DEAD dust: **1147** (raw).
+- Into the v4 pool: **205213096**, burned-to-DEAD dust: **914** (raw).
 - Identity: pool + DEAD == TOTAL_SUPPLY - sold == 205213096 whole tokens. No tokens are lost.
 
 ### Post-graduation
