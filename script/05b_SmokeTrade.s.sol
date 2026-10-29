@@ -50,7 +50,7 @@ contract SmokeTrade is Script {
         uint256 bal = IERC20(ctest).balanceOf(me);
         if (bal > 0) {
             IERC20(ctest).approve(c1, bal / 4);
-            ICOURCurve(c1).sell(bal / 4, 0, me, block.timestamp);
+            ICOURCurve(c1).sell(bal / 4, 0, me, block.timestamp + 3600);
         }
 
         // 4. Graduating buy: oversize the raise so it crosses the stop and refunds the remainder.
@@ -59,7 +59,7 @@ contract SmokeTrade is Script {
         if (grad > have) grad = have;
         uint256 positionId = _nextTokenId(posm);
         IERC20(nvda).approve(c1, grad);
-        ICOURCurve(c1).buy(grad, 0, me, block.timestamp);
+        ICOURCurve(c1).buy(grad, 0, me, block.timestamp + 3600);
         require(ICOURCurve(c1).graduated(), "CTEST did not graduate");
         require(IERC721(posm).ownerOf(positionId) == Constants.DEAD, "LP NFT not owned by DEAD");
         console2.log("CTEST graduated; LP positionId burned to DEAD:", positionId);
@@ -81,10 +81,10 @@ contract SmokeTrade is Script {
         // 5. Pool swaps both ways via the router (moves the spot; after the buyback).
         if (IERC20(nvda).balanceOf(me) >= warm) {
             IERC20(nvda).approve(address(router), warm);
-            uint256 poolBuy = router.buy(ctest, warm, 0, block.timestamp);
+            uint256 poolBuy = router.buy(ctest, warm, 0, block.timestamp + 3600);
             if (poolBuy > 0) {
                 IERC20(ctest).approve(address(router), poolBuy);
-                router.sell(ctest, poolBuy, 0, block.timestamp);
+                router.sell(ctest, poolBuy, 0, block.timestamp + 3600);
             }
         }
 
@@ -112,7 +112,7 @@ contract SmokeTrade is Script {
     function _buy(address curve, address nvda, uint256 amt) internal {
         if (IERC20(nvda).balanceOf(me) < amt) return;
         IERC20(nvda).approve(curve, amt);
-        ICOURCurve(curve).buy(amt, 0, me, block.timestamp);
+        ICOURCurve(curve).buy(amt, 0, me, block.timestamp + 3600);
     }
 
     function _nextTokenId(address posm) internal view returns (uint256 id) {

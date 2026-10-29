@@ -87,30 +87,41 @@ Lihat `docs/CHAIN_FACTS.md`. Ringkas:
   tanpa TSTORE). Guard `ReentrancyGuardTransient` aman.
 - Daftar stock lain (TSLA/AAPL/…) belum dienumerasi (tidak diperlukan untuk uji tertutup NVDA).
 
-## 5. Deploy mainnet — MENUNGGU PENDANAAN
+## 5. Deploy mainnet — ✅ SELESAI (2026-10-30)
 
-Status: **belum dieksekusi.** Wallet deploy dibuat:
-`0x1eb25d02fc7C5487D4648a602c355dBC2301030b` (chain 4663), saldo saat ini **0**. Kirim ETH senilai
-~$250 (gas deploy + ~$180 swap ke NVDA untuk smoke test), lalu jalankan (lihat `docs/DEPLOY.md`):
-`run_fork_rehearsal.sh` (validasi tanpa dana) → `01_DeployCore` → `02_ConfigureStocks` →
-`run_mainnet_smoke.sh` → `06_RestoreParams` → verifikasi di robin.etherscan.io.
-Alamat kontrak akan tertulis ke `deployments/4663.json`. (Tabel alamat + link explorer diisi di sini
-setelah deploy.)
+COUR **live di Robinhood Chain mainnet (4663)**. Didanai 0.005 ETH; deploy+configure memakan ~0.0004 ETH.
 
-## 6. Smoke test mainnet — MENUNGGU PENDANAAN
+| Kontrak | Alamat |
+|---|---|
+| COURFactory | `0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42` |
+| COURFeeVault | `0xE412C7e137b3132b454ca38739ad981F9c90b4EB` |
+| COURHook | `0xFC1bC2f2C0cEA16509dE1C906C8E5a0a322A20cc` |
+| COURRouter | `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449` |
+| COURPriceReader | `0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD` |
+| COURCurve (impl) | `0x5C18Dc68DC62EBDE7172D6831FAeBAc378AEE3B1` |
+| GraduationImpl | `0x60b1b7d2bb873e91420c7f4be2d39ca89bb4fe54` |
 
-Skrip siap (`05a_SmokeLaunch` + `05b_SmokeTrade`): swap ETH→USDG→NVDA → launch CTEST (5%, BUYBACK_BURN)
-& CTEST2 (2%, HOLDERS) → buy/sell → graduasi (cek refund, `Graduated`, `ownerOf(positionId)==DEAD`) →
-swap pool 2 arah → buyback → `claimPlatform` → `claimHolder`. Hasil (langkah + tx link + angka) ditulis
-ke `docs/MAINNET_SMOKE_RESULT.md` setelah dijalankan. Flow ini **sudah divalidasi di fork anvil** (§5
-rehearsal, `docs/REHEARSAL_FORK_RESULT.md`).
+Link: `https://robin.etherscan.io/address/<alamat>`. Detail + tx hash: `docs/MAINNET_SMOKE_RESULT.md`,
+`deployments/4663.json`. **Verifikasi explorer BELUM** (Blockscout di balik Cloudflare; Etherscan v2 butuh
+API key) — perintah siap di MAINNET_SMOKE_RESULT.md untuk dijalankan manusia.
 
-## 7. Status saat ini
-- Param launch: default produksi 4000/60000 di kode; `02_ConfigureStocks` menyetel param uji 40/600 saat
-  deploy, dikembalikan ke 4000/60000 oleh `06_RestoreParams` setelah smoke test.
-- Allowlist: **aktif** (default); hanya deployer yang di-allowlist untuk uji tertutup.
-- Owner: tetap di DEPLOYER EOA (belum handover; multisig belum ada).
-- Saldo wallet: 0 (menunggu pendanaan).
+## 6. Smoke test mainnet — ✅ SELESAI
+
+Dijalankan dengan param uji **$1/$15** (dibuktikan aman untuk desimal NVDA asli di fork lebih dulu):
+swap ETH→USDG→NVDA (0.0242 NVDA) → launch **CTEST** (5%, BUYBACK_BURN) → buy+sell → **graduasi**
+(positionId **4080369**, `ownerOf == 0x…dEaD` DICEK ON-CHAIN; pool 205.213.096 token + 0.0144 NVDA) →
+**buyback-burn** (2.031.812 token ke DEAD) → swap pool 2 arah → **claimPlatform** → restore param
+4000/60000 + minBuybackUsd 50. Launch HOLDERS dilewati untuk hemat budget. Total terpakai **~0.00271 ETH
+(~$6.4)**; sisa saldo **0.00229 ETH**. Detail langkah + tx link: `docs/MAINNET_SMOKE_RESULT.md`.
+Alur ini juga sudah divalidasi penuh di fork (`docs/REHEARSAL_FORK_RESULT.md`).
+
+## 7. Status saat ini (pasca-deploy)
+- Param launch on-chain: **4000 / 60000** (produksi, dikembalikan); minBuybackUsd **50**.
+- Allowlist launch: **AKTIF** — hanya `0x1eb2…030b` (deployer) yang boleh launch.
+- Owner semua kontrak: **deployer EOA** (belum handover; multisig belum ada).
+- Saldo deployer: **0.00229 ETH** (~$5.4).
+- Verifikasi explorer: **belum** (lihat MAINNET_SMOKE_RESULT.md; butuh API key / UI).
+- Langkah menuju publik: lihat **`docs/GO_LIVE.md`**.
 
 ## 8. Yang harus dilakukan manusia (berurutan)
 1. **Kirim dana** ke `0x1eb25d02fc7C5487D4648a602c355dBC2301030b` (~$250 ETH, chain 4663).
