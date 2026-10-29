@@ -9,7 +9,7 @@ Dependencies (pinned via `bootstrap.sh`): Uniswap v4-core & v4-periphery (v1.0.2
 |---|---|---|
 | src/COURHook.sol | 286 | v4 hook: fee capture on pool swaps, tick-accumulator TWAP, pool gating |
 | src/COURFeeVault.sol | 255 | fee custody/routing, 4 modes, dividends, buyback, claims |
-| src/COURFactory.sol | 226 | launch + graduation (pool init, full-range LP, burn), admin |
+| src/COURFactory.sol | 226 | launch + graduation (pool init, full-range LP minted as a v4 PositionManager NFT to DEAD via Permit2), launch allowlist, admin |
 | src/COURCurve.sol | 192 | bonding curve buy/sell, fee+tax, refund+graduate |
 | src/COURRouter.sol | 131 | unified curve/pool routing, ETH path, holds no funds |
 | src/COURPriceReader.sol | 107 | v3 TWAP USD pricing (USDG / WETH routes) |
@@ -23,7 +23,7 @@ Dependencies (pinned via `bootstrap.sh`): Uniswap v4-core & v4-periphery (v1.0.2
 | **Total src** | **~1734** | |
 
 ## Trust assumptions
-- Uniswap v4 PoolManager/PositionManager, v3 pools/router, Permit2, WETH, USDG, and the Robinhood stock tokens behave per their published interfaces on Robinhood Chain (NOT yet fork-verified — see CHAIN_FACTS).
+- Uniswap v4 PoolManager/PositionManager, v3 pools/router, Permit2, WETH, USDG, and the Robinhood stock tokens behave per their published interfaces on Robinhood Chain. **Fork-verified on mainnet 2026-10-29** (code present, ABIs match, Cancun/TSTORE confirmed, graduation mints the LP NFT to DEAD against the real PositionManager; see CHAIN_FACTS + `test/fork/*`).
 - Admin (Timelock+multisig) is honest-but-restricted; see RISKS for the exhaustive privileged-function list.
 - Reference v3 pools have sufficient observation cardinality (bumped pre-launch).
 
@@ -53,14 +53,18 @@ Dependencies (pinned via `bootstrap.sh`): Uniswap v4-core & v4-periphery (v1.0.2
 See `## Slither triage` below. If Slither could not be installed/run in the build environment, that is noted in REPORT §7 and must be run by the human before audit.
 
 ## Slither triage
-Run: `python -m slither . --filter-paths "lib|test|script" --exclude-dependencies` (slither 0.11.6). Raw output: `docs/slither-report.txt`. 85 contracts analyzed, 79 results — **no High/Medium**. All triaged:
+Run: `python -m slither . --filter-paths "lib|test|script" --exclude-dependencies` (slither 0.11.6). Raw
+output: `docs/slither-raw.txt`; full triage: `docs/slither-report.txt`. 99 contracts, 103 results —
+**no High/Medium**. Root cause for the dead-code/constable/immutable/uninitialized-state cluster: slither's
+state-write dataflow is incomplete under `via_ir` (it even reports the constructor-set immutable
+`poolManagerC` as "uninitialized"). Each is refuted by a write/call site in `slither-report.txt`. Summary:
 
 | Detector | Verdict | Notes |
 |---|---|---|
 | `timestamp` (comparisons) | Acknowledged / by design | `block.timestamp` is mandated by the spec (sub-second blocks). Deadlines, tax window, and TWAP all use it. No block numbers anywhere. |
 | `reentrancy-events` | False positive | Only events emitted after an external call (e.g. `StockSet` after `setRefPool`). State-changing paths carry `nonReentrant` transient guards; event ordering is cosmetic. |
 | `cyclomatic-complexity` | Acknowledged | `COURCurve._buy` (13), `COURFactory.createToken` (12) — inherent to the fee/tax/refund/graduation and launch flows; heavily tested. |
-| `dead-code` | False positive | Flagged `_sweep`/`_accrue`/`_checkDeviation`/`_poolStockReserve`/`_pay`/router `_buy`/`_sell` are all called (verified; slither mis-traces these internal fns under via-IR). |
+| `dead-code` | False positive | Flagged `_sweep`/`_accrue`/`_checkDeviation`/`_poolStockReserve`/`_permit2Approve`/`_graduate`/router `_buy`/`_sell` are all called (verified per file:line in slither-report.txt; slither mis-traces internal fns under via-IR). The one genuinely dead fn, `_pay`, was REMOVED in the §2.3 graduation rewrite. |
 | `constable-states` (`COURFeeVault.factory/hook/router/treasury/priceReader/_wired`) | False positive | Written in `wire()`/`setTreasury`; cannot be `constant`. (Set-once post-deploy for ordering reasons; not constructor-settable → not `immutable`.) |
 | `immutable-states` (`COURFactory.startMcUsd/gradMcUsd/minRefLiqUsd/launchFee`) | False positive | Mutated by admin `setLaunchParams`; intentionally mutable for future launches. |
 

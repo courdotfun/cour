@@ -6,20 +6,14 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { LibClone } from "solady/utils/LibClone.sol";
 
-import { IAllowanceTransfer } from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
-import { TickMath } from "v4-core/libraries/TickMath.sol";
-import { Currency } from "v4-core/types/Currency.sol";
 import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
 import { PoolKey } from "v4-core/types/PoolKey.sol";
-import { IPositionManager } from "v4-periphery/src/interfaces/IPositionManager.sol";
-import { Actions } from "v4-periphery/src/libraries/Actions.sol";
-import { LiquidityAmounts } from "v4-periphery/src/libraries/LiquidityAmounts.sol";
 
 import { COURToken } from "./COURToken.sol";
+import { GraduationImpl } from "./GraduationImpl.sol";
 import { ICOURCurve } from "./interfaces/ICOURCurve.sol";
 import { ICOURFactory } from "./interfaces/ICOURFactory.sol";
 import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
@@ -46,6 +40,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
     ICOURFeeVault public immutable feeVaultC;
     ICOURPriceReader public immutable priceReaderC;
     address public immutable curveImpl;
+    address public immutable graduationImpl; // delegatecall target for the graduation pool-init + LP mint
 
     // launch params (affect FUTURE launches only)
     uint256 public startMcUsd = Constants.START_MC_USD;
@@ -71,11 +66,13 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
         address hook_,
         address feeVault_,
         address priceReader_,
-        address curveImpl_
+        address curveImpl_,
+        address graduationImpl_
     ) Ownable(owner_) {
         if (
             poolManager_ == address(0) || positionManager_ == address(0) || hook_ == address(0)
                 || feeVault_ == address(0) || priceReader_ == address(0) || curveImpl_ == address(0)
+                || graduationImpl_ == address(0)
         ) revert Errors.ZeroAddress();
         poolManagerC = IPoolManager(poolManager_);
         positionManager = positionManager_;
@@ -83,6 +80,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
         feeVaultC = ICOURFeeVault(feeVault_);
         priceReaderC = ICOURPriceReader(priceReader_);
         curveImpl = curveImpl_;
+        graduationImpl = graduationImpl_;
     }
 
     // --------------------------------------------------------------- launch
@@ -166,9 +164,7 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
     /// @inheritdoc ICOURFactory
     function graduate(address token) external nonReentrant {
         if (msg.sender != curveOf[token]) revert Errors.OnlyCurve();
-        TokenConfig memory cfg = _config[token];
-        address stock = cfg.stock;
-        (PoolKey memory key, bool tokenIsZero) = PoolKeyLib.build(token, stock, hookC);
+        address stock = _config[token].stock;
 
         // Pull the raised stock and the unsold tokens from the curve (it pre-approved us).
         uint256 stockRaised = IERC20(stock).balanceOf(msg.sender);
@@ -176,65 +172,33 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
         IERC20(stock).safeTransferFrom(msg.sender, address(this), stockRaised);
         IERC20(token).safeTransferFrom(msg.sender, address(this), tokenLeftover);
 
-        (uint256 amount0, uint256 amount1) = tokenIsZero ? (tokenLeftover, stockRaised) : (stockRaised, tokenLeftover);
-
-        // Initialize the pool at exactly the reserve ratio (= graduation price).
-        // Use X128 encoding (sqrt(ratioX128) << 32) rather than X192: the latter overflows uint256 when
-        // the raw reserve ratio exceeds 2^64, which happens for low-decimal stock vs an 18-decimal token.
-        uint256 ratioX128 = FixedPointMathLib.fullMulDiv(amount1, 1 << 128, amount0);
-        uint160 sqrtPriceX96 = uint160(FixedPointMathLib.sqrt(ratioX128) << 32);
-        poolManagerC.initialize(key, sqrtPriceX96);
-
-        // Full-range liquidity.
-        // forge-lint: disable-next-line(divide-before-multiply)
-        int24 tickLower = (TickMath.MIN_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING;
-        // forge-lint: disable-next-line(divide-before-multiply)
-        int24 tickUpper = (TickMath.MAX_TICK / Constants.POOL_TICK_SPACING) * Constants.POOL_TICK_SPACING;
-        uint128 L = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96,
-            TickMath.getSqrtPriceAtTick(tickLower),
-            TickMath.getSqrtPriceAtTick(tickUpper),
-            amount0,
-            amount1
+        // Delegatecall GraduationImpl (runs in this factory's context: inits the pool as the factory and
+        // mints the full-range LP NFT to DEAD via the PositionManager). Kept out-of-line so the factory
+        // stays under the EIP-170 size limit.
+        (bool ok, bytes memory ret) = graduationImpl.delegatecall(
+            abi.encodeCall(
+                GraduationImpl.graduate,
+                (GraduationImpl.Params({
+                        token: token,
+                        stock: stock,
+                        hook: hookC,
+                        poolManager: address(poolManagerC),
+                        positionManager: positionManager,
+                        feeVault: address(feeVaultC),
+                        stockRaised: stockRaised,
+                        tokenLeftover: tokenLeftover
+                    }))
+            )
         );
-
-        // Mint the full-range position NFT straight to DEAD via the v4 PositionManager. The NFT is the
-        // only key to the liquidity, so sending it to DEAD permanently burns the LP (no COUR contract
-        // and no address can ever remove it). positionId is the real minted tokenId.
-        uint256 positionId = IPositionManager(positionManager).nextTokenId();
-        _permit2Approve(key.currency0, uint160(amount0));
-        _permit2Approve(key.currency1, uint160(amount1));
-        {
-            bytes memory actions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
-            bytes[] memory params = new bytes[](2);
-            params[0] = abi.encode(
-                key, tickLower, tickUpper, uint256(L), uint128(amount0), uint128(amount1), Constants.DEAD, bytes("")
-            );
-            params[1] = abi.encode(key.currency0, key.currency1);
-            IPositionManager(positionManager).modifyLiquidities(abi.encode(actions, params), block.timestamp);
+        if (!ok) {
+            assembly ("memory-safe") {
+                revert(add(ret, 0x20), mload(ret))
+            }
         }
+        (uint256 positionId, uint256 tokenLeftoverNet, uint256 stockRaisedNet) =
+            abi.decode(ret, (uint256, uint256, uint256));
 
-        // The PositionManager pulled only what the mint consumed; the remainder stays here as dust.
-        // Clear leftover Permit2 allowances, then sweep: tokens -> DEAD, stock -> platform bucket.
-        _permit2Approve(key.currency0, 0);
-        _permit2Approve(key.currency1, 0);
-        uint256 tokenDust = IERC20(token).balanceOf(address(this));
-        uint256 stockDust = IERC20(stock).balanceOf(address(this));
-        if (tokenDust > 0) IERC20(token).safeTransfer(Constants.DEAD, tokenDust);
-        if (stockDust > 0) {
-            IERC20(stock).safeTransfer(address(feeVaultC), stockDust);
-            feeVaultC.creditPlatform(stock, stockDust);
-        }
-
-        emit Events.Graduated(token, _poolId[token], tokenLeftover - tokenDust, stockRaised - stockDust, positionId);
-    }
-
-    /// @dev Approve `amount` of `currency` for the PositionManager to pull via Permit2 (two-step:
-    ///      ERC20 allowance to Permit2, then Permit2 allowance to the PositionManager).
-    function _permit2Approve(Currency currency, uint160 amount) private {
-        address t = Currency.unwrap(currency);
-        IERC20(t).forceApprove(Constants.PERMIT2, amount);
-        IAllowanceTransfer(Constants.PERMIT2).approve(t, positionManager, amount, uint48(block.timestamp + 1));
+        emit Events.Graduated(token, _poolId[token], tokenLeftoverNet, stockRaisedNet, positionId);
     }
 
     // --------------------------------------------------------------- admin

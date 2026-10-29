@@ -16,6 +16,7 @@ import { COURFactory } from "../../src/COURFactory.sol";
 import { COURFeeVault } from "../../src/COURFeeVault.sol";
 import { COURHook } from "../../src/COURHook.sol";
 import { COURRouter } from "../../src/COURRouter.sol";
+import { GraduationImpl } from "../../src/GraduationImpl.sol";
 import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
 import { ICOURFactory } from "../../src/interfaces/ICOURFactory.sol";
 import { ICOURPriceReader } from "../../src/interfaces/ICOURPriceReader.sol";
@@ -76,6 +77,8 @@ abstract contract BaseTest is Test, DeployPermit2 {
         );
         address hookAddr = address((uint160(0x4444) << 144) | flags);
 
+        GraduationImpl gradImpl = new GraduationImpl();
+
         // Predict the factory CREATE address: only curveImpl is `new`-ed between now and the factory.
         address predictedFactory = vm.computeCreateAddress(address(this), vm.getNonce(address(this)) + 1);
 
@@ -84,7 +87,14 @@ abstract contract BaseTest is Test, DeployPermit2 {
         hook = COURHook(hookAddr);
 
         factory = new COURFactory(
-            admin, address(pm), address(posm), hookAddr, address(vault), address(oracle), address(curveImpl)
+            admin,
+            address(pm),
+            address(posm),
+            hookAddr,
+            address(vault),
+            address(oracle),
+            address(curveImpl),
+            address(gradImpl)
         );
         require(address(factory) == predictedFactory, "factory predict");
 

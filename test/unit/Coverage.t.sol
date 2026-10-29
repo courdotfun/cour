@@ -238,7 +238,14 @@ contract CoverageTest is BaseTest {
     function test_constructors_zero_address() public {
         vm.expectRevert(Errors.ZeroAddress.selector);
         new COURFactory(
-            admin, address(pm), address(0), address(hook), address(vault), address(oracle), address(curveImpl)
+            admin,
+            address(pm),
+            address(0),
+            address(hook),
+            address(vault),
+            address(oracle),
+            address(curveImpl),
+            address(hook)
         );
         vm.expectRevert(Errors.ZeroAddress.selector);
         new COURFeeVault(admin, address(0), address(pm)); // zero treasury

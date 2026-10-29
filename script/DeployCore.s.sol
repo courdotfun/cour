@@ -11,6 +11,7 @@ import { COURFeeVault } from "../src/COURFeeVault.sol";
 import { COURHook } from "../src/COURHook.sol";
 import { COURPriceReader } from "../src/COURPriceReader.sol";
 import { COURRouter } from "../src/COURRouter.sol";
+import { GraduationImpl } from "../src/GraduationImpl.sol";
 
 /// @notice Shared deployment logic (used by 01_DeployCore and 03_LaunchRehearsal).
 /// @dev Deploy order per docs/DEPLOY.md §11. The factory address is predicted via the deployer's CREATE
@@ -44,18 +45,19 @@ abstract contract CourDeployer is Script {
         );
 
         // Predict the factory CREATE address. Sequence of deployer txs before the factory:
-        // [0] priceReader, [1] feeVault, [2] curveImpl, [3] hook(CREATE2 tx) -> factory is [4].
+        // [0] priceReader, [1] feeVault, [2] curveImpl, [3] graduationImpl, [4] hook(CREATE2) -> factory is [5].
         uint64 startNonce = vm.getNonce(deployer);
-        address predictedFactory = vm.computeCreateAddress(deployer, startNonce + 4);
+        address predictedFactory = vm.computeCreateAddress(deployer, startNonce + 5);
 
         d.priceReader = new COURPriceReader(deployer, usdg, weth); // [0]
         d.feeVault = new COURFeeVault(deployer, treasury, poolManager); // [1]
         d.curveImpl = new COURCurve(predictedFactory, address(d.feeVault)); // [2]
+        GraduationImpl gradImpl = new GraduationImpl(); // [3]
 
         bytes memory hookArgs = abi.encode(poolManager, predictedFactory, address(d.feeVault));
         (address hookAddr, bytes32 salt) =
             HookMiner.find(CREATE2_DEPLOYER, flags, type(COURHook).creationCode, hookArgs);
-        d.hook = new COURHook{ salt: salt }(poolManager, predictedFactory, address(d.feeVault)); // [3] CREATE2
+        d.hook = new COURHook{ salt: salt }(poolManager, predictedFactory, address(d.feeVault)); // [4] CREATE2
         require(address(d.hook) == hookAddr, "hook addr mismatch");
 
         d.factory = new COURFactory(
@@ -65,8 +67,9 @@ abstract contract CourDeployer is Script {
             hookAddr,
             address(d.feeVault),
             address(d.priceReader),
-            address(d.curveImpl)
-        ); // [4]
+            address(d.curveImpl),
+            address(gradImpl)
+        ); // [5]
         require(address(d.factory) == predictedFactory, "factory predict mismatch");
 
         d.router = new COURRouter(deployer, poolManager, address(d.factory), v3Router, weth);

@@ -11,6 +11,7 @@ import { COURFactory } from "../../src/COURFactory.sol";
 import { COURFeeVault } from "../../src/COURFeeVault.sol";
 import { COURHook } from "../../src/COURHook.sol";
 import { COURRouter } from "../../src/COURRouter.sol";
+import { GraduationImpl } from "../../src/GraduationImpl.sol";
 import { ICOURCurve } from "../../src/interfaces/ICOURCurve.sol";
 import { ICOURFactory } from "../../src/interfaces/ICOURFactory.sol";
 import { ICOURPriceReader } from "../../src/interfaces/ICOURPriceReader.sol";
@@ -67,12 +68,20 @@ contract ForkIntegrationTest is Test {
                 | Hooks.BEFORE_SWAP_RETURNS_DELTA_FLAG | Hooks.AFTER_SWAP_RETURNS_DELTA_FLAG
         );
         address hookAddr = address((uint160(0x7654) << 144) | flags);
+        GraduationImpl gradImpl = new GraduationImpl();
         address predictedFactory = vm.computeCreateAddress(address(this), vm.getNonce(address(this)) + 1);
         COURCurve curveImpl = new COURCurve(predictedFactory, address(vault));
         deployCodeTo("COURHook.sol:COURHook", abi.encode(POOL_MANAGER, predictedFactory, address(vault)), hookAddr);
         hook = COURHook(hookAddr);
         factory = new COURFactory(
-            admin, POOL_MANAGER, POSITION_MANAGER, hookAddr, address(vault), address(oracle), address(curveImpl)
+            admin,
+            POOL_MANAGER,
+            POSITION_MANAGER,
+            hookAddr,
+            address(vault),
+            address(oracle),
+            address(curveImpl),
+            address(gradImpl)
         );
         require(address(factory) == predictedFactory, "factory predict");
         router = new COURRouter(admin, POOL_MANAGER, address(factory), address(0), address(0));
