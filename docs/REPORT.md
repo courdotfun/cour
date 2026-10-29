@@ -50,8 +50,9 @@ mengirim tepat selisih cadangan pada setiap transaksi.
 
 ## 3. Hasil test, coverage, Slither, gas
 
-- **Test**: ~100+ test non-fork (unit + fuzz + invariant + integrasi) **semua hijau** + 4 test fork
-  (mainnet) hijau. Invariant: handler 256×32 = 8.192 panggilan/invariant, 0 revert tak terduga.
+- **Test**: **103 test non-fork** (unit + fuzz + invariant + integrasi) **semua hijau** + **4 test fork**
+  (mainnet) hijau = 107 total. `forge fmt --check` bersih. Profil `ci` (10.000 fuzz, invariant 512×64 =
+  32.416 panggilan handler) **lulus 103/103, 0 revert**. Default (1.000 fuzz / 256×32) juga hijau.
 - **Coverage** (`forge coverage --ir-minimum`): **baris src = 96,3%** (748/777) — **memenuhi ≥95%**.
   Per-file baris: Curve 98,2% · Factory 96,5% · Vault 94,4% · Hook 98,6% · PriceReader 97,0% ·
   Router 95,9% · Token 86,7% · CurveMath/LaunchTax/PoolManagerSwapper/V3Oracle 100%.
