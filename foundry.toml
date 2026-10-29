@@ -10,7 +10,11 @@ optimizer = true
 optimizer_runs = 44444444        # matches v4-core; resolves Pool.sol Yul stack-too-deep under via_ir
 via_ir = true           # v4 hook math + curve locals exceed the stack without IR
 ffi = false
-fs_permissions = [{ access = "read", path = "./script/config" }, { access = "read-write", path = "./docs" }]
+fs_permissions = [
+    { access = "read", path = "./script/config" },
+    { access = "read-write", path = "./docs" },
+    { access = "read-write", path = "./deployments" },
+]
 gas_reports = ["COURFactory", "COURCurve", "COURHook", "COURFeeVault", "COURRouter"]
 fuzz = { runs = 1000 }
 invariant = { runs = 256, depth = 32, fail_on_revert = false }

@@ -20,3 +20,8 @@ node_modules/
 .DS_Store
 coverage/
 lcov.info
+
+# Deploy outputs: keep the dir (.gitkeep) but not fork/anvil run artifacts.
+# The real mainnet deployments/4663.json is force-added after the mainnet deploy.
+deployments/*.json
+docs/_*.log
