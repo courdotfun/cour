@@ -9,9 +9,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Script, console2 } from "forge-std/Script.sol";
 
 /// @notice Mainnet smoke test, phase A (docs §7.3 steps 1-2): the deployer swaps ETH -> USDG -> NVDA via
-///         SwapRouter02, then launches two test tokens with tax-free initial buys:
-///         CTEST (5% fee, BUYBACK_BURN) and CTEST2 (2% fee, HOLDERS). Writes deployments/smoke.json.
-///         Run phase B (05b_SmokeTrade) AFTER a >5s gap so trades are past the anti-snipe window.
+///         SwapRouter02, then launches CTEST (5% fee, BUYBACK_BURN) and — only if SMOKE_HOLDERS=true —
+///         CTEST2 (2% fee, HOLDERS), each with a TINY fixed initial buy (safe for the cheap test curve).
+///         Writes deployments/smoke.json. Run phase B (05b) AFTER a >5s gap (past the anti-snipe window).
 contract SmokeLaunch is Script {
     function run() external {
         string memory cfg = vm.readFile("script/config/rh-mainnet.json");
@@ -27,9 +27,10 @@ contract SmokeLaunch is Script {
 
         uint256 pk = vm.envUint("DEPLOYER_PK");
         address me = vm.addr(pk);
-        // ETH to spend acquiring NVDA (~$190 at the observed ~$2.3k ETH; headroom above the ~$123 raise).
-        // Override with SMOKE_ETH_WEI.
-        uint256 ethIn = vm.envOr("SMOKE_ETH_WEI", uint256(0.08 ether));
+        uint256 ethIn = vm.envOr("SMOKE_ETH_WEI", uint256(0.08 ether)); // fork default; mainnet overrides small
+        bool holders = vm.envOr("SMOKE_HOLDERS", false);
+        // Tiny fixed initial buy, safe for the $1/$15 curve (does not graduate, well under 50% supply).
+        uint256 initBuy = vm.envOr("SMOKE_INIT_BUY_WEI", uint256(5e14)); // ~0.0005 NVDA
 
         vm.startBroadcast(pk);
 
@@ -42,14 +43,10 @@ contract SmokeLaunch is Script {
                 IV3SwapRouter.ExactInputParams({ path: path, recipient: me, amountIn: ethIn, amountOutMinimum: 0 })
             );
         console2.log("acquired NVDA (raw)", nvdaOut);
-        require(nvdaOut > 0, "no NVDA acquired");
+        require(nvdaOut > initBuy * 3, "insufficient NVDA acquired");
 
-        // Split the NVDA: small initial buys now; the rest is spent in phase B.
-        uint256 initBuy1 = nvdaOut / 20; // ~5% for CTEST initial buy
-        uint256 initBuy2 = nvdaOut / 20; // ~5% for CTEST2 initial buy
-
-        // 2. Launch CTEST (5% fee, BUYBACK_BURN) with a tax-free initial buy.
-        IERC20(nvda).approve(address(factory), initBuy1);
+        // 2. Launch CTEST (5% fee, BUYBACK_BURN) with a tiny tax-free initial buy.
+        IERC20(nvda).approve(address(factory), initBuy);
         (address t1, address c1) = factory.createToken(
             ICOURFactory.CreateParams({
                 name: "COUR Test",
@@ -59,28 +56,31 @@ contract SmokeLaunch is Script {
                 creatorFeeBps: 500,
                 creatorMode: uint8(CreatorMode.BUYBACK_BURN),
                 feeRecipient: me,
-                initialBuyStock: initBuy1,
+                initialBuyStock: initBuy,
                 minInitialTokens: 0,
                 salt: keccak256("CTEST-smoke")
             })
         );
 
-        // Launch CTEST2 (2% fee, HOLDERS) with a tax-free initial buy.
-        IERC20(nvda).approve(address(factory), initBuy2);
-        (address t2, address c2) = factory.createToken(
-            ICOURFactory.CreateParams({
-                name: "COUR Test 2",
-                symbol: "CTEST2",
-                metadataURI: "ipfs://smoke-ctest2",
-                stock: nvda,
-                creatorFeeBps: 200,
-                creatorMode: uint8(CreatorMode.HOLDERS),
-                feeRecipient: me,
-                initialBuyStock: initBuy2,
-                minInitialTokens: 0,
-                salt: keccak256("CTEST2-smoke")
-            })
-        );
+        address t2 = address(0);
+        address c2 = address(0);
+        if (holders) {
+            IERC20(nvda).approve(address(factory), initBuy);
+            (t2, c2) = factory.createToken(
+                ICOURFactory.CreateParams({
+                    name: "COUR Test 2",
+                    symbol: "CTEST2",
+                    metadataURI: "ipfs://smoke-ctest2",
+                    stock: nvda,
+                    creatorFeeBps: 200,
+                    creatorMode: uint8(CreatorMode.HOLDERS),
+                    feeRecipient: me,
+                    initialBuyStock: initBuy,
+                    minInitialTokens: 0,
+                    salt: keccak256("CTEST2-smoke")
+                })
+            );
+        }
 
         vm.stopBroadcast();
 
@@ -92,7 +92,7 @@ contract SmokeLaunch is Script {
         string memory out = vm.serializeAddress(o, "ctest2Curve", c2);
         vm.writeJson(out, "deployments/smoke.json");
         console2.log("CTEST", t1);
-        console2.log("CTEST2", t2);
+        console2.log("CTEST2 (0x0 if skipped)", t2);
         console2.log("Wrote deployments/smoke.json; run 05b after a >5s gap");
     }
 }

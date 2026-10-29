@@ -50,9 +50,9 @@ contract ConfigureStocks is Script {
         // Closed test phase: allowlist ONLY the deployer; the allowlist ships enabled.
         factory.setLaunchAllowlist(deployer, true);
 
-        // CHEAP TEST launch params so graduation is reachable with ~$120 of raise (restore to 4000/60000
-        // before opening to the public — see 06_RestoreParams / DEPLOY.md).
-        factory.setLaunchParams(40, 600, 50_000, 0);
+        // CHEAP TEST launch params (Q=15, same as prod) so graduation needs only ~$3 of NVDA — proven
+        // safe for real NVDA decimals on a fork. Restore to 4000/60000 before opening to the public.
+        factory.setLaunchParams(1, 15, 50_000, 0);
 
         vm.stopBroadcast();
         console2.log("Configured NVDA + test params (40/600) + allowlist(deployer) + ETH path");

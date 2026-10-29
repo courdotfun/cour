@@ -27,6 +27,7 @@ echo "[rehearsal] anvil ready, chain-id=$(cast chain-id --rpc-url $RPC_LOCAL)"
 cast rpc anvil_setBalance "$DEPLOYER_ADDRESS" 0x56BC75E2D63100000 --rpc-url $RPC_LOCAL >/dev/null
 echo "[rehearsal] deployer balance: $(cast balance $DEPLOYER_ADDRESS --rpc-url $RPC_LOCAL)"
 
+export SMOKE_HOLDERS=true # fork has plenty of funds: exercise the HOLDERS path too
 run() { echo "=== $1 ===" | tee -a "$LOG"; forge script "$1" --rpc-url $RPC_LOCAL --broadcast 2>&1 | tee -a "$LOG" | grep -E "script ran|Logs:|  [A-Za-z]|address|positionId|graduated|claimed|buyback" || true; }
 
 run script/01_DeployCore.s.sol:DeployCore
