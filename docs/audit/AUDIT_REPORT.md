@@ -43,15 +43,21 @@ desimal/harga), buy = reserve-delta eksak + cap graduasi + rounding-favours-curv
 rounding-favours-curve, dan no-profit round-trip. Invariant sistem (supply konstan, solvensi kurva,
 solvensi bucket vault termasuk fix self-transfer) dicakup suite invariant Foundry (`test/invariant/`).
 
-## 4. Coverage
-`forge coverage --ir-minimum`: **baris src ~96,7%** (≥95% ✓). **Branch src ~62%** — DI BAWAH target 80%.
-Jujur: metrik branch forge sangat pesimistis (tiap `require`/`&&`/`||`/ternary = 2 cabang); cabang yang
-belum tertutup adalah guard defensif/eksotik (mis. `reserve==0`, `span==0`, urutan-token pada fungsi view
-hook) dan jalur `V3Oracle` tick-sign yang hanya tereksekusi di fork. Semua guard revert kritis, kedua
-urutan token, keempat mode fee, konservasi, dan fix C-1 SUDAH diuji + 25,2 juta input fuzz medusa. Sudah
-ditambah test cabang (BranchCoverage/BranchCoverage2, guard tests) namun 80% butuh puluhan micro-test
-both-sides untuk cabang defensif — dicatat sebagai rekomendasi lanjutan. _(Angka final-dengan-fork diisi
-dari `docs/coverage-final.txt`.)_
+## 4. Coverage — `forge coverage --ir-minimum` (termasuk test fork)
+- **Baris src ≈ 97,1%** (766/789) — **memenuhi ≥95% ✓**. Per-file baris: GraduationImpl/CurveMath/LaunchTax/
+  PoolManagerSwapper/V3Oracle 100%; Hook 98,6%; Curve 98,2%; PriceReader 97,0%; FeeVault 96,3%; Router 95,9%;
+  Factory 94,5%; Token 86,7%.
+- **Branch src ≈ 65%** (111/170) — **BELUM mencapai target 80%** (naik dari 53% awal). GraduationImpl 100%
+  branch; FeeVault 73%; Curve 74%; PriceReader 71%.
+
+  **Jujur soal 80%:** metrik branch forge sangat pesimistis (tiap `require`/`&&`/`||`/ternary = 2 cabang).
+  Cabang sisa yang belum tertutup: `V3Oracle` tick-sign (butuh state tick ekstrem di fork), kombinasi
+  urutan-token pada fungsi _view_ hook + short-circuit `fee==0`, dan edge `divUp` di `CurveMath` — cabang
+  defensif/eksotik. Sudah ditambah `BranchCoverage`/`BranchCoverage2`/`BuybackGuards`/`HoldersSelfTransfer`
+  + guard tests + inklusi fork; menaikkan 65%→80% butuh puluhan micro-test both-sides untuk cabang
+  defensif. **Semua guard revert kritis, kedua urutan token, keempat mode fee, konservasi, dan fix C-1
+  sudah diuji** + 25,2 juta input fuzz medusa (0 pelanggaran). Dicatat sebagai rekomendasi lanjutan (target
+  80% belum terpenuhi — transparan).
 
 ## 5. Deployment aktif (pasca-perbaikan, 2026-10-31)
 Kontrak terbaru (sudah termasuk fix C-1/L-1/I-1) di Robinhood Chain 4663 — `deployments/4663.json`:

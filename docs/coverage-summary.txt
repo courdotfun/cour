@@ -2,8 +2,8 @@ Warning: `--ir-minimum` enables `viaIR` with minimum optimization, which can res
 Only use this flag as a workaround if you are experiencing "stack too deep" errors.
 Note that `viaIR` is production ready since Solidity 0.8.13 and above.
 See more: https://book.getfoundry.sh/guides/best-practices/stack-too-deep
-Compiling 216 files with Solc 0.8.26
-Solc 0.8.26 finished in 545.40s
+Compiling 220 files with Solc 0.8.26
+Solc 0.8.26 finished in 763.99s
 Compiler run successful with warnings:
 Warning (2018): Function state mutability can be restricted to view
   --> test/fork/ForkChain.t.sol:41:5:
@@ -14,62 +14,57 @@ Warning (2018): Function state mutability can be restricted to view
 Analysing contracts...
 Running tests...
 
-Ran 3 tests for test/integration/LaunchTaxFlow.t.sol:LaunchTaxFlowTest
-[PASS] test_buy_in_first_second_reverts() (gas: 2642881)
-[PASS] test_initial_buy_is_tax_free() (gas: 2894757)
-[PASS] test_tax_decays_more_tokens_later() (gas: 5421470)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 104.74ms (42.59ms CPU time)
+Ran 2 tests for test/integration/HoldersSelfTransfer.t.sol:HoldersSelfTransferTest
+[PASS] test_self_transfer_does_not_inflate_pending() (gas: 190872)
+[PASS] test_vault_stays_solvent_after_self_transfer_spam() (gas: 433718)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 65.56ms (15.42ms CPU time)
 
-Ran 7 tests for test/integration/BuyWithETH.t.sol:BuyWithETHTest
-[PASS] test_buyWithETH_direct_fallback() (gas: 513408)
-[PASS] test_buyWithETH_expired() (gas: 135983)
-[PASS] test_buyWithETH_multihop_refunds_nothing_left() (gas: 551738)
-[PASS] test_buyWithETH_path_not_configured() (gas: 55531)
-[PASS] test_buyWithETH_slippage() (gas: 376269)
-[PASS] test_buyWithETH_zero_value() (gas: 127138)
-[PASS] test_setEthInPath_only_owner() (gas: 22593)
-Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 112.45ms (45.07ms CPU time)
+Ran 3 tests for test/integration/LaunchTaxFlow.t.sol:LaunchTaxFlowTest
+[PASS] test_buy_in_first_second_reverts() (gas: 2642852)
+[PASS] test_initial_buy_is_tax_free() (gas: 2894728)
+[PASS] test_tax_decays_more_tokens_later() (gas: 5421412)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 72.40ms (28.65ms CPU time)
 
 Ran 4 tests for test/unit/LaunchTaxTest.t.sol:LaunchTaxTest
 [PASS] test_clock_skew_max_tax() (gas: 1880)
 [PASS] test_decay_schedule() (gas: 15267)
 [PASS] test_monotonic_decreasing() (gas: 14106)
 [PASS] test_taxOn_rounds_up() (gas: 4590)
-Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 4.47ms (3.61ms CPU time)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 3.62ms (2.87ms CPU time)
+
+Ran 7 tests for test/integration/BuyWithETH.t.sol:BuyWithETHTest
+[PASS] test_buyWithETH_direct_fallback() (gas: 513400)
+[PASS] test_buyWithETH_expired() (gas: 135983)
+[PASS] test_buyWithETH_multihop_refunds_nothing_left() (gas: 551730)
+[PASS] test_buyWithETH_path_not_configured() (gas: 55538)
+[PASS] test_buyWithETH_slippage() (gas: 376261)
+[PASS] test_buyWithETH_zero_value() (gas: 127138)
+[PASS] test_setEthInPath_only_owner() (gas: 22593)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 79.70ms (32.59ms CPU time)
 
 Ran 2 tests for test/integration/LaunchToGraduation.t.sol:LaunchToGraduationTest
-[PASS] test_graduates_with_refund_and_opens_pool() (gas: 1906569)
-[PASS] test_graduation_conserves_supply() (gas: 1247527)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 140.82ms (71.74ms CPU time)
+[PASS] test_graduates_with_refund_and_opens_pool() (gas: 1902085)
+[PASS] test_graduation_conserves_supply() (gas: 1249092)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 90.51ms (43.52ms CPU time)
 
-Ran 13 tests for test/unit/Admin.t.sol:AdminTest
-[PASS] test_admin_cannot_change_existing_token() (gas: 2623024)
-[PASS] test_allowlist_only_owner() (gas: 23451)
-[PASS] test_fee_out_of_range() (gas: 82155)
-[PASS] test_initial_buy_too_large() (gas: 2689570)
-[PASS] test_launch_allowlist() (gas: 5375203)
-[PASS] test_launches_paused() (gas: 86989)
-[PASS] test_only_owner_admin() (gas: 25805)
-[PASS] test_setLaunchParams_new_launch_uses_new_values() (gas: 5151977)
-[PASS] test_stock_not_allowed() (gas: 31283)
-[PASS] test_thin_reference_pool() (gas: 82011)
-[PASS] test_vault_wiring_getters_and_platform_claim() (gas: 2862024)
-[PASS] test_wrong_launch_fee() (gas: 68318)
-[PASS] test_wrong_mode() (gas: 64703)
-Suite result: ok. 13 passed; 0 failed; 0 skipped; finished in 160.26ms (97.57ms CPU time)
+Ran 3 tests for test/unit/HookStubs.t.sol:HookStubsTest
+[PASS] test_getHookPermissions() (gas: 25438)
+[PASS] test_hook_entrypoints_only_pool_manager() (gas: 14624)
+[PASS] test_unused_hooks_revert() (gas: 52728)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 34.01ms (17.64ms CPU time)
 
-Ran 3 tests for test/unit/Smoke.t.sol:SmokeTest
-[PASS] test_buy_then_sell_no_free_money() (gas: 4052240)
-[PASS] test_deploy_wired() (gas: 15146)
-[PASS] test_launch_and_buy() (gas: 4020227)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 54.90ms (27.21ms CPU time)
+Ran 5 tests for test/unit/CurveMathTest.t.sol:CurveMathTest
+[PASS] test_balanced_graduation_identity() (gas: 10868)
+[PASS] test_buy_caps_at_stop_and_reports_graduation() (gas: 7617)
+[PASS] test_buy_rounds_against_user() (gas: 6892)
+[PASS] test_launchParams_defaults() (gas: 70792)
+[PASS] test_price_grows_15x_at_stop() (gas: 11023)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 4.93ms (4.24ms CPU time)
 
-Ran 4 tests for test/unit/V3OracleTest.t.sol:V3OracleTest
-[PASS] test_consult_negative_tick_rounds_to_neg_infinity() (gas: 2602222)
-[PASS] test_consult_returns_mean_tick() (gas: 2601605)
-[PASS] test_getQuoteAtTick_large_tick_uses_x128_branch() (gas: 12108)
-[PASS] test_getQuoteAtTick_tick0_is_unity() (gas: 1687013)
-Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 9.63ms (7.45ms CPU time)
+Ran 2 tests for test/unit/BranchCoverage.t.sol:BranchCoverageTest
+[PASS] test_both_token_orderings() (gas: 15986105)
+[PASS] test_exact_output_not_supported() (gas: 8150994)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 135.62ms (88.80ms CPU time)
 
 Ran 11 tests for test/unit/PriceReaderTest.t.sol:PriceReaderTest
 [PASS] test_admin_paths() (gas: 966501)
@@ -83,131 +78,92 @@ Ran 11 tests for test/unit/PriceReaderTest.t.sol:PriceReaderTest
 [PASS] test_usdg_route_tick0_is_one_dollar() (gas: 2129099)
 [PASS] test_weth_route() (gas: 3066964)
 [PASS] test_weth_route_without_pool_reverts() (gas: 2129310)
-Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 50.05ms (44.01ms CPU time)
-
-Ran 1 test for test/integration/Rehearsal.t.sol:RehearsalTest
-[PASS] test_rehearsal() (gas: 49582810)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 215.79ms (177.58ms CPU time)
-
-Ran 3 tests for test/unit/HookStubs.t.sol:HookStubsTest
-[PASS] test_getHookPermissions() (gas: 25438)
-[PASS] test_hook_entrypoints_only_pool_manager() (gas: 14624)
-[PASS] test_unused_hooks_revert() (gas: 52728)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 43.06ms (8.18ms CPU time)
-
-Ran 5 tests for test/unit/CurveMathTest.t.sol:CurveMathTest
-[PASS] test_balanced_graduation_identity() (gas: 10868)
-[PASS] test_buy_caps_at_stop_and_reports_graduation() (gas: 7617)
-[PASS] test_buy_rounds_against_user() (gas: 6892)
-[PASS] test_launchParams_defaults() (gas: 70792)
-[PASS] test_price_grows_15x_at_stop() (gas: 11023)
-Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 6.37ms (5.07ms CPU time)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 52.73ms (28.81ms CPU time)
 
 Ran 10 tests for test/unit/FeeModes.t.sol:FeeModesTest
-[PASS] test_buyback_burn_mode_sends_to_dead() (gas: 2872282)
-[PASS] test_buyback_cap_2pct() (gas: 2789749)
-[PASS] test_buyback_mode_buys_to_creator() (gas: 2879045)
-[PASS] test_buyback_only_creator() (gas: 2773811)
-[PASS] test_buyback_wrong_mode_reverts() (gas: 2773253)
-[PASS] test_creator_mode_split_80_20() (gas: 2774787)
-[PASS] test_holders_claim_wrong_mode_reverts() (gas: 2557246)
-[PASS] test_holders_mode_dividends() (gas: 3185425)
-[PASS] test_platform_claim_to_treasury() (gas: 2798155)
-[PASS] test_two_step_recipient() (gas: 2809723)
-Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 121.51ms (94.22ms CPU time)
-
-Ran 8 tests for test/integration/BuybackGuards.t.sol:BuybackGuardsTest
-[PASS] test_buyback_only_creator() (gas: 2562092)
-[PASS] test_buyback_price_deviation_postgrad() (gas: 4136914)
-[PASS] test_buyback_success_postgrad_burns_to_dead() (gas: 4001759)
-[PASS] test_buyback_too_large_postgrad() (gas: 3848914)
-[PASS] test_buyback_too_large_pregrad() (gas: 2800175)
-[PASS] test_buyback_too_small_below_min_usd() (gas: 2797565)
-[PASS] test_buyback_too_small_when_nothing_owed() (gas: 2562647)
-[PASS] test_buyback_wrong_mode() (gas: 2559738)
-Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 271.27ms (141.87ms CPU time)
-
-Ran 3 tests for test/fuzz/CurveFuzz.t.sol:CurveFuzzTest
-[PASS] testFuzz_graduation_solvency(uint256,uint256) (runs: 3, μ: 4945011, ~: 4949729)
-[PASS] testFuzz_no_free_money(uint256,uint256,uint16,uint256) (runs: 3, μ: 4653145, ~: 4940552)
-[PASS] testFuzz_supply_constant(uint256,uint256,uint256) (runs: 3, μ: 4936111, ~: 4935247)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 561.02ms (1.27s CPU time)
-
-Ran 2 tests for test/unit/BranchCoverage.t.sol:BranchCoverageTest
-[PASS] test_both_token_orderings() (gas: 63707459)
-[PASS] test_exact_output_not_supported() (gas: 50853412)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 781.90ms (248.28ms CPU time)
+[PASS] test_buyback_burn_mode_sends_to_dead() (gas: 2872424)
+[PASS] test_buyback_cap_2pct() (gas: 2789726)
+[PASS] test_buyback_mode_buys_to_creator() (gas: 2879187)
+[PASS] test_buyback_only_creator() (gas: 2773782)
+[PASS] test_buyback_wrong_mode_reverts() (gas: 2773224)
+[PASS] test_creator_mode_split_80_20() (gas: 2774758)
+[PASS] test_holders_claim_wrong_mode_reverts() (gas: 2557217)
+[PASS] test_holders_mode_dividends() (gas: 3185875)
+[PASS] test_platform_claim_to_treasury() (gas: 2798126)
+[PASS] test_two_step_recipient() (gas: 2809694)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 147.02ms (103.37ms CPU time)
 
 Ran 17 tests for test/unit/Coverage.t.sol:CoverageTest
-[PASS] test_constructors_zero_address() (gas: 434360)
-[PASS] test_curve_buy_expired() (gas: 2641901)
-[PASS] test_curve_buy_slippage() (gas: 2647265)
-[PASS] test_curve_quotes() (gas: 2783565)
-[PASS] test_curve_sell_reverts() (gas: 2811832)
-[PASS] test_curve_trades_revert_after_graduation() (gas: 3773730)
-[PASS] test_graduate_only_curve() (gas: 2556191)
-[PASS] test_hook_priceInfo_bad_pool_key() (gas: 24611)
-[PASS] test_hook_twap_anchor_rollover() (gas: 4527430)
-[PASS] test_hook_views_after_graduation() (gas: 3779009)
-[PASS] test_initialBuy_only_factory() (gas: 2559139)
-[PASS] test_notify_only_hook_or_curve() (gas: 2568929)
-[PASS] test_router_expired() (gas: 2569614)
-[PASS] test_router_pre_and_post_grad() (gas: 4248285)
+[PASS] test_constructors_zero_address() (gas: 432188)
+[PASS] test_curve_buy_expired() (gas: 2641872)
+[PASS] test_curve_buy_slippage() (gas: 2647236)
+[PASS] test_curve_quotes() (gas: 2783536)
+[PASS] test_curve_sell_reverts() (gas: 2811803)
+[PASS] test_curve_trades_revert_after_graduation() (gas: 3775266)
+[PASS] test_graduate_only_curve() (gas: 2556188)
+[PASS] test_hook_priceInfo_bad_pool_key() (gas: 24596)
+[PASS] test_hook_twap_anchor_rollover() (gas: 4514191)
+[PASS] test_hook_views_after_graduation() (gas: 3777045)
+[PASS] test_initialBuy_only_factory() (gas: 2559110)
+[PASS] test_notify_only_hook_or_curve() (gas: 2568900)
+[PASS] test_router_expired() (gas: 2569585)
+[PASS] test_router_pre_and_post_grad() (gas: 4244959)
 [PASS] test_vault_admin_and_wire_guards() (gas: 68285)
-[PASS] test_vault_recipient_guards() (gas: 2576032)
-[PASS] test_vault_zero_claims_and_guards() (gas: 2573472)
-Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 1.78s (256.31ms CPU time)
+[PASS] test_vault_recipient_guards() (gas: 2576003)
+[PASS] test_vault_zero_claims_and_guards() (gas: 2573443)
+Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 152.44ms (165.62ms CPU time)
+
+Ran 8 tests for test/integration/BuybackGuards.t.sol:BuybackGuardsTest
+[PASS] test_buyback_only_creator() (gas: 2562063)
+[PASS] test_buyback_price_deviation_postgrad() (gas: 4141470)
+[PASS] test_buyback_success_postgrad_burns_to_dead() (gas: 3991549)
+[PASS] test_buyback_too_large_postgrad() (gas: 3843518)
+[PASS] test_buyback_too_large_pregrad() (gas: 2800152)
+[PASS] test_buyback_too_small_below_min_usd() (gas: 2797536)
+[PASS] test_buyback_too_small_when_nothing_owed() (gas: 2562618)
+[PASS] test_buyback_wrong_mode() (gas: 2559709)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 71.59ms (86.37ms CPU time)
+
+Ran 3 tests for test/unit/Smoke.t.sol:SmokeTest
+[PASS] test_buy_then_sell_no_free_money() (gas: 4052219)
+[PASS] test_deploy_wired() (gas: 15116)
+[PASS] test_launch_and_buy() (gas: 4020206)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 21.22ms (12.47ms CPU time)
+
+Ran 1 test for test/integration/Rehearsal.t.sol:RehearsalTest
+[PASS] test_rehearsal() (gas: 50367312)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 117.97ms (97.42ms CPU time)
+
+Ran 4 tests for test/unit/V3OracleTest.t.sol:V3OracleTest
+[PASS] test_consult_negative_tick_rounds_to_neg_infinity() (gas: 2602222)
+[PASS] test_consult_returns_mean_tick() (gas: 2601605)
+[PASS] test_getQuoteAtTick_large_tick_uses_x128_branch() (gas: 12108)
+[PASS] test_getQuoteAtTick_tick0_is_unity() (gas: 1687013)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 205.83ms (3.24ms CPU time)
 
 Ran 3 tests for test/integration/GraduationIdentity.t.sol:GraduationIdentityTest
-[PASS] testFuzz_graduation_conservation(uint8,uint256) (runs: 3, μ: 41694775, ~: 41697442)
-[PASS] test_graduation_conservation_canonical() (gas: 41708545)
-[PASS] test_pool_price_realistic_cases() (gas: 375015964)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 1.99s (581.20ms CPU time)
+[PASS] testFuzz_graduation_conservation(uint8,uint256) (runs: 1, μ: 42489927, ~: 42489927)
+[PASS] test_graduation_conservation_canonical() (gas: 42497202)
+[PASS] test_pool_price_realistic_cases() (gas: 382163115)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 214.48ms (285.34ms CPU time)
 
-Ran 4 tests for test/invariant/CurveInvariants.t.sol:CurveInvariantsTest
-[PASS] invariant_curve_solvency() (runs: 12, calls: 360, reverts: 0)
+Ran 13 tests for test/unit/Admin.t.sol:AdminTest
+[PASS] test_admin_cannot_change_existing_token() (gas: 2623002)
+[PASS] test_allowlist_only_owner() (gas: 23474)
+[PASS] test_fee_out_of_range() (gas: 82209)
+[PASS] test_initial_buy_too_large() (gas: 2689549)
+[PASS] test_launch_allowlist() (gas: 5375178)
+[PASS] test_launches_paused() (gas: 87005)
+[PASS] test_only_owner_admin() (gas: 25828)
+[PASS] test_setLaunchParams_new_launch_uses_new_values() (gas: 5151910)
+[PASS] test_stock_not_allowed() (gas: 31306)
+[PASS] test_thin_reference_pool() (gas: 82027)
+[PASS] test_vault_wiring_getters_and_platform_claim() (gas: 2862003)
+[PASS] test_wrong_launch_fee() (gas: 68349)
+[PASS] test_wrong_mode() (gas: 64734)
+Suite result: ok. 13 passed; 0 failed; 0 skipped; finished in 351.99ms (63.63ms CPU time)
 
-╭--------------+----------+-------+---------+----------╮
-| Contract     | Selector | Calls | Reverts | Discards |
-+======================================================+
-| CurveHandler | buy      | 167   | 0       | 0        |
-|--------------+----------+-------+---------+----------|
-| CurveHandler | sell     | 193   | 0       | 0        |
-╰--------------+----------+-------+---------+----------╯
-
-[PASS] invariant_reserve_bounds() (runs: 12, calls: 360, reverts: 0)
-
-╭--------------+----------+-------+---------+----------╮
-| Contract     | Selector | Calls | Reverts | Discards |
-+======================================================+
-| CurveHandler | buy      | 167   | 0       | 0        |
-|--------------+----------+-------+---------+----------|
-| CurveHandler | sell     | 193   | 0       | 0        |
-╰--------------+----------+-------+---------+----------╯
-
-[PASS] invariant_supply_constant() (runs: 12, calls: 360, reverts: 0)
-
-╭--------------+----------+-------+---------+----------╮
-| Contract     | Selector | Calls | Reverts | Discards |
-+======================================================+
-| CurveHandler | buy      | 167   | 0       | 0        |
-|--------------+----------+-------+---------+----------|
-| CurveHandler | sell     | 193   | 0       | 0        |
-╰--------------+----------+-------+---------+----------╯
-
-[PASS] invariant_vault_buckets_match_balance() (runs: 12, calls: 360, reverts: 0)
-
-╭--------------+----------+-------+---------+----------╮
-| Contract     | Selector | Calls | Reverts | Discards |
-+======================================================+
-| CurveHandler | buy      | 167   | 0       | 0        |
-|--------------+----------+-------+---------+----------|
-| CurveHandler | sell     | 193   | 0       | 0        |
-╰--------------+----------+-------+---------+----------╯
-
-Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 1.77s (6.24s CPU time)
-
-Ran 18 test suites in 2.02s (8.18s CPU time): 103 tests passed, 0 failed, 0 skipped (103 total tests)
+Ran 17 test suites in 366.49ms (1.82s CPU time): 98 tests passed, 0 failed, 0 skipped (98 total tests)
 
 ╭--------------------------------------+-------------------+--------------------+------------------+------------------╮
 | File                                 | % Lines           | % Statements       | % Branches       | % Funcs          |
@@ -220,23 +176,23 @@ Ran 18 test suites in 2.02s (8.18s CPU time): 103 tests passed, 0 failed, 0 skip
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | script/03_LaunchRehearsal.s.sol      | 0.00% (0/21)      | 0.00% (0/34)       | 100.00% (0/0)    | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| script/04_HandOver.s.sol             | 0.00% (0/18)      | 0.00% (0/25)       | 100.00% (0/0)    | 0.00% (0/1)      |
+| script/04_HandOver.s.sol             | 0.00% (0/22)      | 0.00% (0/31)       | 100.00% (0/0)    | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| script/05a_SmokeLaunch.s.sol         | 0.00% (0/37)      | 0.00% (0/53)       | 0.00% (0/2)      | 0.00% (0/1)      |
+| script/05a_SmokeLaunch.s.sol         | 0.00% (0/40)      | 0.00% (0/54)       | 0.00% (0/3)      | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| script/05b_SmokeTrade.s.sol          | 0.00% (0/58)      | 0.00% (0/84)       | 0.00% (0/11)     | 0.00% (0/3)      |
+| script/05b_SmokeTrade.s.sol          | 0.00% (0/68)      | 0.00% (0/103)      | 0.00% (0/15)     | 0.00% (0/3)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| script/06_RestoreParams.s.sol        | 0.00% (0/10)      | 0.00% (0/12)       | 0.00% (0/4)      | 0.00% (0/1)      |
+| script/06_RestoreParams.s.sol        | 0.00% (0/13)      | 0.00% (0/16)       | 0.00% (0/6)      | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| script/DeployCore.s.sol              | 0.00% (0/23)      | 0.00% (0/25)       | 0.00% (0/4)      | 0.00% (0/1)      |
+| script/DeployCore.s.sol              | 0.00% (0/24)      | 0.00% (0/27)       | 0.00% (0/4)      | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | script/DeployTestnet.s.sol           | 0.00% (0/16)      | 0.00% (0/20)       | 100.00% (0/0)    | 0.00% (0/1)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | src/COURCurve.sol                    | 98.15% (106/108)  | 94.70% (125/132)   | 73.68% (14/19)   | 100.00% (14/14)  |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| src/COURFactory.sol                  | 96.46% (109/113)  | 95.89% (140/146)   | 75.00% (12/16)   | 86.67% (13/15)   |
+| src/COURFactory.sol                  | 94.51% (86/91)    | 93.86% (107/114)   | 66.67% (10/15)   | 85.71% (12/14)   |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| src/COURFeeVault.sol                 | 94.44% (153/162)  | 92.24% (202/219)   | 65.91% (29/44)   | 92.00% (23/25)   |
+| src/COURFeeVault.sol                 | 94.48% (154/163)  | 92.31% (204/221)   | 66.67% (30/45)   | 92.00% (23/25)   |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | src/COURHook.sol                     | 98.64% (145/147)  | 93.16% (177/190)   | 51.72% (15/29)   | 100.00% (19/19)  |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
@@ -245,6 +201,8 @@ Ran 18 test suites in 2.02s (8.18s CPU time): 103 tests passed, 0 failed, 0 skip
 | src/COURRouter.sol                   | 95.89% (70/73)    | 90.36% (75/83)     | 52.63% (10/19)   | 100.00% (10/10)  |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | src/COURToken.sol                    | 86.67% (13/15)    | 91.67% (11/12)     | 100.00% (1/1)    | 66.67% (2/3)     |
+|--------------------------------------+-------------------+--------------------+------------------+------------------|
+| src/GraduationImpl.sol               | 100.00% (33/33)   | 97.67% (42/43)     | 66.67% (2/3)     | 100.00% (2/2)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | src/libraries/CurveMath.sol          | 100.00% (35/35)   | 100.00% (40/40)    | 50.00% (4/8)     | 100.00% (4/4)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
@@ -256,7 +214,11 @@ Ran 18 test suites in 2.02s (8.18s CPU time): 103 tests passed, 0 failed, 0 skip
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | src/libraries/V3Oracle.sol           | 100.00% (16/16)   | 95.45% (21/22)     | 20.00% (1/5)     | 100.00% (2/2)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| test/invariant/CurveHandler.sol      | 100.00% (29/29)   | 93.94% (31/33)     | 60.00% (3/5)     | 100.00% (4/4)    |
+| test/fizz/CourFuzz.sol               | 0.00% (0/97)      | 0.00% (0/132)      | 0.00% (0/19)     | 0.00% (0/15)     |
+|--------------------------------------+-------------------+--------------------+------------------+------------------|
+| test/fizz/CurveMathFuzz.sol          | 0.00% (0/49)      | 0.00% (0/56)       | 0.00% (0/4)      | 0.00% (0/5)      |
+|--------------------------------------+-------------------+--------------------+------------------+------------------|
+| test/invariant/CurveHandler.sol      | 0.00% (0/29)      | 0.00% (0/33)       | 0.00% (0/5)      | 0.00% (0/4)      |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | test/mocks/MockERC20.sol             | 100.00% (6/6)     | 100.00% (3/3)      | 100.00% (0/0)    | 100.00% (3/3)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
@@ -272,7 +234,7 @@ Ran 18 test suites in 2.02s (8.18s CPU time): 103 tests passed, 0 failed, 0 skip
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
 | test/unit/BranchCoverage.t.sol       | 87.50% (7/8)      | 83.33% (5/6)       | 100.00% (0/0)    | 100.00% (3/3)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| test/utils/BaseTest.sol              | 93.88% (46/49)    | 93.48% (43/46)     | 0.00% (0/3)      | 100.00% (5/5)    |
+| test/utils/BaseTest.sol              | 94.00% (47/50)    | 93.75% (45/48)     | 0.00% (0/3)      | 100.00% (5/5)    |
 |--------------------------------------+-------------------+--------------------+------------------+------------------|
-| Total                                | 73.98% (890/1203) | 70.70% (1047/1481) | 52.17% (108/207) | 80.70% (138/171) |
+| Total                                | 63.12% (873/1383) | 59.97% (1029/1716) | 44.17% (106/240) | 70.31% (135/192) |
 ╰--------------------------------------+-------------------+--------------------+------------------+------------------╯

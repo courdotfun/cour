@@ -56,7 +56,7 @@ mengirim tepat selisih cadangan pada setiap transaksi.
 - **Coverage** (`forge coverage --ir-minimum`): **baris src = 96,3%** (748/777) — **memenuhi ≥95%**.
   Per-file baris: Curve 98,2% · Factory 96,5% · Vault 94,4% · Hook 98,6% · PriceReader 97,0% ·
   Router 95,9% · Token 86,7% · CurveMath/LaunchTax/PoolManagerSwapper/V3Oracle 100%.
-  **Branch src ≈ 63%** (naik dari 53% sebelumnya) — **belum mencapai target 80%** (lihat catatan jujur
+  **Branch src ≈ 65%** (111/170; naik dari 53% awal) — **belum mencapai target 80%** (audit round) (lihat catatan jujur
   di bawah). Fungsi src ~95%.
 
   **Catatan jujur soal branch 80%:** forge menghitung branch secara pesimistis (setiap `&&`/`||`/
