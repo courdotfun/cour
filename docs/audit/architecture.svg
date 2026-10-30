@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1198" height="645" viewBox="0 0 480 258" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 8 6" refX="8" refY="3"
+      markerWidth="4" markerHeight="3" orient="auto">
+      <path d="M0.5,0.5 L7,3 L0.5,5.5" fill="none" stroke="#94A3B8"
+        stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
+    </marker>
+    <filter id="shadow" x="-6%" y="-8%" width="112%" height="128%">
+      <feDropShadow dx="0" dy="0.5" stdDeviation="0.8"
+        flood-color="#000" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+  <rect width="480" height="258" fill="#F8F9FB" rx="3"/>
+  <text x="240" y="11" text-anchor="middle" font-size="6" font-weight="700" fill="#1E293B">COUR Phase 1 Architecture</text>
+  <rect x="165" y="16" width="150" height="10" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.4"/>
+  <rect x="170" y="18.5" width="5" height="5" rx="2.5" fill="#fff" stroke="#E2E5EA" stroke-width="0.4"/>
+  <text x="178" y="22.5" font-size="3.5" fill="#1E293B">Actor</text>
+  <rect x="210" y="18.5" width="5" height="5" rx="1.5" fill="#fff" stroke="#E2E5EA" stroke-width="0.4"/>
+  <rect x="211" y="19.5" width="0.8" height="3" rx="0.4" fill="#3B82F6"/>
+  <text x="218" y="22.5" font-size="3.5" fill="#1E293B">Protocol</text>
+  <rect x="258" y="18.5" width="5" height="5" rx="1.5" fill="#fff" stroke="#E2E5EA" stroke-width="0.4"/>
+  <rect x="259" y="19.5" width="0.8" height="3" rx="0.4" fill="#F59E0B"/>
+  <text x="266" y="22.5" font-size="3.5" fill="#1E293B">External</text>
+  <path d="M87.8,46.0 C87.8,70.0 64.0,70.0 64.0,94.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M87.8,46.0 C87.8,70.0 176.7,70.0 176.7,94.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M186.2,46.0 C186.2,70.0 176.7,70.0 176.7,94.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M64.0,114.0 C64.0,135.0 93.3,135.0 93.3,156.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M176.7,114.0 C176.7,135.0 93.3,135.0 93.3,156.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M176.7,114.0 C176.7,135.0 192.3,135.0 192.3,156.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M176.7,114.0 C176.7,135.0 296.7,135.0 296.7,156.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M176.7,114.0 C176.7,135.0 403.5,135.0 403.5,156.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M93.3,176.0 C93.3,197.0 87.0,197.0 87.0,218.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M126.7,174.0 C166.1,188.0 218.6,188.0 257.9,176.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M192.3,176.0 C192.3,197.0 202.8,197.0 202.8,218.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M296.7,176.0 C296.7,197.0 317.0,197.0 317.0,218.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M287.0,236.0 C280.4,250.0 271.6,250.0 265.0,238.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <path d="M403.5,176.0 C403.5,197.0 407.8,197.0 407.8,218.0" fill="none" stroke="#94A3B8" stroke-width="0.5" marker-end="url(#ah)"/>
+  <g filter="url(#shadow)">
+    <rect x="39.4" y="32.0" width="96.8" height="14" rx="7" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <text x="87.8" y="40.8" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">Creator / Trader</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="158.2" y="32.0" width="56.0" height="14" rx="7" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <text x="186.2" y="40.8" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">Admin</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="30.0" y="94.0" width="68.0" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="33.0" y="97.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="64.0" y="103.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURRouter</text>
+    <text x="64.0" y="108.5" text-anchor="middle" font-size="3.5" fill="#64748B">Entrypoint</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="140.3" y="94.0" width="72.8" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="143.3" y="97.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="176.7" y="103.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURFactory</text>
+    <text x="176.7" y="108.5" text-anchor="middle" font-size="3.5" fill="#64748B">Coordinator</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="59.9" y="156.0" width="66.8" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="62.9" y="159.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="93.3" y="165.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURCurve</text>
+    <text x="93.3" y="170.5" text-anchor="middle" font-size="3.5" fill="#64748B">Bonding curve</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="148.7" y="156.0" width="87.2" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="151.7" y="159.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="192.3" y="165.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">GraduationImpl</text>
+    <text x="192.3" y="170.5" text-anchor="middle" font-size="3.5" fill="#64748B">Delegatecall</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="257.9" y="156.0" width="77.6" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="260.9" y="159.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="296.7" y="165.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURFeeVault</text>
+    <text x="296.7" y="170.5" text-anchor="middle" font-size="3.5" fill="#64748B">Fee custody</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="357.5" y="156.0" width="92.0" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="360.5" y="159.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="403.5" y="165.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURPriceReader</text>
+    <text x="403.5" y="170.5" text-anchor="middle" font-size="3.5" fill="#64748B">v3 TWAP USD</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="55.4" y="218.0" width="63.2" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="58.4" y="221.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="87.0" y="227.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURToken</text>
+    <text x="87.0" y="232.5" text-anchor="middle" font-size="3.5" fill="#64748B">ERC20+Permit</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="287.0" y="218.0" width="60.0" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="290.0" y="221.0" width="1.4" height="14" rx="0.6" fill="#3B82F6"/>
+    <text x="317.0" y="227.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">COURHook</text>
+    <text x="317.0" y="232.5" text-anchor="middle" font-size="3.5" fill="#64748B">v4 fee hook</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="140.6" y="218.0" width="124.4" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="143.6" y="221.0" width="1.4" height="14" rx="0.6" fill="#F59E0B"/>
+    <text x="202.8" y="227.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">v4 PoolManager</text>
+    <text x="202.8" y="232.5" text-anchor="middle" font-size="3.5" fill="#64748B">PoolManager / PositionManager</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="369.0" y="218.0" width="77.6" height="20" rx="3" fill="#fff" stroke="#E2E5EA" stroke-width="0.5"/>
+    <rect x="372.0" y="221.0" width="1.4" height="14" rx="0.6" fill="#F59E0B"/>
+    <text x="407.8" y="227.5" text-anchor="middle" font-size="4.8" font-weight="600" fill="#1E293B">v3 Pools</text>
+    <text x="407.8" y="232.5" text-anchor="middle" font-size="3.5" fill="#64748B">USDG / WETH TWAP</text>
+  </g>
+  <rect x="64.3" y="65.0" width="23.2" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="75.9" y="70.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">buy/sell</text>
+  <rect x="117.1" y="65.0" width="30.4" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="132.3" y="70.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">createToken</text>
+  <rect x="165.1" y="65.0" width="32.8" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="181.5" y="70.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">admin config</text>
+  <rect x="59.9" y="130.0" width="37.6" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="78.7" y="135.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">route pre-grad</text>
+  <rect x="118.6" y="130.0" width="32.8" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="135.0" y="135.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">clone + init</text>
+  <rect x="168.1" y="130.0" width="32.8" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="184.5" y="135.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">delegatecall</text>
+  <rect x="219.1" y="130.0" width="35.2" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="236.7" y="135.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">registerToken</text>
+  <rect x="278.5" y="130.0" width="23.2" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="290.1" y="135.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">stockUsd</text>
+  <rect x="75.0" y="192.0" width="30.4" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="90.2" y="197.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">mint supply</text>
+  <rect x="178.3" y="187.0" width="28.0" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="192.3" y="192.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">notify fee</text>
+  <rect x="178.8" y="196.0" width="37.6" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="197.6" y="201.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">init pool + LP</text>
+  <rect x="286.9" y="192.0" width="40.0" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="306.9" y="197.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">priceInfo guard</text>
+  <rect x="264.4" y="249.0" width="23.2" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="276.0" y="254.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">take fee</text>
+  <rect x="389.3" y="192.0" width="32.8" height="6.0" rx="1" fill="#F8F9FB"/>
+  <text x="405.7" y="197.0" font-size="4" fill="#1E293B" font-weight="500" text-anchor="middle">TWAP observe</text>
+</svg>

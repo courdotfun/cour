@@ -25,3 +25,6 @@ lcov.info
 # The real mainnet deployments/4663.json is force-added after the mainnet deploy.
 deployments/*.json
 docs/_*.log
+
+# x-ray skill working dir (consolidated into docs/audit/)
+x-ray/
