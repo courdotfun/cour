@@ -16,6 +16,7 @@ import { LiquidityAmounts } from "v4-periphery/src/libraries/LiquidityAmounts.so
 
 import { ICOURFeeVault } from "./interfaces/ICOURFeeVault.sol";
 import { Constants } from "./libraries/Constants.sol";
+import { Errors } from "./libraries/Errors.sol";
 import { PoolKeyLib } from "./libraries/PoolKeyLib.sol";
 
 /// @title GraduationImpl
@@ -27,6 +28,11 @@ import { PoolKeyLib } from "./libraries/PoolKeyLib.sol";
 ///         mints the full-range position NFT to DEAD. MUST declare NO storage variables.
 contract GraduationImpl {
     using SafeERC20 for IERC20;
+
+    /// @dev The impl's own deployed address, baked into its bytecode. Under a delegatecall `address(this)`
+    ///      is the FACTORY (!= __self); a direct call has `address(this) == __self`. Lets graduate() reject
+    ///      direct calls (defense-in-depth; a direct call is already inert — hook rejects non-factory init).
+    address private immutable __self = address(this);
 
     struct Params {
         address token;
@@ -44,6 +50,7 @@ contract GraduationImpl {
         external
         returns (uint256 positionId, uint256 tokenLeftoverNet, uint256 stockRaisedNet)
     {
+        if (address(this) == __self) revert Errors.OnlyDelegatecall(); // reject direct (non-delegatecall) calls
         (PoolKey memory key, bool tokenIsZero) = PoolKeyLib.build(p.token, p.stock, p.hook);
         (uint256 amount0, uint256 amount1) =
             tokenIsZero ? (p.tokenLeftover, p.stockRaised) : (p.stockRaised, p.tokenLeftover);

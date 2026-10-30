@@ -151,6 +151,11 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
         TokenData storage t = _td[token];
         if (!t.registered || t.mode != CreatorMode.HOLDERS) return;
 
+        // Self-transfer (from == to) nets zero: balance and eligibility are unchanged, so no settle is
+        // needed. Processing it would settle the SAME holder twice off one stale pre-move balance and
+        // double-credit pending dividends (audit CRITICAL: HOLDERS self-transfer vault drain). Skip it.
+        if (from == to) return;
+
         uint256 acc = t.accPerShare;
         bool fe = _eligible(t, from);
         bool te = _eligible(t, to);
@@ -273,7 +278,9 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
         if (!ICOURCurve(t.curve).graduated()) {
             // Pre-graduation: buy on the curve (no fee, since msg.sender == vault). Cap 2% of curve stock.
             uint256 poolStock = IERC20(t.stock).balanceOf(t.curve);
-            if (stockIn > (poolStock * Constants.BUYBACK_MAX_POOL_BPS) / Constants.BPS && poolStock > 0) {
+            // A zero reserve means the cap cannot be sized safely -> revert rather than skip the guard
+            // (audit LOW: cap bypass when reserve==0).
+            if (poolStock == 0 || stockIn > (poolStock * Constants.BUYBACK_MAX_POOL_BPS) / Constants.BPS) {
                 revert Errors.BuybackTooLarge();
             }
             IERC20(t.stock).forceApprove(t.curve, stockIn);
@@ -283,7 +290,8 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
             // Post-graduation: swap on the v4 pool. Deviation + 2%-of-reserve guards.
             _checkDeviation(token);
             uint256 reserve = _poolStockReserve(token, t.stock);
-            if (reserve > 0 && stockIn > (reserve * Constants.BUYBACK_MAX_POOL_BPS) / Constants.BPS) {
+            // A zero reserve means the cap cannot be sized safely -> revert (audit LOW: cap bypass).
+            if (reserve == 0 || stockIn > (reserve * Constants.BUYBACK_MAX_POOL_BPS) / Constants.BPS) {
                 revert Errors.BuybackTooLarge();
             }
             (PoolKey memory key, bool tokenIsZero) = PoolKeyLib.build(token, t.stock, hook);

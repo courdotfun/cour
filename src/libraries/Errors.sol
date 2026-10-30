@@ -12,6 +12,7 @@ library Errors {
     error OnlyHookOrCurve();
     error AlreadyInitialized();
     error ZeroAddress();
+    error OnlyDelegatecall();
 
     // --- factory / launch ---
     error StockNotAllowed();
