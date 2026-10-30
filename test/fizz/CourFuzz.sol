@@ -70,7 +70,10 @@ contract CourFuzz {
         vault = new COURFeeVault(address(this), TREASURY, PM_STUB);
         curveImpl = new COURCurve(address(this), address(vault));
         vault.wire(address(this), HOOK_STUB, ROUTER_STUB, PRICE_STUB);
-        _launch();
+        // NOTE: do NOT _launch() here. _launch() -> vault.registerToken() -> factory.curveOf() calls back
+        // into THIS contract, but during construction this address has no code yet, so the typed call
+        // decodes empty and reverts ("Failed to initialize the test chain" under medusa). Launch lazily
+        // on the first handler call (when the harness is fully deployed) via _ensureActive().
     }
 
     // ---------------------------------------------------------------- factory role
@@ -100,8 +103,9 @@ contract CourFuzz {
         );
         curveOf[address(token)] = address(curve);
 
-        CurveMath.LaunchParams memory lp =
-            CurveMath.computeLaunchParams(STOCK_PRICE_X18, STOCK_DECIMALS, Constants.START_MC_USD, Constants.GRAD_MC_USD);
+        CurveMath.LaunchParams memory lp = CurveMath.computeLaunchParams(
+            STOCK_PRICE_X18, STOCK_DECIMALS, Constants.START_MC_USD, Constants.GRAD_MC_USD
+        );
 
         uint64 launchedAt = uint64(block.timestamp);
         // Jump past the 5s anti-snipe window so buys are tax-free (tax paths covered elsewhere).
@@ -127,6 +131,10 @@ contract CourFuzz {
     }
 
     function _ensureActive() internal {
+        if (address(curve) == address(0)) {
+            _launch(); // lazy first launch (see constructor note)
+            return;
+        }
         if (lastGraduated || curve.graduated()) _launch();
     }
 
@@ -174,8 +182,7 @@ contract CourFuzz {
         if (bal == 0) return;
         uint256 tokensIn = _clamp(tokensSeed, 1, bal);
         IERC20(address(token)).approve(address(curve), tokensIn);
-        try curve.sell(tokensIn, 0, address(this), block.timestamp) returns (uint256) { }
-        catch { }
+        try curve.sell(tokensIn, 0, address(this), block.timestamp) returns (uint256) { } catch { }
     }
 
     /// @notice Atomic buy then immediate sell of exactly what was received. SP-02: never profits the trader.
@@ -207,26 +214,26 @@ contract CourFuzz {
     /// @notice Creator claims accrued fees (harness is the fee recipient).
     function handler_claimCreator(uint256) external {
         _ensureActive();
-        try vault.claim(address(token)) returns (uint256) { }
-        catch { }
+        try vault.claim(address(token)) returns (uint256) { } catch { }
     }
 
     /// @notice Platform (treasury) side is claimed to the treasury.
     function handler_claimPlatform(uint256) external {
         _ensureActive();
-        try vault.claimPlatform(address(stock)) returns (uint256) { }
-        catch { }
+        try vault.claimPlatform(address(stock)) returns (uint256) { } catch { }
     }
 
     // ---------------------------------------------------------------- property oracles
 
     /// @notice GL-01: fixed token supply is constant forever.
     function property_totalSupply() external view returns (bool) {
+        if (address(token) == address(0)) return true; // not launched yet (lazy init)
         return IERC20(address(token)).totalSupply() == Constants.TOTAL_SUPPLY;
     }
 
     /// @notice SP-01: curve solvency — real stock held >= net stock raised (vS - vS0).
     function property_solvency() external view returns (bool) {
+        if (address(curve) == address(0)) return true;
         if (curve.graduated()) return true;
         TokenConfig memory c = curve.config();
         uint256 net = curve.vS() - c.vS0;
@@ -235,6 +242,7 @@ contract CourFuzz {
 
     /// @notice SP-05: reserve ranges pre-graduation — vS >= vS0 and vTStop <= vT <= vT0.
     function property_reserveRanges() external view returns (bool) {
+        if (address(curve) == address(0)) return true;
         if (curve.graduated()) return true;
         TokenConfig memory c = curve.config();
         uint256 _vS = curve.vS();
@@ -244,9 +252,10 @@ contract CourFuzz {
 
     /// @notice GL-02: vault bucket conservation — owed buckets sum to the vault's stock balance (±dust).
     function property_vaultBuckets() external view returns (bool) {
+        if (address(token) == address(0)) return true;
         uint256 bal = IERC20(address(stock)).balanceOf(address(vault));
-        uint256 sum = vault.creatorOwed(address(token)) + vault.buybackOwed(address(token))
-            + vault.platformOwed(address(stock));
+        uint256 sum =
+            vault.creatorOwed(address(token)) + vault.buybackOwed(address(token)) + vault.platformOwed(address(stock));
         return _diffLe(bal, sum, 1);
     }
 }
