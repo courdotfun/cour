@@ -36,12 +36,15 @@
 - Test baru: `test/integration/HoldersSelfTransfer.t.sol` (regresi C-1), `test/fizz/CurveMathFuzz.sol`
   (harness medusa).
 
-## 3. Hasil fuzz (medusa) — lihat `FUZZ.md`
-Harness `test/fizz/CurveMathFuzz.sol` (assertion-mode) pada matematika inti kurva, medusa 1.5.1, **31m00s,
-25.236.587 calls, 0 violations, 4/4 properti PASSED**. Properti: launch-param sanity (p0>0 untuk semua
-desimal/harga), buy = reserve-delta eksak + cap graduasi + rounding-favours-curve, sell eksak +
-rounding-favours-curve, dan no-profit round-trip. Invariant sistem (supply konstan, solvensi kurva,
-solvensi bucket vault termasuk fix self-transfer) dicakup suite invariant Foundry (`test/invariant/`).
+## 3. Hasil fuzz (medusa) — lihat `FUZZ.md` (2 kampanye, 43 menit total, **0 pelanggaran**)
+- **A — `CurveMathFuzz`** (matematika kurva, assertion-mode): **31m00s, 25.236.587 calls, 0 violations,
+  4/4 properti PASSED** (launch-param p0>0 semua desimal/harga, buy reserve-delta eksak + cap graduasi +
+  rounding-favours-curve, sell eksak, no-profit round-trip).
+- **B — `CourFuzz`** (STATEFUL kurva+fee-vault, property+assertion): **11m58s, 1.597.269 calls, 1.083 branch,
+  0 violations, 11/11 PASSED** — `property_{totalSupply, solvency, reserveRanges, vaultBuckets}` + split
+  20/80 + round-trip + graduation-count. Memvalidasi akuntansi vault di bawah fuzzing stateful.
+Invariant sistem juga dicakup suite invariant Foundry (`test/invariant/`); fix C-1 (HOLDERS self-transfer)
+punya regresi khusus `HoldersSelfTransfer.t.sol` + `invariant_vault_buckets_match_balance`.
 
 ## 4. Coverage — `forge coverage --ir-minimum` (termasuk test fork)
 - **Baris src ≈ 97,1%** (766/789) — **memenuhi ≥95% ✓**. Per-file baris: GraduationImpl/CurveMath/LaunchTax/

@@ -5,18 +5,40 @@
 > optimizer_runs=44444444). Echidna is not available on this Windows host; medusa is the Echidna-compatible
 > fuzzer used.
 
-## Campaign
+Two campaigns were run (43 min total medusa, **0 violations** across both):
+
+### Campaign A — `CurveMathFuzz` (pure curve math, assertion mode)
 
 | Field | Value |
 |---|---|
-| Mode | assertion testing (8 workers, call-sequence length 100) |
-| Duration | **31m00s** (config `timeout: 1860s`) |
-| Total calls | **25,236,587** (~11k–20k calls/sec) |
+| Config | `medusa.json` (8 workers, call-seq 100) |
+| Duration | **31m00s** (`timeout: 1860s`) |
+| Total calls | **25,236,587** (~11k–20k/sec) |
 | Sequences | 252,367 |
-| Branches hit | 231 (harness) |
 | **Violations** | **0 / 252,367** |
-| Result | **4 / 4 assertion properties PASSED, 0 FAILED** |
-| Artifacts | `fizz_data/corpus/` (corpus + coverage html/lcov) |
+| Result | **4 / 4 assertion properties PASSED** |
+
+### Campaign B — `CourFuzz` (STATEFUL full curve + fee-vault, property + assertion mode)
+
+| Field | Value |
+|---|---|
+| Config | `medusa-stateful.json` (8 workers, call-seq 100) |
+| Duration | **11m58s** (`timeout: 720s`) |
+| Total calls | **1,597,269** |
+| Sequences | 15,974 |
+| Branches hit | **1,083** (full curve + vault system) |
+| **Violations** | **0 / 15,974** |
+| Result | **11 / 11 tests PASSED** (7 handlers + 4 property oracles) |
+
+Harness B (`test/fizz/CourFuzz.sol`, from the fizz skill) plays the COURFactory role: it clones the real
+`COURCurve`, deploys a real `COURToken`, registers it with the real `COURFeeVault`, and fuzzes
+buy/sell/roundTrip/claim while checking `property_{totalSupply, solvency, reserveRanges, vaultBuckets}` and
+inline asserts (20/80 split SP-03, round-trip no-profit SP-02, graduation token count SP-04). CREATOR mode
+keeps the bucket-conservation exact. (Fixed a lazy-init bug so medusa can initialize the chain — see the
+commit; the harness launched in its constructor, whose `registerToken` callback hit the not-yet-deployed
+harness address.)
+
+Artifacts: `fizz_data/corpus/` (corpus + coverage html/lcov).
 
 Run: `ETHERSCAN… n/a` — `C:\Users\Lenovo\tools\medusa\medusa.exe fuzz --config medusa.json`
 (crytic-compile on PATH via `C:\Users\Lenovo\bin\crytic-compile.bat`).
