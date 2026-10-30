@@ -1,0 +1,12 @@
+{
+  "status": "DEPRECATED",
+  "reason": "Superseded 2026-10-31 by the audit-fixed deployment (CRITICAL HOLDERS self-transfer fix C-1 + L-1 + I-1). Do NOT use.",
+  "chainId": 4663,
+  "factory": "0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42",
+  "feeVault": "0xE412C7e137b3132b454ca38739ad981F9c90b4EB",
+  "hook": "0xFC1bC2f2C0cEA16509dE1C906C8E5a0a322A20cc",
+  "router": "0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449",
+  "priceReader": "0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD",
+  "curveImpl": "0x5C18Dc68DC62EBDE7172D6831FAeBAc378AEE3B1",
+  "graduationImpl": "0x60b1b7d2bb873e91420c7f4be2d39ca89bb4fe54"
+}
