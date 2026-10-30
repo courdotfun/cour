@@ -1,5 +1,12 @@
 # Hasil Smoke Test Mainnet — COUR (Robinhood Chain, chainId 4663)
 
+> ⚠️ **DEPRECATED DEPLOYMENT.** Kontrak yang di-smoke-test di dokumen ini (factory
+> `0x8e27C871…8D42`) diganti pada 2026-10-31 oleh deployment ber-perbaikan-audit (fix CRITICAL
+> self-transfer C-1). **Deployment AKTIF: factory `0x2EA5E113f88A1C79F1A489fbef789578f10a070A`** —
+> lihat `deployments/4663.json` + `docs/audit/AUDIT_REPORT.md`. Dokumen ini disimpan sebagai catatan
+> bahwa alur smoke (launch→graduasi→LP NFT ke DEAD→buyback→claim) berhasil end-to-end di mainnet.
+
+
 > Dieksekusi 2026-10-30 dengan wallet deployer `0x1eb25d02fc7C5487D4648a602c355dBC2301030b`.
 > Budget 0.005 ETH; terpakai total **~0.00271 ETH (~$6.4)** — murni gas hanya **~0.00051 ETH (~$1.2)**;
 > sisanya ~0.0022 ETH adalah swap ke NVDA yang kini terkunci di LP yang dibakar + token CTEST.

@@ -36,21 +36,46 @@
 - Test baru: `test/integration/HoldersSelfTransfer.t.sol` (regresi C-1), `test/fizz/CurveMathFuzz.sol`
   (harness medusa).
 
-## 3. Hasil fuzz (medusa)
-Lihat `FUZZ.md`. Harness `CurveMathFuzz` (assertion-mode) pada matematika inti kurva (launch params,
-buy/sell/graduation reserve moves, rounding-favours-curve, no-profit round-trip), dijalankan medusa 1.5.1.
-_(Ringkasan angka diisi setelah kampanye 31 menit selesai.)_
+## 3. Hasil fuzz (medusa) — lihat `FUZZ.md`
+Harness `test/fizz/CurveMathFuzz.sol` (assertion-mode) pada matematika inti kurva, medusa 1.5.1, **31m00s,
+25.236.587 calls, 0 violations, 4/4 properti PASSED**. Properti: launch-param sanity (p0>0 untuk semua
+desimal/harga), buy = reserve-delta eksak + cap graduasi + rounding-favours-curve, sell eksak +
+rounding-favours-curve, dan no-profit round-trip. Invariant sistem (supply konstan, solvensi kurva,
+solvensi bucket vault termasuk fix self-transfer) dicakup suite invariant Foundry (`test/invariant/`).
 
 ## 4. Coverage
-_(Diisi setelah pengukuran; target branch src ≥80%.)_
+`forge coverage --ir-minimum`: **baris src ~96,7%** (≥95% ✓). **Branch src ~62%** — DI BAWAH target 80%.
+Jujur: metrik branch forge sangat pesimistis (tiap `require`/`&&`/`||`/ternary = 2 cabang); cabang yang
+belum tertutup adalah guard defensif/eksotik (mis. `reserve==0`, `span==0`, urutan-token pada fungsi view
+hook) dan jalur `V3Oracle` tick-sign yang hanya tereksekusi di fork. Semua guard revert kritis, kedua
+urutan token, keempat mode fee, konservasi, dan fix C-1 SUDAH diuji + 25,2 juta input fuzz medusa. Sudah
+ditambah test cabang (BranchCoverage/BranchCoverage2, guard tests) namun 80% butuh puluhan micro-test
+both-sides untuk cabang defensif — dicatat sebagai rekomendasi lanjutan. _(Angka final-dengan-fork diisi
+dari `docs/coverage-final.txt`.)_
 
-## 5. Deployment aktif
-_(Diisi setelah redeploy pasca-perbaikan. Deployment LAMA ditandai DEPRECATED karena mengandung bug C-1.)_
+## 5. Deployment aktif (pasca-perbaikan, 2026-10-31)
+Kontrak terbaru (sudah termasuk fix C-1/L-1/I-1) di Robinhood Chain 4663 — `deployments/4663.json`:
+
+| Kontrak | Alamat |
+|---|---|
+| COURFactory | `0x2EA5E113f88A1C79F1A489fbef789578f10a070A` |
+| COURFeeVault | `0x908C1B98C4F7FA9dd11A65ea5739d7030d6802bC` |
+| COURHook | `0xEde81409313e7350B1952fa4cfdD4A51f1cda0cc` |
+| COURRouter | `0xD9C66211F35C891C2dBfd80985363EA6da5C2006` |
+| COURPriceReader | `0x7Fc9b037c9FA9B4b305f3Ce1474E5435Ef8b88B1` |
+| COURCurve (impl) | `0x9a7e7B3dF3fD1c30B328f2498996c3C3d2706213` |
+| GraduationImpl | `0x3eb6e58f663d89bec653809d00959c9e1101da30` |
+
+Param 4000/60000, minBuybackUsd 50, allowlist AKTIF, owner=deployer, NVDA dikonfigurasi (semua diverifikasi
+on-chain). **DEPRECATED** (mengandung bug C-1, JANGAN dipakai): factory
+`0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42` (`deployments/4663-DEPRECATED.json`). Redeploy memakai ~0,0004
+ETH gas, tanpa swap NVDA baru.
 
 ## 6. Verifikasi kontrak
-Explorer robin.etherscan.io butuh `ETHERSCAN_API_KEY` (Etherscan API v2, chainid 4663) — saat ini kosong
-di `.env`. Perintah lengkap + constructor args disiapkan (lihat §6 di `MAINNET_SMOKE_RESULT.md` dan di sini
-setelah redeploy). Blockscout di balik Cloudflare (API diblok; bisa via UI browser).
+`ETHERSCAN_API_KEY` kosong di `.env` → verifikasi otomatis belum dijalankan. Perintah lengkap + constructor
+args siap di **`deployments/verify-4663.sh`** (Etherscan API v2, chainid 4663):
+`ETHERSCAN_API_KEY=xxxx bash deployments/verify-4663.sh`. Blockscout di balik Cloudflare (API diblok; bisa
+via UI browser, Standard-JSON dari `out/`).
 
 ## 7. Yang masih harus dilakukan manusia
 - **Audit manusia tetap disarankan sebelum allowlist dibuka** (skill ini bukan pengganti audit formal).

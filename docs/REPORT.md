@@ -87,7 +87,7 @@ Lihat `docs/CHAIN_FACTS.md`. Ringkas:
   tanpa TSTORE). Guard `ReentrancyGuardTransient` aman.
 - Daftar stock lain (TSLA/AAPL/…) belum dienumerasi (tidak diperlukan untuk uji tertutup NVDA).
 
-## 5. Deploy mainnet — ✅ SELESAI (2026-10-30)
+## 5. Deploy mainnet — ✅ SELESAI (2026-10-30; alamat di bawah kini DEPRECATED oleh audit redeploy 2026-10-31 — lihat docs/audit/AUDIT_REPORT.md untuk alamat AKTIF)
 
 COUR **live di Robinhood Chain mainnet (4663)**. Didanai 0.005 ETH; deploy+configure memakan ~0.0004 ETH.
 
