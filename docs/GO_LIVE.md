@@ -45,7 +45,7 @@ router `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449`, hook `0xFC1bC2f2C0cEA16509d
 ## 5. [WAJIB] Hand over ke Timelock 48 jam — 🧑/🤖
 - **Apa**: transfer ownership factory/priceReader/feeVault **dan router** ke `TimelockController` (48h)
   yang proposer/executor-nya = multisig.
-- **Catatan kode**: `script/04_HandOver.s.sol` saat ini mentransfer factory/priceReader/feeVault.
+- **Catatan kode**: `script/04_HandOver.s.sol` sudah mentransfer factory/priceReader/feeVault/router (router ditambahkan 2026-10-31).
   **TODO 🤖**: tambahkan `COURRouter` (kini `Ownable2Step` sejak §2.4) ke 04_HandOver sebelum dijalankan.
 - **Perintah**:
   ```
