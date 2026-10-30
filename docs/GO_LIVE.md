@@ -45,13 +45,10 @@ router `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449`, hook `0xFC1bC2f2C0cEA16509d
 ## 5. [WAJIB] Hand over ke Timelock 48 jam — 🧑/🤖
 - **Apa**: transfer ownership factory/priceReader/feeVault **dan router** ke `TimelockController` (48h)
   yang proposer/executor-nya = multisig.
-- **Catatan kode**: `script/04_HandOver.s.sol` sudah mentransfer factory/priceReader/feeVault/router (router ditambahkan 2026-10-31).
-  **TODO 🤖**: tambahkan `COURRouter` (kini `Ownable2Step` sejak §2.4) ke 04_HandOver sebelum dijalankan.
+- **Catatan kode**: `script/04_HandOver.s.sol` membaca `deployments/4663.json` dan mentransfer
+  factory/priceReader/feeVault/**router** ke Timelock (router ditambahkan 2026-10-31).
 - **Perintah**:
   ```
-  export COUR_FACTORY=0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42
-  export COUR_PRICE_READER=0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD
-  export COUR_FEE_VAULT=0xE412C7e137b3132b454ca38739ad981F9c90b4EB
   export MULTISIG=<alamat Safe>
   forge script script/04_HandOver.s.sol:HandOver --rpc-url $RH_RPC_URL --broadcast --slow
   # lalu timelock harus acceptOwnership() pada tiap kontrak via op multisig terjadwal.
