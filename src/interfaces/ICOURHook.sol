@@ -13,4 +13,8 @@ interface ICOURHook {
 
     /// @notice Best-effort stock-side reserve of the graduated full-range pool (for the 2% buyback cap).
     function poolStockReserve(address token, address stock) external view returns (uint256);
+
+    /// @notice True once the observed TWAP window spans at least HOOK_TWAP_WINDOW seconds, i.e. the TWAP
+    ///         used by the buyback deviation guard is backed by a full window of observations (L-2).
+    function twapWindowFull(address token) external view returns (bool);
 }

@@ -39,6 +39,9 @@ contract BuybackGuardsTest is BaseTest {
         uint256 big = (cfg.k / cfg.vTStop - cfg.vS0) * 2;
         _buy(curve, alice, big);
         require(ICOURCurve(curve).graduated(), "did not graduate");
+        // L-2: a post-graduation buyback requires a FULL TWAP window. Let it elapse so these guard tests
+        // exercise the deviation/reserve/success paths (not the new TwapWindowNotReady gate).
+        vm.warp(block.timestamp + Constants.HOOK_TWAP_WINDOW + 1);
     }
 
     // --------------------------------------------------------------- access / mode
@@ -104,6 +107,62 @@ contract BuybackGuardsTest is BaseTest {
         vm.prank(creator);
         vm.expectRevert(Errors.BuybackTooLarge.selector);
         vault.executeBuyback(token, type(uint256).max, 0);
+    }
+
+    // --------------------------------------------------------------- TwapWindowNotReady (L-2)
+
+    /// POST-graduation: a buyback reverts until the hook TWAP window (HOOK_TWAP_WINDOW) is fully elapsed,
+    /// then succeeds once the window is full.
+    function test_buyback_reverts_until_twap_window_full_postgrad() public {
+        (address token, address curve) = _launchBB(500);
+        // Graduate WITHOUT the window-elapsing warp (_graduate warps; inline here to control timing).
+        TokenConfig memory cfg = ICOURCurve(curve).config();
+        _buy(curve, alice, (cfg.k / cfg.vTStop - cfg.vS0) * 2);
+        require(ICOURCurve(curve).graduated(), "did not graduate");
+
+        assertFalse(hook.twapWindowFull(token), "window not full right after graduation");
+        uint256 reserve = hook.poolStockReserve(token, address(stock));
+        uint256 amt = (reserve * 100) / Constants.BPS; // 1% reserve, under cap
+        if (amt > vault.buybackOwed(token)) amt = vault.buybackOwed(token);
+
+        // Window not full yet -> revert TwapWindowNotReady (before deviation/reserve checks).
+        vm.prank(creator);
+        vm.expectRevert(Errors.TwapWindowNotReady.selector);
+        vault.executeBuyback(token, amt, 0);
+
+        // Just under the window: still not ready.
+        vm.warp(block.timestamp + Constants.HOOK_TWAP_WINDOW - 1);
+        assertFalse(hook.twapWindowFull(token), "still not full 1s before window");
+        vm.prank(creator);
+        vm.expectRevert(Errors.TwapWindowNotReady.selector);
+        vault.executeBuyback(token, amt, 0);
+
+        // Cross the window boundary -> ready, buyback succeeds (no price move -> deviation passes).
+        vm.warp(block.timestamp + 2);
+        assertTrue(hook.twapWindowFull(token), "window full after HOOK_TWAP_WINDOW");
+        vm.prank(creator);
+        (uint256 stockIn, uint256 tokensOut) = vault.executeBuyback(token, amt, 0);
+        assertGt(stockIn, 0);
+        assertGt(tokensOut, 0);
+    }
+
+    /// PRE-graduation: the TWAP-window gate does NOT apply (the curve buy is deterministic, no pool/TWAP);
+    /// a correctly-sized pre-grad buyback succeeds immediately with no window wait.
+    function test_buyback_pregrad_ignores_twap_window() public {
+        // 1% fee keeps the accrued owed (80% of fee) under the 2%-of-curve-stock cap; $100 buy clears the
+        // $50 min-USD floor without reaching the ~123-NVDA graduation raise.
+        (address token, address curve) = _launchBB(100);
+        _buy(curve, bob, 100e18);
+        assertFalse(ICOURCurve(curve).graduated(), "still on curve");
+        assertFalse(hook.twapWindowFull(token), "no pool yet -> window not full");
+
+        uint256 owed = vault.buybackOwed(token);
+        assertGt(owed, 0);
+        vm.prank(creator);
+        // No TwapWindowNotReady despite the window being 'not full' — pre-grad path skips the gate.
+        (uint256 stockIn, uint256 tokensOut) = vault.executeBuyback(token, owed, 0);
+        assertGt(stockIn, 0);
+        assertGt(tokensOut, 0);
     }
 
     // --------------------------------------------------------------- PriceDeviation (post-grad)

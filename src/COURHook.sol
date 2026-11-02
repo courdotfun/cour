@@ -321,6 +321,20 @@ contract COURHook is IHooks, ICOURHook {
     }
 
     /// @inheritdoc ICOURHook
+    function twapWindowFull(address token) external view returns (bool) {
+        PoolId id = PoolId.wrap(factory.poolIdOf(token));
+        if (!_pool[id].set) return false;
+        Obs memory o = _obs[id];
+        uint32 nowTs = uint32(block.timestamp);
+        // Reference the oldest anchor the TWAP integrates from (same selection as priceInfo/consult). The
+        // window is "full" once that anchor is at least HOOK_TWAP_WINDOW seconds old.
+        uint32 refTs = o.prevAnchorTs != 0 ? o.prevAnchorTs : o.anchorTs;
+        if (refTs == 0) return false;
+        uint32 span = nowTs > refTs ? nowTs - refTs : 0;
+        return span >= Constants.HOOK_TWAP_WINDOW;
+    }
+
+    /// @inheritdoc ICOURHook
     function poolStockReserve(
         address token,
         address /*stock*/

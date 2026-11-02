@@ -35,6 +35,7 @@ library Errors {
 
     // --- pricing ---
     error TwapNotReady();
+    error TwapWindowNotReady();
 
     // --- buyback ---
     error BuybackTooSmall();

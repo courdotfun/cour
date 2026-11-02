@@ -287,7 +287,9 @@ contract COURFeeVault is ICOURFeeVault, Ownable2Step, ReentrancyGuardTransient, 
             (tokensOut, stockIn) = ICOURCurve(t.curve).buy(stockIn, minTokensOut, recipient, block.timestamp);
             IERC20(t.stock).forceApprove(t.curve, 0);
         } else {
-            // Post-graduation: swap on the v4 pool. Deviation + 2%-of-reserve guards.
+            // Post-graduation: swap on the v4 pool. The deviation guard is only meaningful once the TWAP
+            // spans a full window, so require that first (L-2) before the deviation + 2%-of-reserve guards.
+            if (!ICOURHook(hook).twapWindowFull(token)) revert Errors.TwapWindowNotReady();
             _checkDeviation(token);
             uint256 reserve = _poolStockReserve(token, t.stock);
             // A zero reserve means the cap cannot be sized safely -> revert (audit LOW: cap bypass).

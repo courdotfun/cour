@@ -66,14 +66,21 @@ contract SmokeTrade is Script {
 
         // 6. Creator buyback (BUYBACK_BURN -> DEAD) FIRST, while pool spot == TWAP anchor (a later pool swap
         //    would trip the 3% deviation guard). Cap at 1% of the actual reserve (< the 2% guard).
+        //    NOTE (L-2): a post-graduation buyback now also requires a FULL TWAP window (HOOK_TWAP_WINDOW =
+        //    300s) to have elapsed since graduation. In a single smoke tx that window is not yet full, so the
+        //    call reverts TwapWindowNotReady — expected; it is exercised on-chain after 300s or in the fork
+        //    test. We attempt it and skip gracefully so the rest of the smoke flow still runs.
         vault.setMinBuybackUsd(0); // whole-USD floor; sub-dollar test notional -> 0 (restored to 50 in 06)
         uint256 owed = vault.buybackOwed(ctest);
         uint256 reserve = ICOURHook(hook).poolStockReserve(ctest, nvda);
         uint256 cap = reserve / 100;
         uint256 req = owed < cap ? owed : cap;
         if (req > 0) {
-            (uint256 sin, uint256 tout) = vault.executeBuyback(ctest, req, 0);
-            console2.log("buyback stockIn/tokensOut", sin, tout);
+            try vault.executeBuyback(ctest, req, 0) returns (uint256 sin, uint256 tout) {
+                console2.log("buyback stockIn/tokensOut", sin, tout);
+            } catch {
+                console2.log("buyback skipped: TWAP window not full yet (L-2); run after 300s. owed", owed);
+            }
         } else {
             console2.log("buyback skipped (too small for pool); owed/reserve", owed, reserve);
         }

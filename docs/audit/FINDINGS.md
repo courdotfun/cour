@@ -37,17 +37,19 @@
 - **Fix:** treat a zero reserve as un-sizable → `revert BuybackTooLarge()` (both branches).
 - **Status:** FIXED. (No existing test regressed; reserve>0 in all current tests.)
 
-### L-2 — Buyback deviation TWAP span near-zero immediately after graduation  📝 ACKNOWLEDGED
-- **File:** `src/COURHook.sol:298-321` (`priceInfo`/`consult`).
+### L-2 — Buyback deviation TWAP span near-zero immediately after graduation  ✅ FIXED (hardening 2026-11-01)
+- **File:** `src/COURHook.sol` (`priceInfo`/`consult`), guarded in `src/COURFeeVault.sol:executeBuyback`.
 - **Issue:** for the first `HOOK_TWAP_WINDOW` (300s) after graduation `prevAnchorTs==0`, so the TWAP mean is
   over a very short span and ≈ spot, making the 3% deviation guard trivially satisfied for an early buyback.
-- **Assessment:** the buyback is the creator's own funds buying their own token, capped at 2% reserve +
-  `minBuybackUsd` + `minTokensOut`; mostly self-affecting. RISKS.md already states the hook TWAP is "a
-  deviation guard, not a high-fidelity oracle." A hard fix (reject buyback until a full window elapses) would
-  block all buybacks for 300s post-graduation and break the immediate-buyback flow — not cheap for a LOW,
-  self-affecting issue.
-- **Status:** ACKNOWLEDGED / documented (RISKS.md). Recommended hardening for the formal audit: require
-  `span >= HOOK_TWAP_WINDOW` before trusting the deviation guard. NOT changed (disruptive, low value).
+- **Fix:** added `COURHook.twapWindowFull(token)` (true once the TWAP reference anchor is ≥ `HOOK_TWAP_WINDOW`
+  seconds old) and gated the POST-graduation buyback on it: `executeBuyback` now reverts the new
+  `Errors.TwapWindowNotReady()` before `_checkDeviation` when the window is not yet full. Pre-graduation
+  buybacks (deterministic curve buy, no pool/TWAP) are unaffected.
+- **Tests:** `BuybackGuards.t.sol::test_buyback_reverts_until_twap_window_full_postgrad` (revert at 0s / window-1,
+  success after the boundary) and `::test_buyback_pregrad_ignores_twap_window`. Existing post-grad guard tests
+  and the fork rehearsal now elapse the window first.
+- **Status:** FIXED. Trade-off (buybacks wait 300s post-graduation) is accepted — it is the behaviour the
+  reviewer requested.
 
 ### L-3 — `refLiquidityUsd` uses spot `balanceOf`, donation-inflatable to bypass the thin-pool floor  📝 ACKNOWLEDGED
 - **File:** `src/COURPriceReader.sol:92-103`, gated at `COURFactory.sol:98`.
@@ -59,16 +61,21 @@
 - **Status:** ACKNOWLEDGED / documented. Harden before opening the allowlist: derive reference liquidity from
   in-range liquidity (slot0 + `liquidity`) rather than raw `balanceOf`.
 
-### L-4 — Graduation opening price derived from manipulable curve `balanceOf`  📝 ACKNOWLEDGED
-- **File:** `src/GraduationImpl.sol:47-55` (reads `stockRaised`/`tokenLeftover` from `COURCurve._graduate`).
-- **Issue:** donating stock/tokens to the curve before sell-out skews `amount0/amount1` and thus the opening
-  v4 pool `sqrtPrice`.
-- **Assessment:** griefing with attacker self-cost (the donation is locked into the burned LP), arb-corrected
-  quickly, and allowlist-mitigated. The current reals-based price is proven balanced vs the curve spot within
-  0.1% (`GraduationIdentity.t.sol`).
-- **Status:** ACKNOWLEDGED. Recommended hardening: derive the opening `sqrtPrice` from the stored curve
-  params (`vS_final/vTStop`) instead of live balances, treating surplus as dust. NOT changed now (deeper
-  change; LOW; self-costly).
+### L-4 — Graduation opening price derived from manipulable curve `balanceOf`  ✅ FIXED (hardening 2026-11-01)
+- **File:** `src/GraduationImpl.sol`, `src/COURFactory.sol::graduate`.
+- **Issue:** donating stock/tokens to the curve before sell-out skewed `amount0/amount1` (read from
+  `balanceOf`) and thus the opening v4 pool `sqrtPrice` and the burned LP size.
+- **Fix:** the opening price and LP amounts are now derived from the curve's INTERNAL accounting:
+  `acctStock = divUp(k, vTStop) - vS0` (the exact solvent raise) and
+  `acctToken = TOTAL_SUPPLY - (vT0 - vTStop)` (the exact unsold-token count, SP-04). The factory passes
+  `vS0/vT0/vTStop/k` to `GraduationImpl` (instead of balances). The mint consumes only the accounting amounts;
+  any donated excess (balanceOf − accounting) is swept out — stock → platform bucket, tokens → DEAD — so it
+  never enters the pool or moves the price.
+- **Tests:** `GraduationDonation.t.sol::test_donation_does_not_move_pool_price_or_inflate_lp` (donate stock +
+  tokens pre-grad → pool price == curve price within 0.1%, donation routed to platform/DEAD, nothing stranded)
+  and `::testFuzz_donation_price_invariant` (decimals {6,8,18} × price $1–$5000 × bounded donation).
+- **Status:** FIXED. Donations can no longer influence the graduation price; they are forfeited to
+  platform/DEAD.
 
 ## INFO
 

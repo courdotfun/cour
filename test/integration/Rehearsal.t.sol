@@ -183,6 +183,8 @@ contract RehearsalTest is BaseTest {
     }
 
     function _phasePostGrad() internal {
+        // L-2: post-graduation buyback requires a full TWAP window; let it elapse.
+        vm.warp(block.timestamp + Constants.HOOK_TWAP_WINDOW + 1);
         uint256 deadBefore = MockERC20(token).balanceOf(Constants.DEAD);
         uint256 buybackOwed = vault.buybackOwed(token);
         uint256 req = buybackOwed < 1e18 ? buybackOwed : 1e18;
