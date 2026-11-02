@@ -164,9 +164,12 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
     /// @inheritdoc ICOURFactory
     function graduate(address token) external nonReentrant {
         if (msg.sender != curveOf[token]) revert Errors.OnlyCurve();
-        address stock = _config[token].stock;
+        TokenConfig memory cfg = _config[token];
+        address stock = cfg.stock;
 
-        // Pull the raised stock and the unsold tokens from the curve (it pre-approved us).
+        // Pull the curve's FULL balances (accounting + any donations) into the factory. GraduationImpl
+        // sizes the LP from the curve accounting (vS0/vTStop/k) and sweeps any donated excess to
+        // DEAD/platform, so donations cannot move the initial pool price (L-4).
         uint256 stockRaised = IERC20(stock).balanceOf(msg.sender);
         uint256 tokenLeftover = IERC20(token).balanceOf(msg.sender);
         IERC20(stock).safeTransferFrom(msg.sender, address(this), stockRaised);
@@ -185,8 +188,10 @@ contract COURFactory is ICOURFactory, Ownable2Step, ReentrancyGuardTransient {
                         poolManager: address(poolManagerC),
                         positionManager: positionManager,
                         feeVault: address(feeVaultC),
-                        stockRaised: stockRaised,
-                        tokenLeftover: tokenLeftover
+                        vS0: cfg.vS0,
+                        vT0: cfg.vT0,
+                        vTStop: cfg.vTStop,
+                        k: cfg.k
                     }))
             )
         );

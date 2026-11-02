@@ -29,8 +29,10 @@ contract BranchCoverage2Test is BaseTest {
             poolManager: address(pm),
             positionManager: address(posm),
             feeVault: address(vault),
-            stockRaised: 1,
-            tokenLeftover: 1
+            vS0: 1,
+            vT0: 2,
+            vTStop: 1,
+            k: 2
         });
         vm.expectRevert(Errors.OnlyDelegatecall.selector);
         gi.graduate(p);

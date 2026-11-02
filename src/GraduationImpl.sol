@@ -41,19 +41,32 @@ contract GraduationImpl {
         address poolManager;
         address positionManager;
         address feeVault;
-        uint256 stockRaised;
-        uint256 tokenLeftover;
+        // Curve accounting (NOT balanceOf) — the pool price and LP size are derived from these so that
+        // any stock/token DONATED to the curve before graduation cannot move the initial pool price (L-4).
+        uint256 vS0; // initial virtual stock reserve
+        uint256 vT0; // initial virtual token reserve (== TOTAL_SUPPLY + virtual offset)
+        uint256 vTStop; // graduation stop point for vT
+        uint256 k; // vS0 * vT0
     }
 
     /// @dev Delegatecalled by the factory. Returns (positionId, tokenIntoPool, stockIntoPool) for the event.
+    ///      The factory has already pulled the curve's FULL balances (accounting + any donations) into
+    ///      itself; this routine sizes the LP from the curve's internal accounting and sweeps everything
+    ///      left over (donations + rounding) to DEAD (tokens) / the platform bucket (stock).
     function graduate(Params calldata p)
         external
         returns (uint256 positionId, uint256 tokenLeftoverNet, uint256 stockRaisedNet)
     {
         if (address(this) == __self) revert Errors.OnlyDelegatecall(); // reject direct (non-delegatecall) calls
         (PoolKey memory key, bool tokenIsZero) = PoolKeyLib.build(p.token, p.stock, p.hook);
-        (uint256 amount0, uint256 amount1) =
-            tokenIsZero ? (p.tokenLeftover, p.stockRaised) : (p.stockRaised, p.tokenLeftover);
+
+        // Accounting amounts (manipulation-proof): the real stock raised is the virtual-stock delta at the
+        // stop (vsAtStop - vS0, exactly what the solvent curve holds), and the unsold tokens are
+        // TOTAL_SUPPLY - (vT0 - vTStop) (the exact graduation token count, SP-04). Donations inflate the
+        // factory's balanceOf above these but NEVER enter the price or the LP.
+        uint256 acctStock = FixedPointMathLib.divUp(p.k, p.vTStop) - p.vS0;
+        uint256 acctToken = Constants.TOTAL_SUPPLY - (p.vT0 - p.vTStop);
+        (uint256 amount0, uint256 amount1) = tokenIsZero ? (acctToken, acctStock) : (acctStock, acctToken);
 
         // Initialize the pool at the reserve ratio (= graduation price). X128 encoding avoids the X192
         // overflow for low-decimal stock vs an 18-decimal token.
@@ -73,7 +86,10 @@ contract GraduationImpl {
             amount1
         );
 
-        // Mint the full-range position NFT to DEAD via the PositionManager (paying via Permit2).
+        // Mint the full-range position NFT to DEAD via the PositionManager (paying via Permit2). The
+        // approvals/maxes are the ACCOUNTING amounts, so the mint can never pull donated excess.
+        uint256 tokenBeforeMint = IERC20(p.token).balanceOf(address(this));
+        uint256 stockBeforeMint = IERC20(p.stock).balanceOf(address(this));
         positionId = IPositionManager(p.positionManager).nextTokenId();
         _permit2Approve(key.currency0, uint160(amount0), p.positionManager);
         _permit2Approve(key.currency1, uint160(amount1), p.positionManager);
@@ -89,7 +105,9 @@ contract GraduationImpl {
         _permit2Approve(key.currency0, 0, p.positionManager);
         _permit2Approve(key.currency1, 0, p.positionManager);
 
-        // Sweep the rounding dust: tokens -> DEAD, stock -> platform bucket.
+        // Sweep EVERYTHING not consumed by the mint (donations + rounding dust): tokens -> DEAD, stock ->
+        // platform bucket. Donated stock/tokens therefore leave the system / enrich the platform rather than
+        // silently subsidising the burned LP at a manipulated price.
         uint256 tokenDust = IERC20(p.token).balanceOf(address(this));
         uint256 stockDust = IERC20(p.stock).balanceOf(address(this));
         if (tokenDust > 0) IERC20(p.token).safeTransfer(Constants.DEAD, tokenDust);
@@ -97,8 +115,9 @@ contract GraduationImpl {
             IERC20(p.stock).safeTransfer(p.feeVault, stockDust);
             ICOURFeeVault(p.feeVault).creditPlatform(p.stock, stockDust);
         }
-        tokenLeftoverNet = p.tokenLeftover - tokenDust;
-        stockRaisedNet = p.stockRaised - stockDust;
+        // Amounts actually placed into the pool (for the Graduated event).
+        tokenLeftoverNet = tokenBeforeMint - tokenDust;
+        stockRaisedNet = stockBeforeMint - stockDust;
     }
 
     function _permit2Approve(Currency currency, uint160 amount, address posm) private {
