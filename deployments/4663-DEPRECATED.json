@@ -1,12 +1,32 @@
 {
   "status": "DEPRECATED",
-  "reason": "Superseded 2026-10-31 by the audit-fixed deployment (CRITICAL HOLDERS self-transfer fix C-1 + L-1 + I-1). Do NOT use.",
   "chainId": 4663,
-  "factory": "0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42",
-  "feeVault": "0xE412C7e137b3132b454ca38739ad981F9c90b4EB",
-  "hook": "0xFC1bC2f2C0cEA16509dE1C906C8E5a0a322A20cc",
-  "router": "0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449",
-  "priceReader": "0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD",
-  "curveImpl": "0x5C18Dc68DC62EBDE7172D6831FAeBAc378AEE3B1",
-  "graduationImpl": "0x60b1b7d2bb873e91420c7f4be2d39ca89bb4fe54"
+  "note": "All deployments below are superseded and PAUSED (launchesPaused=true). Do NOT use. The ACTIVE deployment is in 4663.json (tag audit-freeze-v1).",
+  "deprecated": [
+    {
+      "supersededOn": "2026-11-05",
+      "sourceCommit": "029b233",
+      "reason": "Superseded by the final audit-freeze-v1 deploy which adds hardening L-2/L-3/L-4. Contained C-1/L-1/I-1 only.",
+      "pausedTx": "0x466e9aba314f217572937d0d16b99878bad3e704f440354b999cfb4f0fe67012",
+      "factory": "0x2EA5E113f88A1C79F1A489fbef789578f10a070A",
+      "feeVault": "0x908C1B98C4F7FA9dd11A65ea5739d7030d6802bC",
+      "hook": "0xEde81409313e7350B1952fa4cfdD4A51f1cda0cc",
+      "router": "0xD9C66211F35C891C2dBfd80985363EA6da5C2006",
+      "priceReader": "0x7Fc9b037c9FA9B4b305f3Ce1474E5435Ef8b88B1",
+      "curveImpl": "0x9a7e7B3dF3fD1c30B328f2498996c3C3d2706213",
+      "graduationImpl": "0x3eb6e58f663d89bec653809d00959c9e1101da30"
+    },
+    {
+      "supersededOn": "2026-10-31",
+      "reason": "Superseded by the audit-fixed redeploy (CRITICAL HOLDERS self-transfer fix C-1 + L-1 + I-1). Do NOT use.",
+      "pausedNote": "Paused in a prior session (launchesPaused=true confirmed on-chain 2026-11-05).",
+      "factory": "0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42",
+      "feeVault": "0xE412C7e137b3132b454ca38739ad981F9c90b4EB",
+      "hook": "0xFC1bC2f2C0cEA16509dE1C906C8E5a0a322A20cc",
+      "router": "0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449",
+      "priceReader": "0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD",
+      "curveImpl": "0x5C18Dc68DC62EBDE7172D6831FAeBAc378AEE3B1",
+      "graduationImpl": "0x60b1b7d2bb873e91420c7f4be2d39ca89bb4fe54"
+    }
+  ]
 }

@@ -35,6 +35,7 @@ contract DeployCore is CourDeployer {
         vm.serializeAddress(o, "priceReader", address(d.priceReader));
         vm.serializeAddress(o, "feeVault", address(d.feeVault));
         vm.serializeAddress(o, "curveImpl", address(d.curveImpl));
+        vm.serializeAddress(o, "graduationImpl", address(d.graduationImpl));
         vm.serializeAddress(o, "hook", address(d.hook));
         vm.serializeAddress(o, "factory", address(d.factory));
         string memory out = vm.serializeAddress(o, "router", address(d.router));

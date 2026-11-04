@@ -24,6 +24,7 @@ abstract contract CourDeployer is Script {
         COURPriceReader priceReader;
         COURFeeVault feeVault;
         COURCurve curveImpl;
+        GraduationImpl graduationImpl;
         COURHook hook;
         COURFactory factory;
         COURRouter router;
@@ -53,6 +54,7 @@ abstract contract CourDeployer is Script {
         d.feeVault = new COURFeeVault(deployer, treasury, poolManager); // [1]
         d.curveImpl = new COURCurve(predictedFactory, address(d.feeVault)); // [2]
         GraduationImpl gradImpl = new GraduationImpl(); // [3]
+        d.graduationImpl = gradImpl;
 
         bytes memory hookArgs = abi.encode(poolManager, predictedFactory, address(d.feeVault));
         (address hookAddr, bytes32 salt) =
