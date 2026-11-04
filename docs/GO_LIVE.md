@@ -8,6 +8,20 @@
 Alamat: factory `0x8e27C8712FD3Ba21374F8b48A82aAf07E2838D42`, feeVault
 `0xE412C7e137b3132b454ca38739ad981F9c90b4EB`, priceReader `0x2e1F9eC3dc1064C31F16a7CebC304b7915d0d4dD`,
 router `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449`, hook `0xFC1bC2f2C0cEA16509dE1C906C8E5a0a322A20cc`.
+> **CATATAN**: alamat di atas usang. Deployment AKTIF ada di `deployments/4663.json` / `AUDIT_REPORT.md §5`.
+
+---
+
+## 0. [PENTING] Status deployment vs kode — 🧑
+- **Deployment mainnet AKTIF** = commit **`029b233`** (`deployments/4663.json`). Memuat fix **C-1, L-1, I-1**.
+- **BELUM memuat** hardening **L-2, L-3, L-4** — ketiganya kini di tag **`audit-freeze-v1`** (HEAD `458c358`).
+  Diff `src/`: 7 file, +81/−18.
+- **Rencana (disepakati):** *tidak* redeploy sekarang. Kode di-**freeze** (`audit-freeze-v1`) untuk audit
+  manusia (langkah 2); setelah laporan audit bersih, lakukan **satu kali deploy final** dari commit yang
+  sudah diaudit — baru kemudian lanjut verifikasi (3), multisig (4), handover (5), dst. Allowlist tetap
+  AKTIF sepanjang interval ini sehingga hanya deployer yang bisa launch; L-2/L-3/L-4 low-severity +
+  termitigasi allowlist, jadi aman menunda sampai deploy final. **Jangan buka allowlist (langkah 10)
+  dengan kode lama yang belum memuat L-2/L-3/L-4.**
 
 ---
 

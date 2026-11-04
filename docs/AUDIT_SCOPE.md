@@ -1,26 +1,45 @@
 # Audit Scope
 
-Commit: see `git log`. Solidity 0.8.26, `evm_version = cancun`, `via_ir = true`, `optimizer_runs = 44444444`.
+**Freeze tag:** `audit-freeze-v1`. **Source freeze commit:** `458c358` (last code change; all commits after it
+are documentation only — resolve the tag with `git rev-parse audit-freeze-v1`). Solidity 0.8.26,
+`evm_version = cancun`, `via_ir = true`, `optimizer_runs = 44444444`.
 Dependencies (pinned via `bootstrap.sh`): Uniswap v4-core & v4-periphery (v1.0.2 tree), OpenZeppelin v5.1.0, Solady, forge-std.
 
-## Files in scope (approx nSLOC)
+## Files in scope (nSLOC — non-blank, non-comment, approx)
 
 | File | nSLOC | Purpose |
 |---|---|---|
-| src/COURHook.sol | 286 | v4 hook: fee capture on pool swaps, tick-accumulator TWAP, pool gating |
-| src/COURFeeVault.sol | 255 | fee custody/routing, 4 modes, dividends, buyback, claims |
-| src/COURFactory.sol | 226 | launch + graduation (pool init, full-range LP minted as a v4 PositionManager NFT to DEAD via Permit2), launch allowlist, admin |
+| src/COURHook.sol | 296 | v4 hook: fee capture on pool swaps, tick-accumulator TWAP (+ `twapWindowFull`, L-2), pool gating |
+| src/COURFeeVault.sol | 257 | fee custody/routing, 4 modes, dividends, buyback (TWAP + 2%-cap guards), claims |
+| src/COURFactory.sol | 210 | launch + graduation orchestration (delegatecalls `GraduationImpl`), launch allowlist, admin |
 | src/COURCurve.sol | 192 | bonding curve buy/sell, fee+tax, refund+graduate |
-| src/COURRouter.sol | 131 | unified curve/pool routing, ETH path, holds no funds |
-| src/COURPriceReader.sol | 107 | v3 TWAP USD pricing (USDG / WETH routes) |
+| src/COURRouter.sol | 143 | unified curve/pool routing, ETH path, holds no funds |
+| src/GraduationImpl.sol | 84 | graduation mechanics via **delegatecall**: pool init + full-range LP NFT→DEAD (Permit2), donation sweep, `OnlyDelegatecall` guard |
+| src/COURPriceReader.sol | 117 | v3 TWAP USD pricing (USDG / WETH routes) + donation-proof in-range liquidity floor (L-3) |
 | src/COURToken.sol | 41 | fixed-supply ERC20+Permit, HOLDERS hook |
 | src/libraries/CurveMath.sol | 72 | x·y=k math, launch params, curve-favouring rounding |
 | src/libraries/PoolManagerSwapper.sol | 59 | exact-input swaps via PoolManager `unlock` |
 | src/libraries/V3Oracle.sol | 34 | OracleLibrary port (consult, getQuoteAtTick) |
-| src/libraries/{Constants,Errors,Events,LaunchTax,PoolKeyLib} | ~144 | shared defs + tax + pool key |
-| src/types/{CreatorMode,TokenConfig} | ~23 | enums/structs |
-| src/interfaces/* | ~144 | interfaces (incl. minimal external) |
-| **Total src** | **~1734** | |
+| src/libraries/{Constants,Errors,Events,LaunchTax,PoolKeyLib} | 152 | shared defs + tax + pool key |
+| src/types/{CreatorMode,TokenConfig} | 23 | enums/structs |
+| src/interfaces/* | 166 | interfaces (incl. minimal external) |
+| **Total src** | **~1846** | |
+
+## Scope vs live deployment (what differs)
+The **live mainnet deployment** (`deployments/4663.json`, chain 4663) is commit **`029b233`** and contains fixes
+**C-1, L-1, I-1** only. The audit scope (`audit-freeze-v1`) additionally contains the **L-2, L-3, L-4**
+hardening. Plan: no redeploy now — audit the frozen code, then do a single final deploy from the audited
+commit (allowlist stays enabled meanwhile). `git diff 029b233 audit-freeze-v1 -- src/` = **7 files, +81/−18**:
+
+| File | Change in scope (not yet on mainnet) |
+|---|---|
+| src/COURHook.sol | L-2: `twapWindowFull(token)` |
+| src/interfaces/ICOURHook.sol | L-2: `twapWindowFull` in interface |
+| src/COURFeeVault.sol | L-2: post-grad buyback reverts `TwapWindowNotReady()` until the TWAP window is full |
+| src/COURPriceReader.sol | L-3: `refLiquidityUsd` uses in-range reserve (`_inRangeReserve`), not `balanceOf` |
+| src/GraduationImpl.sol | L-4: opening price & LP from curve accounting (`vS0/vT0/vTStop/k`); donations swept |
+| src/COURFactory.sol | L-4: passes curve accounting to `GraduationImpl.graduate` |
+| src/libraries/Errors.sol | `TwapWindowNotReady()` |
 
 ## Trust assumptions
 - Uniswap v4 PoolManager/PositionManager, v3 pools/router, Permit2, WETH, USDG, and the Robinhood stock tokens behave per their published interfaces on Robinhood Chain. **Fork-verified on mainnet 2026-10-29** (code present, ABIs match, Cancun/TSTORE confirmed, graduation mints the LP NFT to DEAD against the real PositionManager; see CHAIN_FACTS + `test/fork/*`).

@@ -10,9 +10,12 @@
 |---|---|---|
 | **Critical** | 1 | ✅ diperbaiki + test regresi |
 | High | 0 | — |
-| **Low** | 4 | 2 ✅ diperbaiki, 2 📝 di-acknowledge (mitigasi + rekomendasi) |
+| **Low** | 4 | 4 ✅ diperbaiki + test regresi (L-1, L-2, L-3, L-4) |
 | **Info** | 1 | ✅ diperbaiki (hardening) |
 | Rejected/FP | 2 | ditolak dengan bukti file:line |
+
+**Tidak ada temuan yang masih terbuka.** (L-2/L-3/L-4 di-hardening setelah deploy mainnet — lihat
+§"Status deployment vs kode" di bawah.)
 
 ### Detail & status (ringkas; lengkap di `FINDINGS.md`)
 
@@ -20,21 +23,29 @@
 |---|---|---|---|---|
 | C-1 | Critical | COURFeeVault.sol:149-163 | HOLDERS self-transfer double-credit → vault drain | **FIXED** (early-return `from==to`) + `HoldersSelfTransfer.t.sol` |
 | L-1 | Low | COURFeeVault.sol:280-293 | buyback 2%-cap dilewati saat reserve==0 | **FIXED** (revert saat reserve==0) |
-| L-2 | Low | COURHook.sol:298-321 | TWAP span ~0 tepat setelah graduasi melemahkan deviation guard | ACK (self-affecting; guard lain 2%+minTokensOut; RISKS) |
-| L-3 | Low | COURPriceReader.sol:92-103 | refLiquidityUsd pakai spot balanceOf (donation-inflatable) | ACK (floor-bypass, biaya attacker, allowlist-mitigated) |
-| L-4 | Low | GraduationImpl.sol:47-55 | harga awal pool dari balanceOf kurva (manipulable) | ACK (griefing, self-cost, arb-corrected; rekom: pakai vS/vTStop) |
+| L-2 | Low | COURHook.sol (`twapWindowFull`) | TWAP span ~0 tepat setelah graduasi melemahkan deviation guard | **FIXED** (buyback pasca-grad revert `TwapWindowNotReady` s/d window penuh) + `BuybackGuards.t.sol` |
+| L-3 | Low | COURPriceReader.sol (`refLiquidityUsd`+`_inRangeReserve`) | refLiquidityUsd pakai spot balanceOf (donation-inflatable) | **FIXED** (floor dari in-range reserve: `liquidity`+`slot0`) + `PriceReaderTest.t.sol` |
+| L-4 | Low | GraduationImpl.sol / COURFactory.graduate | harga awal pool dari balanceOf kurva (manipulable) | **FIXED** (harga & LP dari akuntansi `vS0/vT0/vTStop/k`; donasi disapu) + `GraduationDonation.t.sol` |
 | I-1 | Info | GraduationImpl.sol | graduate() externally callable (inert) | **FIXED** (guard `OnlyDelegatecall`) |
 | FP-1 | — | COURCurve.sol:141-147 | HOLDERS buyer "capture own fee" | ditolak (by-design, self-harm) |
 | FP-2 | — | COURFeeVault.sol:285 | "unaccounted refund" | FALSE POSITIVE (stockIn ← stockUsed; owed benar) |
 
 ## 2. Perubahan kode
 - `src/COURFeeVault.sol`: (C-1) `beforeBalanceChange` return dini bila `from==to`; (L-1) buyback cap
-  revert bila reserve/poolStock == 0 (pra- & pasca-graduasi).
-- `src/GraduationImpl.sol`: (I-1) immutable `__self` + `revert OnlyDelegatecall()` menolak panggilan langsung.
-- `src/libraries/Errors.sol`: `error OnlyDelegatecall()`.
+  revert bila reserve/poolStock == 0 (pra- & pasca-graduasi); (L-2) buyback pasca-graduasi revert
+  `TwapWindowNotReady()` sampai window TWAP penuh.
+- `src/COURHook.sol` + `src/interfaces/ICOURHook.sol`: (L-2) `twapWindowFull(token)` — true setelah anchor
+  TWAP ≥ `HOOK_TWAP_WINDOW` detik.
+- `src/COURPriceReader.sol`: (L-3) `refLiquidityUsd` memakai in-range (virtual) reserve dari `liquidity()`
+  + `slot0.sqrtPriceX96` (`_inRangeReserve`), bukan `balanceOf` → donasi tidak bisa menaikkan floor.
+- `src/GraduationImpl.sol` + `src/COURFactory.sol`: (L-4) harga awal & jumlah LP diturunkan dari akuntansi
+  kurva (`vS0/vT0/vTStop/k`), kelebihan donasi disapu (stock→platform, token→DEAD); (I-1) immutable `__self`
+  + `revert OnlyDelegatecall()` menolak panggilan langsung.
+- `src/libraries/Errors.sol`: `error OnlyDelegatecall()`, `error TwapWindowNotReady()`.
 - `script/04_HandOver.s.sol`: kini juga transfer ownership `COURRouter` (baca `deployments/4663.json`).
-- Test baru: `test/integration/HoldersSelfTransfer.t.sol` (regresi C-1), `test/fizz/CurveMathFuzz.sol`
-  (harness medusa).
+- Test baru: `test/integration/HoldersSelfTransfer.t.sol` (regresi C-1), `BuybackGuards.t.sol` (L-2),
+  `PriceReaderTest.t.sol` (L-3 donation-invariance), `GraduationDonation.t.sol` (L-4),
+  `test/fizz/CurveMathFuzz.sol` (harness medusa).
 
 ## 3. Hasil fuzz (medusa) — lihat `FUZZ.md` (2 kampanye, 43 menit total, **0 pelanggaran**)
 - **A — `CurveMathFuzz`** (matematika kurva, assertion-mode): **31m00s, 25.236.587 calls, 0 violations,
@@ -88,9 +99,20 @@ via UI browser, Standard-JSON dari `out/`).
 
 ## 7. Yang masih harus dilakukan manusia
 - **Audit manusia tetap disarankan sebelum allowlist dibuka** (skill ini bukan pengganti audit formal).
+  Kode telah di-*freeze* pada tag **`audit-freeze-v1`** untuk dikirim ke auditor (lihat `AUDIT_SCOPE.md` +
+  `AUDITOR_BRIEF.md`).
 - Isi `ETHERSCAN_API_KEY` dan verifikasi semua kontrak (deployment terbaru).
 - Push ke GitHub: user terautentikasi (`ballasted`) belum punya akses write ke `courdotfun/cour` (403) —
   beri akses atau push sendiri.
-- Hardening L-2/L-3/L-4 (opsional, direkomendasikan sebelum publik): TWAP min-window untuk buyback;
-  refLiquidity dari in-range liquidity; harga graduasi dari `vS/vTStop`.
 - Lanjutkan `GO_LIVE.md` (amankan key, multisig, handover timelock, legal, indexer/frontend, monitoring).
+
+## 8. Status deployment vs kode
+- **Deployment mainnet AKTIF** (Robinhood Chain 4663, `deployments/4663.json`) = commit **`029b233`**
+  ("deploy(mainnet): redeploy audit-fixed contracts"). Memuat fix **C-1, L-1, I-1**.
+- **BELUM memuat** hardening **L-2, L-3, L-4** (ditambahkan setelah deploy; sekarang ada di
+  `audit-freeze-v1` / HEAD `458c358`). Diff `src/`: 7 file, +81/−18 (Hook, FeeVault, Factory, PriceReader,
+  GraduationImpl, ICOURHook, Errors).
+- **Rencana (disepakati):** *tidak* redeploy sekarang. Kode di-**freeze** untuk audit manusia; setelah
+  laporan audit bersih, lakukan **satu kali deploy final** dari commit yang telah diaudit (bukan deploy
+  bertahap). Allowlist tetap AKTIF selama interval ini, jadi hanya deployer yang bisa launch — L-2/L-3/L-4
+  adalah low-severity + termitigasi allowlist, sehingga aman menunda sampai deploy final.
