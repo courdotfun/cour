@@ -1,0 +1,37 @@
+# COUR indexer — Ponder + Postgres.
+# NOTE: Docker was not available in the build environment; this file is provided
+# untested. Run `docker compose up --build` after setting PONDER_RPC_URL_4663.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ponder
+      POSTGRES_PASSWORD: ponder
+      POSTGRES_DB: ponder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ponder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  indexer:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Chain RPC (required). Set in a .env next to this file or your shell.
+      PONDER_RPC_URL_4663: ${PONDER_RPC_URL_4663}
+      DATABASE_URL: postgres://ponder:ponder@postgres:5432/ponder
+    ports:
+      - "42069:42069"
+    command: ["pnpm", "start"]
+
+volumes:
+  pgdata:
