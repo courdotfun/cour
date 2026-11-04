@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Verify the ACTIVE COUR deployment on robin.etherscan.io (Etherscan API v2, chainId 4663).
-# Requires ETHERSCAN_API_KEY in the environment (free key from robin.etherscan.io). The explorer's
-# Blockscout API is behind Cloudflare and rejects automated calls, so use the Etherscan v2 path below
-# (or verify via the Blockscout browser UI with Standard-JSON input from out/).
+# Verify the ACTIVE (final, audit-freeze-v1) COUR deployment on robin.etherscan.io
+# (Etherscan API v2, chainId 4663). Requires ETHERSCAN_API_KEY in the environment
+# (free key from robin.etherscan.io). The Blockscout API is behind Cloudflare and rejects
+# automated calls — for Blockscout use the browser UI with Standard-JSON input from out/
+# (see deployments/verify-blockscout-standard-json/ produced by verify-4663-blockscout.sh).
 # Usage: ETHERSCAN_API_KEY=xxxx bash deployments/verify-4663.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -15,14 +16,14 @@ PM=0x8366a39CC670B4001A1121B8F6A443A643e40951; POSM=0x58daec3116aae6D93017bAAea7
 USDG=0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168; WETH=0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73
 V3R=0xCaf681a66D020601342297493863E78C959E5cb2
 
-# ACTIVE deployment (deployments/4663.json)
-PR=0x7Fc9b037c9FA9B4b305f3Ce1474E5435Ef8b88B1
-FV=0x908C1B98C4F7FA9dd11A65ea5739d7030d6802bC
-CI=0x9a7e7B3dF3fD1c30B328f2498996c3C3d2706213
-HOOK=0xEde81409313e7350B1952fa4cfdD4A51f1cda0cc
-FAC=0x2EA5E113f88A1C79F1A489fbef789578f10a070A
-GI=0x3eb6e58f663d89bec653809d00959c9e1101da30
-ROUTER=0xD9C66211F35C891C2dBfd80985363EA6da5C2006
+# FINAL deployment (deployments/4663.json, tag audit-freeze-v1)
+PR=0xF7C914E7B7580a7653DcC3b7574bf041F615e359
+FV=0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76
+CI=0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00
+HOOK=0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC
+FAC=0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C
+GI=0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7
+ROUTER=0x835Afd54F9BA20b18b6807B44886123E85A586f9
 
 $V $GI     src/GraduationImpl.sol:GraduationImpl
 $V $PR     src/COURPriceReader.sol:COURPriceReader --constructor-args "$(cast abi-encode 'c(address,address,address)' $DEP $USDG $WETH)"

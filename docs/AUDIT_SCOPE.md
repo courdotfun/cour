@@ -25,21 +25,27 @@ Dependencies (pinned via `bootstrap.sh`): Uniswap v4-core & v4-periphery (v1.0.2
 | src/interfaces/* | 166 | interfaces (incl. minimal external) |
 | **Total src** | **~1846** | |
 
-## Scope vs live deployment (what differs)
-The **live mainnet deployment** (`deployments/4663.json`, chain 4663) is commit **`029b233`** and contains fixes
-**C-1, L-1, I-1** only. The audit scope (`audit-freeze-v1`) additionally contains the **L-2, L-3, L-4**
-hardening. Plan: no redeploy now — audit the frozen code, then do a single final deploy from the audited
-commit (allowlist stays enabled meanwhile). `git diff 029b233 audit-freeze-v1 -- src/` = **7 files, +81/−18**:
+## Scope == live deployment (final deploy done 2026-11-05)
+The **live mainnet deployment** (`deployments/4663.json`, chain 4663) IS the audit scope: it was deployed from
+tag **`audit-freeze-v1`** (source freeze `458c358`) and contains **C-1, L-1, I-1 + L-2, L-3, L-4**. All 7
+contracts are **verified on robin.etherscan.io** against this exact source (see `docs/VERIFICATION.md`), which
+is the authoritative bytecode↔source proof. Reproducible creation-bytecode sha256 per contract are listed in
+`VERIFICATION.md`.
 
-| File | Change in scope (not yet on mainnet) |
+| Contract | Address |
 |---|---|
-| src/COURHook.sol | L-2: `twapWindowFull(token)` |
-| src/interfaces/ICOURHook.sol | L-2: `twapWindowFull` in interface |
-| src/COURFeeVault.sol | L-2: post-grad buyback reverts `TwapWindowNotReady()` until the TWAP window is full |
-| src/COURPriceReader.sol | L-3: `refLiquidityUsd` uses in-range reserve (`_inRangeReserve`), not `balanceOf` |
-| src/GraduationImpl.sol | L-4: opening price & LP from curve accounting (`vS0/vT0/vTStop/k`); donations swept |
-| src/COURFactory.sol | L-4: passes curve accounting to `GraduationImpl.graduate` |
-| src/libraries/Errors.sol | `TwapWindowNotReady()` |
+| COURFactory | `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C` |
+| COURFeeVault | `0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76` |
+| COURHook | `0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC` |
+| COURRouter | `0x835Afd54F9BA20b18b6807B44886123E85A586f9` |
+| COURPriceReader | `0xF7C914E7B7580a7653DcC3b7574bf041F615e359` |
+| COURCurve (impl) | `0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00` |
+| GraduationImpl | `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7` |
+
+The deployment is **allowlist-gated** (only the deployer can launch) and owner = deployer EOA (handover to
+Timelock+multisig pending). The two prior deployments (029b233 and the older one) are **paused and deprecated**
+(`deployments/4663-DEPRECATED.json`). If the human audit requires code changes, redeploy as `audit-fix-v1`
+(see `docs/audit/POST_AUDIT_PLAYBOOK.md`).
 
 ## Trust assumptions
 - Uniswap v4 PoolManager/PositionManager, v3 pools/router, Permit2, WETH, USDG, and the Robinhood stock tokens behave per their published interfaces on Robinhood Chain. **Fork-verified on mainnet 2026-10-29** (code present, ABIs match, Cancun/TSTORE confirmed, graduation mints the LP NFT to DEAD against the real PositionManager; see CHAIN_FACTS + `test/fork/*`).

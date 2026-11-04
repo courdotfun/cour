@@ -108,7 +108,13 @@ Regression tests for the findings: `HoldersSelfTransfer.t.sol` (C-1), `BuybackGu
 `PriceReaderTest.t.sol` (L-3), `GraduationDonation.t.sol` (L-4).
 
 ## 8. Deployment note
-The live mainnet deployment (`deployments/4663.json`) is commit `029b233` and contains **C-1/L-1/I-1 only**.
-This audit scope (`audit-freeze-v1`) also contains **L-2/L-3/L-4**. There will be **no redeploy until after
-your report**; we then do a single final deploy from the audited commit. The allowlist stays enabled
-throughout, so only the deployer can launch in the interim.
+The live mainnet deployment (`deployments/4663.json`, chain 4663) **IS this audit scope** — deployed from tag
+`audit-freeze-v1` and **verified on robin.etherscan.io** (all 7 contracts "Pass - Verified"; see
+`docs/VERIFICATION.md`). Final addresses: factory `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C`, feeVault
+`0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76`, hook `0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC`, router
+`0x835Afd54F9BA20b18b6807B44886123E85A586f9`, priceReader `0xF7C914E7B7580a7653DcC3b7574bf041F615e359`,
+curveImpl `0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00`, graduationImpl
+`0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7`. The deployment is **allowlist-gated** (only the deployer can
+launch) and owner = deployer EOA (handover to Timelock+multisig pending). If your report requires code
+changes, we redeploy as `audit-fix-v1` (see `audit/POST_AUDIT_PLAYBOOK.md`). The public allowlist is opened
+only **after** your report is clean.

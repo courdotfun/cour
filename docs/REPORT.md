@@ -123,13 +123,14 @@ Alur ini juga sudah divalidasi penuh di fork (`docs/REHEARSAL_FORK_RESULT.md`).
 - Verifikasi explorer: **belum** (lihat MAINNET_SMOKE_RESULT.md; butuh API key / UI).
 - Langkah menuju publik: lihat **`docs/GO_LIVE.md`**.
 
-### 7a. Status deployment vs kode
-- **Deployment mainnet AKTIF** = commit **`029b233`** (`deployments/4663.json`). Memuat fix **C-1, L-1, I-1**.
-- **BELUM memuat** hardening **L-2, L-3, L-4** — ketiganya ditambahkan setelah deploy dan kini berada di
-  tag **`audit-freeze-v1`** (HEAD `458c358`). Diff `src/`: 7 file, +81/−18.
-- **Rencana:** *tidak* redeploy sekarang. Kode di-**freeze** untuk audit manusia; setelah audit bersih,
-  **satu kali deploy final** dari commit yang sudah diaudit. Allowlist AKTIF menahan launch publik selama
-  interval ini (L-2/L-3/L-4 low-severity + termitigasi allowlist).
+### 7a. Status deployment vs kode (UPDATED 2026-11-05 — final deploy DONE)
+- **Deployment mainnet AKTIF** = tag **`audit-freeze-v1`** (`deployments/4663.json`, factory
+  `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C`, block 106215255). Memuat **C-1/L-1/I-1 + L-2/L-3/L-4** —
+  kode live == kode audit.
+- **Semua 7 kontrak terverifikasi** di robin.etherscan.io (`docs/VERIFICATION.md`). Allowlist AKTIF, owner =
+  deployer EOA. Dua deployment lama di-pause & DEPRECATED.
+- **Rencana:** audit manusia terhadap kode live yang beku; redeploy `audit-fix-v1` hanya bila auditor minta
+  perubahan (`docs/audit/POST_AUDIT_PLAYBOOK.md`). Allowlist dibuka ke publik setelah audit + handover.
 
 ## 8. Yang harus dilakukan manusia (berurutan)
 1. **Kirim dana** ke `0x1eb25d02fc7C5487D4648a602c355dBC2301030b` (~$250 ETH, chain 4663).

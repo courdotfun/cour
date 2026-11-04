@@ -106,13 +106,13 @@ via UI browser, Standard-JSON dari `out/`).
   beri akses atau push sendiri.
 - Lanjutkan `GO_LIVE.md` (amankan key, multisig, handover timelock, legal, indexer/frontend, monitoring).
 
-## 8. Status deployment vs kode
-- **Deployment mainnet AKTIF** (Robinhood Chain 4663, `deployments/4663.json`) = commit **`029b233`**
-  ("deploy(mainnet): redeploy audit-fixed contracts"). Memuat fix **C-1, L-1, I-1**.
-- **BELUM memuat** hardening **L-2, L-3, L-4** (ditambahkan setelah deploy; sekarang ada di
-  `audit-freeze-v1` / HEAD `458c358`). Diff `src/`: 7 file, +81/−18 (Hook, FeeVault, Factory, PriceReader,
-  GraduationImpl, ICOURHook, Errors).
-- **Rencana (disepakati):** *tidak* redeploy sekarang. Kode di-**freeze** untuk audit manusia; setelah
-  laporan audit bersih, lakukan **satu kali deploy final** dari commit yang telah diaudit (bukan deploy
-  bertahap). Allowlist tetap AKTIF selama interval ini, jadi hanya deployer yang bisa launch — L-2/L-3/L-4
-  adalah low-severity + termitigasi allowlist, sehingga aman menunda sampai deploy final.
+## 8. Status deployment vs kode (UPDATED 2026-11-05 — final deploy DONE)
+- **Deployment mainnet AKTIF** (Robinhood Chain 4663, `deployments/4663.json`) = tag **`audit-freeze-v1`**
+  (source `458c358`). Memuat **C-1, L-1, I-1 + L-2, L-3, L-4** — kode beku == kode ter-deploy.
+- Factory `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C`; **semua 7 kontrak terverifikasi** di robin.etherscan.io
+  (lihat `docs/VERIFICATION.md`, bukti bytecode↔source). Allowlist AKTIF, owner = deployer EOA.
+- Dua deployment lama (029b233 `0x2EA5…070A` dan `0x8e27…8D42`) **di-pause & DEPRECATED**
+  (`deployments/4663-DEPRECATED.json`).
+- **Rencana:** audit manusia berjalan terhadap kode live yang beku ini. Jika auditor minta perubahan →
+  redeploy sebagai `audit-fix-v1` (lihat `POST_AUDIT_PLAYBOOK.md`). Allowlist dibuka ke publik HANYA setelah
+  audit bersih + handover (GO_LIVE.md).

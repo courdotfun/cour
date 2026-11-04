@@ -18,8 +18,8 @@ graduates to a Uniswap **v4** pool, deployed on **Robinhood Chain (chainId 4663)
 - **Code (frozen):** git tag `audit-freeze-v1`, repo `github.com/courdotfun/cour`. Source freeze commit
   `458c358`. Solidity 0.8.26, `via_ir=true`, `optimizer_runs=44444444`, `evm_version=cancun`.
 - **What it does / architecture / trust model / invariants / risk areas:** `AUDITOR_BRIEF.md` (2 pages).
-- **Deployed (allowlist-gated, closed beta):** final contracts at [FINAL_ADDRESSES — see deployments/4663.json];
-  we can point you at the live instance on chain 4663.
+- **Deployed (allowlist-gated, closed beta):** final contracts live & verified on chain 4663 — factory
+  `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C` (full list in `deployments/4663.json` / `VERIFICATION.md`).
 - **Pre-work done (not a substitute for your review):** Slither (no High/Medium), an agentic audit pass
   (1 Critical + 4 Low + 1 Info, all fixed with regression tests; 2 rejected), and medusa fuzzing
   (~27M calls, 0 violations). Details in `audit/FINDINGS.md`, `audit/FUZZ.md`.

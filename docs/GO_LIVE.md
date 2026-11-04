@@ -12,16 +12,20 @@ router `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449`, hook `0xFC1bC2f2C0cEA16509d
 
 ---
 
-## 0. [PENTING] Status deployment vs kode — 🧑
-- **Deployment mainnet AKTIF** = commit **`029b233`** (`deployments/4663.json`). Memuat fix **C-1, L-1, I-1**.
-- **BELUM memuat** hardening **L-2, L-3, L-4** — ketiganya kini di tag **`audit-freeze-v1`** (HEAD `458c358`).
-  Diff `src/`: 7 file, +81/−18.
-- **Rencana (disepakati):** *tidak* redeploy sekarang. Kode di-**freeze** (`audit-freeze-v1`) untuk audit
-  manusia (langkah 2); setelah laporan audit bersih, lakukan **satu kali deploy final** dari commit yang
-  sudah diaudit — baru kemudian lanjut verifikasi (3), multisig (4), handover (5), dst. Allowlist tetap
-  AKTIF sepanjang interval ini sehingga hanya deployer yang bisa launch; L-2/L-3/L-4 low-severity +
-  termitigasi allowlist, jadi aman menunda sampai deploy final. **Jangan buka allowlist (langkah 10)
-  dengan kode lama yang belum memuat L-2/L-3/L-4.**
+## 0. [PENTING] Status deployment vs kode — ✅ final deploy DONE (2026-11-05)
+- **Deployment mainnet AKTIF** = tag **`audit-freeze-v1`** (`deployments/4663.json`). Memuat **C-1/L-1/I-1 +
+  L-2/L-3/L-4**. Alamat final di §"Alamat (FINAL)" di bawah. **Semua 7 kontrak terverifikasi** di
+  robin.etherscan.io (langkah 3 ✅, `docs/VERIFICATION.md`).
+- Allowlist **AKTIF** (hanya deployer), owner = deployer EOA. Dua deployment lama di-pause & DEPRECATED.
+- **Sisa menuju publik:** amankan key (1), audit manusia terhadap kode live (2), multisig (4), handover
+  timelock (5), legal (6), indexer/frontend (8), monitoring (9) → baru buka allowlist (10). Jika audit minta
+  perubahan → `audit-fix-v1` + redeploy (`docs/audit/POST_AUDIT_PLAYBOOK.md`).
+
+### Alamat (FINAL, tag audit-freeze-v1)
+factory `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C`, feeVault `0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76`,
+hook `0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC`, router `0x835Afd54F9BA20b18b6807B44886123E85A586f9`,
+priceReader `0xF7C914E7B7580a7653DcC3b7574bf041F615e359`, curveImpl `0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00`,
+graduationImpl `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7`.
 
 ---
 
