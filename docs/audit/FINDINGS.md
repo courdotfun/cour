@@ -51,15 +51,22 @@
 - **Status:** FIXED. Trade-off (buybacks wait 300s post-graduation) is accepted — it is the behaviour the
   reviewer requested.
 
-### L-3 — `refLiquidityUsd` uses spot `balanceOf`, donation-inflatable to bypass the thin-pool floor  📝 ACKNOWLEDGED
-- **File:** `src/COURPriceReader.sol:92-103`, gated at `COURFactory.sol:98`.
-- **Issue:** a one-time USDG/WETH transfer into the reference v3 pool inflates `refLiquidityUsd` to pass
-  `minRefLiqUsd`, letting an otherwise-thin pool clear the launch floor.
-- **Assessment:** bypasses a SAFETY FLOOR only (no fund theft); the launch price itself uses the 1800s TWAP
+### L-3 — `refLiquidityUsd` uses spot `balanceOf`, donation-inflatable to bypass the thin-pool floor  ✅ FIXED (hardening 2026-11-05)
+- **File:** `src/COURPriceReader.sol` (`refLiquidityUsd` + new `_inRangeReserve`), gated at `COURFactory.sol:98`.
+- **Issue:** a one-time USDG/WETH transfer into the reference v3 pool inflated `refLiquidityUsd` (it read raw
+  `balanceOf`) to pass `minRefLiqUsd`, letting an otherwise-thin pool clear the launch floor.
+- **Assessment:** bypassed a SAFETY FLOOR only (no fund theft); the launch price itself uses the 1800s TWAP
   (manipulation-resistant); the attacker loses the donated funds; and the **launch allowlist is ON** (only
-  trusted creators can launch during the closed phase). RISKS.md already calls `refLiquidityUsd` "a proxy."
-- **Status:** ACKNOWLEDGED / documented. Harden before opening the allowlist: derive reference liquidity from
-  in-range liquidity (slot0 + `liquidity`) rather than raw `balanceOf`.
+  trusted creators can launch during the closed phase). RISKS.md already called `refLiquidityUsd` "a proxy."
+- **Fix:** `refLiquidityUsd` now values the USD-side leg from the pool's **in-range (virtual) reserve** —
+  derived from the active `liquidity()` and `slot0.sqrtPriceX96` (token0: `L·2^96/sqrtP`; token1:
+  `L·sqrtP/2^96`, via `FixedPointMathLib.fullMulDiv`) — instead of `balanceOf`. A raw donation changes neither
+  `L` nor the price, so it can no longer move the floor; a pool with zero active liquidity reports 0.
+- **Tests:** `PriceReaderTest.t.sol::test_refLiquidityUsd_ignores_donations` (10M donation leaves the floor
+  unchanged), `::test_refLiquidityUsd_zero_when_no_liquidity` (empty pool → 0 even after a donation), and the
+  WETH-route test now asserts the same donation-invariance. `MockV3Pool` gained `setLiquidity` and derives
+  `slot0.sqrtPriceX96` from its tick.
+- **Status:** FIXED. (Floor is now donation-proof; safe to open the allowlist from the L-3 angle.)
 
 ### L-4 — Graduation opening price derived from manipulable curve `balanceOf`  ✅ FIXED (hardening 2026-11-01)
 - **File:** `src/GraduationImpl.sol`, `src/COURFactory.sol::graduate`.
@@ -102,6 +109,7 @@
   and remains reflected in `buybackOwed`. No loss.
 
 ---
-**Summary:** 1 CRITICAL fixed (+regression test), 1 LOW fixed, 1 INFO fixed (hardening); 3 LOW acknowledged/
-documented with mitigations; 2 rejected (1 by-design, 1 false-positive with file:line proof). A human audit is
-still recommended before opening the allowlist (see GO_LIVE.md).
+**Summary:** 1 CRITICAL fixed (+regression test), all 4 LOW fixed (L-1 cap, L-2 TWAP window, L-3 donation-proof
+floor, L-4 graduation price — each with regression tests), 1 INFO fixed (hardening); 2 rejected (1 by-design, 1
+false-positive with file:line proof). No findings remain open. A human audit is still recommended before
+opening the allowlist (see GO_LIVE.md).

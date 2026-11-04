@@ -17,7 +17,9 @@ Admin is `Ownable2Step` → to be a 48h `TimelockController` behind a Safe multi
 
 ## Oracle
 - Prices come only from Uniswap v3 TWAPs (1800s) on Robinhood Chain. **No third-party oracles.** A stock whose reference pool lacks observation history reverts `TwapNotReady`; `bumpCardinality` must be called ahead of launches.
-- `refLiquidityUsd` is a 2×(quote reserve) proxy, not an exact TVL; it gates only the thin-pool floor.
+- `refLiquidityUsd` is a 2×(quote reserve) proxy, not an exact TVL; it gates only the thin-pool floor. The
+  reserve is the pool's **in-range (virtual) reserve** from active `liquidity`+`slot0`, not raw `balanceOf`, so
+  a donation into the pool cannot inflate it (L-3 hardening).
 - The hook TWAP accumulator uses a rolling two-anchor scheme giving a window in ~[300s, 600s]; it is a deviation **guard**, not a high-fidelity oracle. Approximate by design.
 
 ## Buyback post-graduation reserve cap

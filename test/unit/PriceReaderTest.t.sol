@@ -74,8 +74,31 @@ contract PriceReaderTest is Test {
         MockStock stock = new MockStock("NV", "NV", 18);
         MockV3Pool pool = new MockV3Pool(address(stock), address(usdg), 0);
         reader.setRefPool(address(stock), address(pool), ICOURPriceReader.RefKind.USDG);
-        usdg.mint(address(pool), 500_000e18);
+        // At tick 0 (price 1) the in-range reserve equals the active liquidity L on each side.
+        pool.setLiquidity(500_000e18);
         assertEq(reader.refLiquidityUsd(address(stock)), 1_000_000); // 2x reserve
+    }
+
+    /// L-3 regression: a donation (raw balanceOf transfer) must NOT inflate the reference-liquidity floor.
+    function test_refLiquidityUsd_ignores_donations() public {
+        MockStock stock = new MockStock("NV", "NV", 18);
+        MockV3Pool pool = new MockV3Pool(address(stock), address(usdg), 0);
+        reader.setRefPool(address(stock), address(pool), ICOURPriceReader.RefKind.USDG);
+        pool.setLiquidity(500_000e18);
+        uint256 before = reader.refLiquidityUsd(address(stock));
+        // Donate 10M USDG straight into the pool: old balanceOf logic would have reported ~20M.
+        usdg.mint(address(pool), 10_000_000e18);
+        assertEq(reader.refLiquidityUsd(address(stock)), before); // unchanged — floor is donation-proof
+    }
+
+    /// A pool with no active in-range liquidity reports a zero floor (fails ThinReferencePool at launch).
+    function test_refLiquidityUsd_zero_when_no_liquidity() public {
+        MockStock stock = new MockStock("NV", "NV", 18);
+        MockV3Pool pool = new MockV3Pool(address(stock), address(usdg), 0);
+        reader.setRefPool(address(stock), address(pool), ICOURPriceReader.RefKind.USDG);
+        pool.setLiquidity(0);
+        usdg.mint(address(pool), 10_000_000e18); // donation cannot rescue an empty pool
+        assertEq(reader.refLiquidityUsd(address(stock)), 0);
     }
 
     function test_setRefPool_only_owner_or_setter() public {
@@ -113,8 +136,12 @@ contract PriceReaderTest is Test {
         MockV3Pool stockWeth = new MockV3Pool(address(s), address(weth), 0);
         reader.setWethUsdgPool(address(wethUsdg));
         reader.setRefPool(address(s), address(stockWeth), ICOURPriceReader.RefKind.WETH);
-        weth.mint(address(stockWeth), 100e18);
-        assertGt(reader.refLiquidityUsd(address(s)), 0);
+        // In-range reserve comes from active liquidity, not a donated balance.
+        stockWeth.setLiquidity(100e18);
+        uint256 withLiq = reader.refLiquidityUsd(address(s));
+        assertGt(withLiq, 0);
+        weth.mint(address(stockWeth), 1_000e18); // donation ignored
+        assertEq(reader.refLiquidityUsd(address(s)), withLiq);
     }
 
     function test_uiMultiplier_passthrough_and_default() public {

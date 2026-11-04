@@ -7,8 +7,8 @@ import { IUniswapV3PoolMinimal } from "./interfaces/IUniswapV3PoolMinimal.sol";
 import { Constants } from "./libraries/Constants.sol";
 import { Errors } from "./libraries/Errors.sol";
 import { V3Oracle } from "./libraries/V3Oracle.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 import { Ownable, Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @title COURPriceReader
@@ -89,16 +89,19 @@ contract COURPriceReader is ICOURPriceReader, Ownable2Step {
     }
 
     /// @inheritdoc ICOURPriceReader
+    /// @dev L-3 hardening: reserves are the pool's in-range (virtual) reserves derived from the active
+    ///      `liquidity` and `slot0.sqrtPriceX96`, NOT raw `balanceOf`. A one-off donation into the pool
+    ///      moves neither L nor the price, so it can no longer inflate this floor proxy.
     function refLiquidityUsd(address stock) external view returns (uint256) {
         Ref memory r = refOf[stock];
         if (r.pool == address(0)) return 0;
         if (r.kind == RefKind.USDG) {
-            uint256 bal = IERC20(usdg).balanceOf(r.pool);
-            return (bal * 2) / (10 ** uint256(usdgDecimals)); // both sides ~ 2x the USDG reserve
+            uint256 reserve = _inRangeReserve(r.pool, usdg);
+            return (reserve * 2) / (10 ** uint256(usdgDecimals)); // both sides ~ 2x the USDG reserve
         } else {
-            uint256 bal = IERC20(weth).balanceOf(r.pool);
+            uint256 reserve = _inRangeReserve(r.pool, weth);
             uint256 wethUsdX18 = _wethUsd();
-            return (bal * wethUsdX18 * 2) / 1e36;
+            return (reserve * wethUsdX18 * 2) / 1e36;
         }
     }
 
@@ -122,6 +125,21 @@ contract COURPriceReader is ICOURPriceReader, Ownable2Step {
     }
 
     // --------------------------------------------------------------- internal
+
+    /// @dev In-range (virtual) reserve of `token` at the pool's current price, from the active liquidity
+    ///      `L` and `slot0.sqrtPriceX96`. For token0: amount0 = L * 2^96 / sqrtP; for token1:
+    ///      amount1 = L * sqrtP / 2^96. Donation-resistant — raw transfers change neither L nor sqrtP.
+    ///      Returns 0 when the pool is uninitialized (sqrtP == 0) or has no active liquidity.
+    function _inRangeReserve(address pool, address token) internal view returns (uint256) {
+        (uint160 sqrtPriceX96,,,,,,) = IUniswapV3PoolMinimal(pool).slot0();
+        if (sqrtPriceX96 == 0) return 0;
+        uint256 l = IUniswapV3PoolMinimal(pool).liquidity();
+        if (l == 0) return 0;
+        if (token == IUniswapV3PoolMinimal(pool).token0()) {
+            return FixedPointMathLib.fullMulDiv(l, 1 << 96, sqrtPriceX96);
+        }
+        return FixedPointMathLib.fullMulDiv(l, sqrtPriceX96, 1 << 96);
+    }
 
     function _wethUsd() internal view returns (uint256 wethUsdX18) {
         address pool = wethUsdgPool;
