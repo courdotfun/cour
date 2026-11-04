@@ -79,3 +79,15 @@ of factory/reader/vault/router; the timelock then `acceptOwnership()` on each vi
 - Never commit `.env` or print the private key. `launchFee = 0`; creators pay only gas.
 - Keep the launch allowlist ENABLED until the public opening is explicitly decided.
 - Transient storage (Cancun) is confirmed on-chain; no fallback guard needed.
+
+## Final deployment (2026-11-05, tag `audit-freeze-v1`)
+
+Deployed with the proven flow `01_DeployCore` → `02_ConfigureStocks` → `06_RestoreParams`, then a read-only
+getter smoke + one `createToken` with no initial buy (`05c_SmokeLaunchNoBuy`, token CSMOKE), then paused the
+two prior factories. All addresses, block, compiler settings and params are in `deployments/4663.json`; the
+two superseded+paused deployments are in `deployments/4663-DEPRECATED.json`. Verification: all 7 contracts
+`Pass - Verified` on robin.etherscan.io via `deployments/verify-4663.sh` (Etherscan v2, chainid 4663);
+Blockscout standard-JSON inputs for manual UI upload are in `deployments/verify-blockscout/` (`docs/VERIFICATION.md`).
+Handover (`04_HandOver`, all four Ownables → 48h Timelock) and the emergency pause are fork-tested in
+`test/fork/HandoverAndPause.t.sol`. Ownership remains with the deployer EOA; handover is a human step
+(needs a Safe) — see `GO_LIVE.md`.

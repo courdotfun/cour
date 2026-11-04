@@ -54,3 +54,23 @@ Pull raised stock + unsold tokens from the curve → `poolManager.initialize(key
 
 ## Indexer notes (Phase 1C)
 Events carry full state for reconstruction: `TokenLaunched` (params + start price + mode + uri), `CurveTrade` (stock/token/fee/tax/vS/vT per trade), `Graduated` (poolId + liquidity), `FeeTaken` (creator-side/platform split), `FeeClaimed`/`HolderClaimed`/`BuybackExecuted`/`PlatformClaimed`, `FeeRecipientChanged`, and admin events. An indexer can rebuild every chart, the holder list (from token Transfers + `beforeBalanceChange` eligibility rules), and fee dashboards without extra RPC calls.
+
+## Off-chain components (added 2026-11-05)
+
+Beyond the contracts, COUR now ships three off-chain services (each with its own README):
+
+- **Indexer (`indexer/`, Ponder).** Subscribes to the final deployment's events (`TokenLaunched`,
+  `CurveTrade`, `Graduated`, `FeeTaken`, claims, `BuybackExecuted`, admin events) plus dynamic Curve/Token
+  contracts and the v4 PoolManager swaps for graduated pools. Derives tokens, trades, OHLCV candles (stock &
+  USD), holders, fee/claim/buyback history, per-stock USD snapshots (from `PriceReader.stockUsd`), and user
+  stats. Exposes GraphQL + a REST API consumed by the frontend. USD = price-in-stock × stockUsd.
+- **Frontend (`frontend/`, Vite + viem).** The approved design wired to the live contracts (via `COURRouter`
+  for buy/sell/launch/claim/buyback, `COURFactory` for `createToken`, `COURPriceReader` for prices) and the
+  indexer for lists/charts/history. Wallet via EIP-6963. Allowlist-aware launch UI. Unsupported Phase-1
+  features (LP provisioning, limit orders) are shown as "Coming soon"; see `docs/FRONTEND_CHANGES.md`.
+- **Monitor (`monitor/`, viem).** Watches admin/critical events and periodic health (prices, balances, paused
+  state, ownership) and alerts to Telegram (console fallback), with a read-only `/status` + `/health` HTTP.
+  Incident procedures in `docs/INCIDENT_RUNBOOK.md`.
+
+Data flow: contracts (chain 4663) → indexer (Postgres) → frontend (reads indexer REST/GraphQL + direct
+on-chain for quotes/balances/allowlist). Monitor reads the chain directly, independent of the indexer.
