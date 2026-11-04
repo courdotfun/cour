@@ -1,61 +1,566 @@
-
-╭-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------╮
-| Type        | Signature                                                                        | Selector                                                           |
-+=====================================================================================================================================================================+
-| event       | CurveTrade(address,address,bool,uint256,uint256,uint256,uint256,uint256,uint256) | 0xff97a934874a0b13dbb8d5d75e670ef1518b2691d415a892491d156802c93059 |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | AlreadyInitialized()                                                             | 0x0dc149f0                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | Expired()                                                                        | 0x203d82d8                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | Graduated()                                                                      | 0x9d4b7885                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | InitialBuyTooLarge()                                                             | 0x37c6d202                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | OnlyFactory()                                                                    | 0x0c6d42ae                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | ReentrancyGuardReentrantCall()                                                   | 0x3ee5aeb5                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | SafeERC20FailedOperation(address)                                                | 0x5274afe7                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | Slippage()                                                                       | 0x7dd37f70                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| error       | ZeroAmount()                                                                     | 0x1f2a2005                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | buy(uint256,uint256,address,uint256) nonpayable returns (uint256,uint256)        | 0x8945257c                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | config() view returns (TokenConfig)                                              | 0x79502c55                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | creator() view returns (address)                                                 | 0x02d05d3f                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | factoryAddr() view returns (address)                                             | 0x963671be                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | feeVaultAddr() view returns (address)                                            | 0x38f10f13                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | graduated() view returns (bool)                                                  | 0xe7c2b772                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | initialBuy(uint256,uint256,address) nonpayable returns (uint256,uint256)         | 0xcb839956                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | initialize(TokenConfig) nonpayable                                               | 0x3205a079                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | progressBps() view returns (uint256)                                             | 0x6c1eba15                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | quoteBuy(uint256) view returns (uint256,uint256,uint256)                         | 0x4beb394c                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | quoteSell(uint256) view returns (uint256,uint256)                                | 0xa64190c4                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | quoteStockForTokens(uint256) view returns (uint256)                              | 0x0a5e602b                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | sell(uint256,uint256,address,uint256) nonpayable returns (uint256)               | 0x8a038a54                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | stock() view returns (address)                                                   | 0xbdf3c4ae                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | token() view returns (address)                                                   | 0xfc0c546a                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | vS() view returns (uint256)                                                      | 0xaa30c4b7                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| function    | vT() view returns (uint256)                                                      | 0x3bb54fb0                                                         |
-|-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------|
-| constructor | constructor(address,address) nonpayable                                          |                                                                    |
-╰-------------+----------------------------------------------------------------------------------+--------------------------------------------------------------------╯
-
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "factory_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "feeVault_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buy",
+    "inputs": [
+      {
+        "name": "stockIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minTokensOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokensOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "stockUsed",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "config",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "c",
+        "type": "tuple",
+        "internalType": "struct TokenConfig",
+        "components": [
+          {
+            "name": "token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "stock",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "creator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "creatorFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "mode",
+            "type": "uint8",
+            "internalType": "enum CreatorMode"
+          },
+          {
+            "name": "stockDecimals",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "launchedAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "vS0",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "vT0",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "k",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "vTStop",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "creator",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "factoryAddr",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "feeVaultAddr",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "graduated",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialBuy",
+    "inputs": [
+      {
+        "name": "stockIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minTokensOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokensOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "stockUsed",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "cfg",
+        "type": "tuple",
+        "internalType": "struct TokenConfig",
+        "components": [
+          {
+            "name": "token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "stock",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "creator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "creatorFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "mode",
+            "type": "uint8",
+            "internalType": "enum CreatorMode"
+          },
+          {
+            "name": "stockDecimals",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "launchedAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "vS0",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "vT0",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "k",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "vTStop",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "progressBps",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "quoteBuy",
+    "inputs": [
+      {
+        "name": "stockIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokensOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "tax",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "quoteSell",
+    "inputs": [
+      {
+        "name": "tokensIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "stockOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "quoteStockForTokens",
+    "inputs": [
+      {
+        "name": "tokensWanted",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "stockIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "sell",
+    "inputs": [
+      {
+        "name": "tokensIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minStockOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "stockOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "stock",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "token",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CurveTrade",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "trader",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "isBuy",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "stockAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "tax",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "vS",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "vT",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Expired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Graduated",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InitialBuyTooLarge",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyFactory",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Slippage",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAmount",
+    "inputs": []
+  }
+]
