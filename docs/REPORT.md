@@ -154,3 +154,85 @@ forge script script/02_ConfigureStocks.s.sol --rpc-url $RH_RPC_URL --broadcast -
 bash script/run_mainnet_smoke.sh                         # smoke test mainnet
 forge script script/06_RestoreParams.s.sol --rpc-url $RH_RPC_URL --broadcast
 ```
+
+---
+
+# Laporan Program "Bawa COUR sampai final" (2026-11-05)
+
+Ringkasan eksekusi prompt deploy-final + paket-audit + indexer + frontend + monitoring. Semua ter-commit &
+ter-push ke `courdotfun/cour`. Kode `src/` TIDAK diubah (beku di `audit-freeze-v1`).
+
+## 1. Yang dibangun
+Deploy final kontrak dari tag beku + verifikasi dua-explorer, paket audit manusia, indexer Ponder, frontend
+dApp tersambung kontrak, service monitoring, dan uji handover/pause di fork. Repo kini monorepo:
+`src/` (kontrak), `indexer/`, `frontend/`, `monitor/`.
+
+## 2. Deployment final (chain 4663, tag audit-freeze-v1, block 106215255)
+| Kontrak | Alamat | etherscan | Blockscout |
+|---|---|---|---|
+| COURFactory | `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C` | ✅ Verified | ⏳ manual (std-json siap) |
+| COURFeeVault | `0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76` | ✅ | ⏳ |
+| COURHook | `0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC` | ✅ | ⏳ |
+| COURRouter | `0x835Afd54F9BA20b18b6807B44886123E85A586f9` | ✅ | ⏳ |
+| COURPriceReader | `0xF7C914E7B7580a7653DcC3b7574bf041F615e359` | ✅ | ⏳ |
+| COURCurve (impl) | `0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00` | ✅ | ⏳ |
+| GraduationImpl | `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7` | ✅ | ⏳ |
+- Param produksi 4000/60000, minBuybackUsd 50, launchFee 0, **allowlist AKTIF**, owner = deployer EOA.
+- Bukti bytecode==tag: verifikasi etherscan terhadap sumber tag + sha256 creation-bytecode reproducible
+  (`docs/VERIFICATION.md`). Build in-place == tag (`git diff audit-freeze-v1 HEAD -- src script` kosong).
+- Smoke: getter read-only + 1 `createToken` tanpa initial buy (CSMOKE `0x9662…A7bC`). Dua factory lama
+  di-pause & DEPRECATED. Token uji dipakai untuk memverifikasi indexer end-to-end.
+
+## 3. Indexer (`indexer/`, Ponder 0.18.4)
+Events → Postgres (pglite dev), GraphQL + REST (`/tokens /token/:addr /candles /trades /holders
+/portfolio/:addr /top-users /stats`). Tabel: token/trade/candle(stock+USD)/holder/feeEvent/claim/buyback/
+stockPrice/userStats/pool/globalStat/adminEvent. USD = harga-stock × `stockUsd`. **Terbukti live-index CSMOKE**
+dari block 106215255 (typecheck lulus; REST+GraphQL valid). Dockerfile+compose siap (Docker tak tersedia di
+sini → belum di-build). Catatan: RPC publik rate-limit (429) saat backfill → pakai RPC khusus di produksi.
+
+## 4. Frontend (`frontend/`, Vite+TS+viem)
+Desain `COUR-launchpad.html` dijadikan app nyata; **visual dipertahankan** (30 screenshot, 5 view × 3 tema ×
+2 viewport, 0 error console; `pnpm build` PASS). Lapisan chain (viem, wallet EIP-6963, allowlist gating,
+admin panel owner-only), data (indexer REST + fallback on-chain), features (buy/sell/buyWithETH, createToken,
+claim/holder/platform, buyback, stock swap). Rename `EON_*`→`COUR_*` + migrasi localStorage. Geo-block
+middleware, `vercel.json`, `.env.example`. Edit kejujuran (LP 0%+LP dibakar, Stock Reserve dihapus, limit
+order/lend/DCA/Oink → Coming soon, "pay with any token"→ETH/stock) di `docs/FRONTEND_CHANGES.md`.
+**Gap jujur (belum selesai):** beberapa render DOM lama (daftar market home, portfolio, chart candle, handler
+form order/launch) masih membaca struktur demo in-memory; padanan nyata sudah ada di `window.COUR` dan
+simulator dimatikan saat live, tapi render spesifik itu belum di-swap (butuh membongkar skrip inline 8.5k
+baris). Belum deploy ke Vercel. E2E penuh (Playwright) & Lighthouse belum dijalankan (smoke puppeteer dipakai).
+
+## 5. Monitoring (`monitor/`) & runbook
+Watcher event + health (harga/saldo/paused/owner) → Telegram (fallback console) + `/status`+`/health`.
+`tsc` lulus; smoke live mainnet jalan (NVDA $201.43). `docs/INCIDENT_RUNBOOK.md`. Handover (4 Ownable →
+Timelock 48 jam) + prosedur pause **teruji di fork** (`test/fork/HandoverAndPause.t.sol`, 2/2 PASS).
+
+## 6. Saldo deployer
+**~0.00147 ETH** (chain 4663). Monitor menandai ini di bawah ambang — **perlu di-top-up** sebelum op admin
+(handover/pause) berikutnya.
+
+## 7. Yang harus dilakukan manusia (berurutan)
+1. **Top-up saldo deployer** (sedikit ETH di 4663) untuk op admin berikutnya.
+2. **Audit manusia**: kirim paket (`docs/audit/HUMAN_AUDIT_PACKAGE.md` + `AUDITOR_BRIEF.md` + `OUTREACH_EMAIL.md`,
+   tag `audit-freeze-v1`, alamat live) ke beberapa auditor; pilih & engage.
+3. **Amankan private key** deployer → hardware wallet.
+4. **Buat Safe 2-of-3** di 4663; set `MULTISIG` di `.env`; jalankan `script/04_HandOver.s.sol` → Timelock 48 jam
+   `acceptOwnership` tiap kontrak (alur terbukti di fork).
+5. **Verifikasi Blockscout** manual (upload `deployments/verify-blockscout/*.standard.json` + args) bila mau.
+6. **Host indexer** (Railway/Render/Fly) + Postgres + RPC khusus; isi env.
+7. **Isi env frontend** (`VITE_RPC_URL`, `VITE_INDEXER_URL`, `VITE_WC_PROJECT_ID`, `VITE_PINATA_JWT`) + deploy
+   Vercel + domain. (Opsional: minta rewiring render DOM lama ke data nyata — lihat Gap §4.)
+8. **Review legal** & daftar negara geo-block (`frontend/src/config/regions.ts`).
+9. Setelah audit bersih → `docs/audit/POST_AUDIT_PLAYBOOK.md` → handover → **baru** buka allowlist (langkah
+   terakhir `setLaunchAllowlistEnabled(false)` via timelock).
+
+## 8. Perintah penting
+```
+# deploy & verify (sudah dijalankan)
+forge script script/01_DeployCore.s.sol:DeployCore --rpc-url $RH_RPC_URL --broadcast --slow
+ETHERSCAN_API_KEY=xxx bash deployments/verify-4663.sh
+forge test --match-path 'test/fork/HandoverAndPause.t.sol' -vv     # handover+pause fork
+cd indexer && pnpm install && pnpm dev                              # indexer (PONDER_RPC_URL_4663)
+cd frontend && pnpm install && pnpm build && pnpm dev               # frontend
+cd monitor && pnpm install && pnpm start                            # monitoring
+```
