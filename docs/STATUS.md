@@ -110,7 +110,13 @@ tapi renderer spesifik belum di-swap (butuh bongkar skrip inline ~8,5k baris):
   SEO 75, **Performance 42 (✗, di bawah 85)**. Penyebab: desain `index.html`
   monolitik ~1,16 MB (inline script 8,5k baris + CSS + gambar base64). Naik ke ≥85
   butuh refactor struktur (code-split, externalize gambar) — **follow-up**.
-- **Deploy Vercel** (preview/prod): **belum** — CLI belum login, env belum diisi (§3.7).
+- **Deploy Vercel: SUDAH (2026-11-11)** — project `cour1/frontend` live & `READY`
+  di `https://frontend-lemon-mu-g0mh4l8zez.vercel.app` (deploy pertama otomatis jadi
+  production oleh Vercel; domain `*.vercel.app`, belum domain kustom). Build `pnpm build`
+  lulus di Vercel. Baked env: `VITE_RPC_URL`=RPC Robinhood. **Masih perlu diisi di
+  Project Settings:** `VITE_INDEXER_URL` (saat indexer sudah di-host → list token penuh;
+  sekarang fallback on-chain CSMOKE), `VITE_WC_PROJECT_ID`, `VITE_PINATA_JWT`, lalu
+  redeploy + domain kustom. Geo-block middleware aktif (blokir US). Lihat §3.7.
 - **Smoke matrix 5×3×2**: logika ada + diperketat (abaikan noise jaringan), tapi
   lambat di sandbox ini (30 screenshot halaman 1,16 MB); E2E sudah membuktikan 0 error JS.
 
