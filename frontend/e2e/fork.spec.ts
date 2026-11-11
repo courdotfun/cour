@@ -86,7 +86,7 @@ test.describe("fork: full on-chain flow (UI)", () => {
       const toRaw = (window as any).COUR.format.toRaw;
       const stockIn = toRaw("1", t.stockDecimals);
       const q = await f.trade.previewBuy(t.address, stockIn, 200);
-      return f.trade.buy(t.address, t.stock, stockIn, q.minOut);
+      return f.trade.buy(t.address, t.pairedStock, stockIn, q.minOut);
     });
     expect(buyHash).toMatch(/^0x[0-9a-f]{64}$/i);
 

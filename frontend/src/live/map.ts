@@ -27,9 +27,11 @@ export interface UiToken {
   _p0: number;
   mine?: boolean;
   // ---- real fields used by the live trade/launch handlers (not by the design) ----
+  // NB: named `pairedStock` (not `stock`) on purpose — the design treats a truthy
+  // `_tkTok.stock` as "this is a stock-page token" and switches to stock-page UI.
   address: `0x${string}`;
   curve: `0x${string}`;
-  stock: `0x${string}`;
+  pairedStock: `0x${string}`;
   stockDecimals: number;
   mode: number;
   graduated: boolean;
@@ -123,7 +125,7 @@ export function mapToken(
     mine,
     address: t.address,
     curve: t.curve,
-    stock: t.stock,
+    pairedStock: t.stock,
     stockDecimals: t.stockDecimals,
     mode: t.mode,
     graduated: t.graduated,

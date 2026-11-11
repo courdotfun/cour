@@ -76,6 +76,22 @@ async function main() {
     const cats = runnerResult.lhr.categories;
     const scores = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, Math.round((v.score || 0) * 100)]));
     console.log("LIGHTHOUSE scores:", scores);
+    const a = runnerResult.lhr.audits;
+    const metric = (id) => a[id]?.displayValue ?? "n/a";
+    console.log("LIGHTHOUSE metrics:", {
+      FCP: metric("first-contentful-paint"),
+      LCP: metric("largest-contentful-paint"),
+      TBT: metric("total-blocking-time"),
+      CLS: metric("cumulative-layout-shift"),
+      SI: metric("speed-index"),
+      TTI: metric("interactive"),
+    });
+    const opps = Object.values(a)
+      .filter((x) => x.details?.type === "opportunity" && (x.details.overallSavingsMs || 0) > 50)
+      .sort((x, y) => (y.details.overallSavingsMs || 0) - (x.details.overallSavingsMs || 0))
+      .slice(0, 8)
+      .map((x) => `${x.id} (~${Math.round(x.details.overallSavingsMs)}ms)`);
+    console.log("LIGHTHOUSE top opportunities:", opps);
     const gated = ["performance", "accessibility", "best-practices"];
     const failed = gated.filter((k) => (scores[k] ?? 0) < MIN);
     if (failed.length) {

@@ -2275,12 +2275,12 @@ window.COUR_LIVE = true;
       <div class="ct-stepwrap" data-step="1">
         <div class="field" id="fName">
           <label>Token name</label>
-          <input id="ctName" placeholder="e.g. Nova Protocol" maxlength="22">
+          <input id="ctName" placeholder="e.g. My Token" maxlength="22">
           <div class="err">Give your token a name.</div>
         </div>
         <div class="field" id="fTick">
           <label>Ticker</label>
-          <input id="ctTick" placeholder="$NOVA" maxlength="8">
+          <input id="ctTick" placeholder="$TOKEN" maxlength="8">
           <div class="err">Ticker is required.</div>
         </div>
         <div class="field">
@@ -3003,7 +3003,7 @@ window.COUR_LIVE = true;
   function _tokBy(tk){for(var i=0;i<tokens.length;i++)if(tokens[i].tick===tk)return tokens[i];return null;}
   function seedProfile(){
     if(_pfSeeded)return; _pfSeeded=true;
-    [['buy','NOVA',1.8,'2h ago'],['buy','FLARE',1.1,'5h ago'],['sell','QCAT',0.7,'9h ago'],['buy','AUR',0.9,'1d ago'],['sell','VOX',1.2,'1d ago'],['buy','DEEP',0.6,'2d ago']].forEach(function(a){var t=_tokBy(a[1]);var qty=t?a[2]*3200/_pxOf(t):a[2]*1000;_activityLog.push({side:a[0],tick:a[1],qtyK:(qty/1000).toFixed(2),eth:a[2].toFixed(4),when:a[3]});});
+    // Live mode: no fabricated activity. Real trades populate _activityLog.
   }
   function pfStatData(){
     var keys=Object.keys(_holdings),holds=keys.length,up=0,vol=0;
@@ -4708,18 +4708,9 @@ window.COUR_LIVE = true;
   // item shape: {cat:"web3"|"stocks"|"market", title, src}
   (function(){
     var list=document.getElementById('newsList'); if(!list) return;
-    var NEWS_POOL=[
-      {cat:"web3",   title:"Base network hits new daily transaction record", src:"The Block"},
-      {cat:"stocks", title:"Tokenized equities cross $2B in on-chain volume", src:"Bloomberg"},
-      {cat:"market", title:"24/7 trading drives weekend volume surge", src:"Reuters"},
-      {cat:"stocks", title:"NVDA-linked token leads tech rally, up 8%", src:"CoinDesk"},
-      {cat:"web3",   title:"Robinhood Chain adds 12 new stock tokens", src:"Decrypt"},
-      {cat:"market", title:"Regulators signal openness to on-chain securities", src:"WSJ"},
-      {cat:"stocks", title:"AAPL tokenized shares now live on-chain", src:"CoinDesk"},
-      {cat:"web3",   title:"New RWA launchpad standard gains traction", src:"The Block"},
-      {cat:"market", title:"Institutional inflows into tokenized assets climb", src:"Bloomberg"},
-      {cat:"stocks", title:"TSLA token sees record 24h liquidity", src:"Decrypt"}
-    ];
+    // Live mode: no fabricated news/headlines. A real feed can populate NEWS_POOL
+    // (shape {cat,title,src}); until then the ticker stays empty (honest).
+    var NEWS_POOL=[];
     var TAG={web3:"WEB3",stocks:"STOCKS",market:"MARKET"};
     var MAX=24, feed=[], pi=0;
     function fmtAge(sec){ if(sec<60)return "just now"; var m=Math.floor(sec/60); if(m<60)return m+"m ago"; return Math.floor(m/60)+"h ago"; }
@@ -4733,6 +4724,7 @@ window.COUR_LIVE = true;
       return el;
     }
     function pushNews(fresh){
+      if(!NEWS_POOL.length) return; // live: no fabricated news
       var item=NEWS_POOL[pi%NEWS_POOL.length]; pi++;
       var el=card(item,fresh);
       var st=list.scrollTop, sh=list.scrollHeight;
@@ -4814,6 +4806,7 @@ window.COUR_LIVE = true;
   // ---------- pair volume by quote asset (mock; swap for indexer) ----------
   (function(){
     var host=document.getElementById('pvList'), tot=document.getElementById('pvTotal'); if(!host) return;
+    if(window.COUR_LIVE) return; // live: no fabricated pair-volume (wire to indexer /stats)
     var rows=[{t:"NVDA",v:48.2},{t:"TSLA",v:27.9},{t:"AAPL",v:14.6},{t:"META",v:9.1},{t:"MSFT",v:6.4},{t:"Other",v:11.3}];
     function draw(){
       var sum=rows.reduce(function(a,r){return a+r.v},0);
@@ -4828,7 +4821,8 @@ window.COUR_LIVE = true;
   // ---------- live launches feed (mock; swap for factory events) ----------
   (function(){
     var list=document.getElementById('llList'); if(!list) return;
-    var NAMES=[["Chad Nvidia","CHADN"],["Tesla Frog","TFROG"],["Apple Pie","APIE"],["Meta Monke","MMONK"],["Bull Run","BULL"],["Diamond Hands","DIAMO"],["Earnings Cat","ECAT"],["Stonk Doge","SDOGE"],["Moon Tick","MTICK"],["Gigachad Pair","GIGAP"],["Robin Frog","RFROG"],["Wall St Bets","WSB"]];
+    if(window.COUR_LIVE) return; // live: no fabricated launch feed (wire to indexer /tokens)
+    var NAMES=[];
     var PAIRS=["NVDA","TSLA","AAPL","META","MSFT","AMZN","GOOGL","COIN"];
     var MAX=16, items=[], k=0;
     function ago(t){var s=Math.floor((Date.now()-t)/1000);return s<5?'now':s<60?s+'s':Math.floor(s/60)+'m';}
@@ -5182,19 +5176,11 @@ window.COUR_LIVE = true;
       hot:'<svg '+IC+'><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
       newtoken:'<svg '+IC+'><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/></svg>'
     };
-    var POOL=[
-      {cat:"newtoken",tick:"GIGA",hue:292,msg:"New launch: <b>$GIGA</b>"},
-      {cat:"ath",tick:"NOVA",hue:150,msg:"<b>$NOVA</b> hit a new ATH"},
-      {cat:"grad",tick:"FORGE",hue:30,msg:"<b>$FORGE</b> just graduated"},
-      {cat:"whale",msg:"Whale bought <b>$18K TSLA</b>"},
-      {cat:"hot",msg:"<b>$AAPL</b> volume +240%"},
-      {cat:"newtoken",tick:"ZEPH",hue:200,msg:"New launch: <b>$ZEPH</b>"},
-      {cat:"ath",tick:"NVDA",hue:110,msg:"<b>$NVDA</b> new all-time high"},
-      {cat:"grad",tick:"HYD",hue:214,msg:"<b>$HYD</b> reached graduation"},
-      {cat:"whale",msg:"Whale bought <b>$42K NVDA</b>"},
-      {cat:"newtoken",tick:"VAULT",hue:170,msg:"New launch: <b>$VAULT</b>"}
-    ];
+    // Live mode: no fabricated "social proof" toasts. Real events pass `forced`
+    // (e.g. a real launch/graduation); the random pool stays empty.
+    var POOL=[];
     function show(forced){
+      if(!forced && !POOL.length) return; // live: only real (forced) toasts
       var e=forced||POOL[Math.floor(Math.random()*POOL.length)];
       var el=document.createElement('div'); el.className='toast'; el.setAttribute('data-cat',e.cat);
       // NOTE (for Hari): if the token has a logo uploaded at launch, pass e.logo = <image url>.
@@ -5397,14 +5383,9 @@ window.COUR_LIVE = true;
     connected:false, via:null,
     addr:'0x7Af3c91e0b2D5a64E8f1C3b9A0d4E6f8215c24b0',
     stocks:{},
-    cash:{ETH:60/3200},   // ~$60 of ETH (at $3,200)
+    cash:{ETH:0},         // live: real balances come from chain, not demo seed
     positions:[], realized:0, vol:0,
-    log:[
-      {type:'in',title:'Received 5 NVDA',sub:'from 0x91Bc…77f2',amt:'+5 NVDA',when:'3h ago'},
-      {type:'lp',title:'Added liquidity NOVA / NVDA',sub:'pool share 0.042%',amt:'$1,240',when:'1d ago'},
-      {type:'swap',title:'Swapped 0.15 ETH → 2.1 AAPL',sub:'fee 0.30%',amt:'-0.15 ETH',when:'2d ago'},
-      {type:'out',title:'Sent 0.4 ETH',sub:'to 0x3F2d…9a6c',amt:'-0.4 ETH',when:'4d ago'}
-    ]
+    log:[]                // live: no fabricated wallet activity
   };
   window.COUR_W=W;
 
@@ -6458,8 +6439,8 @@ window.COUR_LIVE = true;
   // NOTE (for Hari): t.cfAcc is the creator's unclaimed share in USD (80% of the token's creatorFee). Real: show FeeSplitter.pending(token, creator)
   // and send FeeSplitter.claim(token) through COUR_WALLET, then credit the ETH it pays out. Keep the same shape: cfList(), cfAccrue(), cfClaim().
   var CF_SHARE=0.8, CF_GAS=0.02;
-  function cfIs(t){ return !!t&&(t.mine||t.tick==='NOVA'||t.tick==='DEEP'); }
-  window.cfList=function(){ var a=tokens.filter(function(t){ return t.mine; }); [tokByTick('NOVA'),tokByTick('DEEP')].forEach(function(t){ if(t&&a.indexOf(t)<0) a.push(t); }); return a; };
+  function cfIs(t){ return !!t&&!!t.mine; }
+  window.cfList=function(){ return tokens.filter(function(t){ return t.mine; }); };
   window.cfAccrue=function(t,px,dt){
     if(!cfIs(t)) return;
     if(t.cfAcc==null) t.cfAcc=t.mine?0:((t.tick.length*7+23)%60+12);
@@ -8476,10 +8457,10 @@ body.mr-going .ox-sfx{display:none}
     document.head.appendChild(css);
     // demo data. NOTE (for Hari): replace with the real top users by 24h volume: {addr, vol, trades}
     // full address, 24h volume, 24h trades, portfolio value, joined, 30d pnl
-    var U=[['0x7a3f51e08c2d94b7a6310fd8e2c45b9a7d139c21',48210,132,182400,'Feb 2026',38.4],['0xb91ea07c3d58e1294bf60c7d83a5e2f19b0404dd',36940,98,64300,'Mar 2026',21.7],['0x2c589f1e64b3a7d082c5e91f3b6a40d7c8e2e7a0',29770,81,23500,'Mar 2026',12.9],['0xf04d3b7a92e5c1068d4f7a3e59b2c0d618a41b36',21350,64,9200,'Apr 2026',-4.2],['0x63e2d8a41f7c5b30e962a8c7d4f13b05e9a6a8f9',15880,47,3100,'May 2026',8.5],['0x9d176c2b8e04f5a31d97c0b4e82a7f3d159670c4',12420,39,640,'Jun 2026',3.1]]
-      .map(function(r){ return {full:r[0],a:r[0].slice(0,6)+'…'+r[0].slice(-4),v:r[1],t:r[2],port:r[3],joined:r[4],pnl:r[5]}; });
-    // ranks 7-100: generated demo users (deterministic), volume falls with rank
-    (function(){
+    // Live mode: real top users come from the indexer (/top-users); demo removed.
+    var U=[];
+    // ranks 7-100: generated demo users (deterministic) — disabled in live mode.
+    if(!window.COUR_LIVE)(function(){
       var seed=20261101, HX='0123456789abcdef', MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
       function rnd(){ seed=(seed*1664525+1013904223)%4294967296; return seed/4294967296; }
       for(var i=U.length;i<100;i++){
@@ -8493,6 +8474,7 @@ body.mr-going .ox-sfx{display:none}
     var CROWN='<svg class="tu-crown" viewBox="0 0 26 20" fill="currentColor" aria-hidden="true"><path d="M2 6l5.5 4.5L13 2l5.5 8.5L24 6l-2 12H4L2 6Z"/><rect x="4" y="17" width="18" height="2.4" rx="1.2"/></svg>';
     function draw(){
       var host=document.getElementById('topUsers'); if(!host) return;
+      if(!U.length){ host.innerHTML='<div class="row-head"><h2>Top users <span class="rh-count">24h</span></h2></div><div style="color:var(--muted);padding:20px 2px">No trader data yet.</div>'; return; }
       var top=U[0].v;
       var h='<div class="row-head"><h2>Top users <span class="rh-count">24h</span></h2></div><div class="tu-pod">';
       [1,0,2].forEach(function(i){

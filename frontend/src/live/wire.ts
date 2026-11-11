@@ -204,7 +204,7 @@ export async function tradeReal(): Promise<void> {
       // amount is in the paired stock units (buy with stock)
       const stockIn = toRaw(amt, tok.stockDecimals);
       const q = await trade.previewBuy(tok.address, stockIn, 150);
-      const hash = await trade.buy(tok.address, tok.stock, stockIn, q.minOut);
+      const hash = await trade.buy(tok.address, tok.pairedStock, stockIn, q.minOut);
       toast(`Bought ${tok.tick}. Tx ${shortAddr(hash)}`, false, explorerTx(hash));
     }
     const amtEl = document.getElementById("ordAmt") as HTMLInputElement | null;
