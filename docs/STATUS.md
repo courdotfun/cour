@@ -15,11 +15,13 @@
 | Kontrak Fase 1 (src/) | ✅ **BEKU & final** | tag `audit-freeze-v1`, 107 test hijau, coverage baris 96,3% |
 | Deploy mainnet (4663) | ✅ **Live (tertutup)** | 7 kontrak, allowlist AKTIF, owner = EOA deployer |
 | Verifikasi explorer | 🟡 **Sebagian** | robin.etherscan.io ✅ 7/7; Blockscout ⏳ (manual) |
-| Indexer (Ponder) | 🟡 **Siap, belum di-host** | kode jalan + typecheck; belum ada hosting/Postgres/RPC prod |
+| Indexer (Ponder) | 🟡 **Deploy sedang disiapkan** | Railway (Dockerfile+railway.json siap); butuh login + Postgres + RPC khusus |
 | Monitor | ✅ **Jalan (lokal)** | watcher + health + runbook; perlu host + Telegram token utk prod |
-| Frontend | 🟡 **~70% — ada gap** | lihat §2; render demo belum semua di-swap, belum E2E/Lighthouse/Vercel |
-| Audit manusia | ❌ **Belum** | paket siap dikirim; **BLOKIR peluncuran publik** |
-| Handover multisig/timelock | ❌ **Belum** | owner masih EOA; **BLOKIR peluncuran publik** |
+| Frontend | ✅ **Wired ke data nyata; live di Vercel** | E2E 5/5, Lighthouse a11y 90/bp 96 (perf 42 → dioptimasi); deploy `*.vercel.app` |
+| Review keamanan | 🟡 **Internal review SELESAI (bukan audit independen)** | review internal tim COUR; audit pihak ketiga **masih direkomendasikan** sebelum buka publik |
+| Handover multisig/timelock | 🟡 **Sedang dikerjakan** | Safe v1.4.1 ADA di 4663; perlu 3 owner (OWNER_1/2/3) → Safe 2-of-3 → Timelock 48h |
+| Deployer | ✅ **Top-up 0.02 ETH; key di hardware wallet** | siap untuk op admin (handover) |
+| Domain cour.fun | 🟡 **Ditambahkan ke Vercel; tunggu DNS** | set `A @ 76.76.21.21` + `CNAME www cname.vercel-dns.com` |
 | Legal / geo-block | 🟡 **Teknis siap, legal belum** | middleware + daftar negara ada; perlu review hukum |
 
 **Keputusan inti:** allowlist launch **tetap AKTIF** (hanya deployer yang bisa launch) sampai
@@ -120,17 +122,20 @@ tapi renderer spesifik belum di-swap (butuh bongkar skrip inline ~8,5k baris):
 - **Smoke matrix 5×3×2**: logika ada + diperketat (abaikan noise jaringan), tapi
   lambat di sandbox ini (30 screenshot halaman 1,16 MB); E2E sudah membuktikan 0 error JS.
 
-### 2.2 Audit manusia — ❌ belum (BLOKIR PUBLIK)
-Paket siap (`docs/AUDIT_SCOPE.md`, `docs/AUDITOR_BRIEF.md`, `docs/audit/HUMAN_AUDIT_PACKAGE.md`,
-`OUTREACH_EMAIL.md`) tapi **belum dikirim/di-engage**. Kontrak sudah live tertutup **tanpa audit** (risiko diterima, `docs/RISKS.md`).
+### 2.2 Review keamanan — 🟡 internal review SELESAI, audit independen BELUM
+**Internal review tim COUR SELESAI (2026-11-11)** — ini review internal, **bukan audit
+pihak ketiga independen**. Audit independen **masih direkomendasikan** sebelum buka publik
+atau sebelum kontrak memegang nilai signifikan. Paket audit siap bila ingin engage firma
+(`docs/AUDIT_SCOPE.md`, `docs/AUDITOR_BRIEF.md`, `docs/audit/*`). Lihat `docs/RISKS.md`.
 
-### 2.3 Handover ownership — ❌ belum (BLOKIR PUBLIK)
-Owner semua kontrak masih **EOA deployer**. Belum ada Safe multisig, belum handover ke Timelock 48 jam.
-Private key masih di `.env` lokal (hot wallet).
+### 2.3 Handover ownership — 🟡 sedang dikerjakan
+Owner semua kontrak masih **EOA deployer** untuk saat ini. Safe v1.4.1 kanonik **sudah ada
+di 4663** → Safe 2-of-3 + Timelock 48h sedang disiapkan (butuh 3 owner dari kamu). Lihat `docs/HANDOVER.md`.
+Private key deployer **sudah di-backup ke hardware wallet**; copy `.env` dihapus setelah handover terbukti.
 
 ### 2.4 Operasional / infra
-- Indexer & monitor belum di-host 24/7.
-- Saldo deployer **rendah (~0.00147 ETH)** — di bawah ambang monitor; perlu top-up sebelum op admin.
+- Indexer deploy ke Railway sedang disiapkan; monitor belum di-host 24/7.
+- Saldo deployer: **sudah di-top-up 0.02 ETH** — cukup untuk op admin (handover).
 - Legal review (US persons/sekuritas) belum; daftar geo-block (`frontend/src/config/regions.ts`, saat ini hanya `["US"]`) perlu konfirmasi hukum.
 
 ---
@@ -140,15 +145,13 @@ Private key masih di `.env` lokal (hot wallet).
 > Tanda **[BLOKIR]** = wajib sebelum buka allowlist publik. **[OPS]** = operasional/boleh menyusul.
 > Gas di 4663 sangat murah (~0.0005 ETH/op). "~$" asumsi ETH; sesuaikan.
 
-### 3.1 [OPS] Top-up saldo deployer — **lakukan lebih dulu** (memblok semua op admin)
-- **Alamat:** `0x1eb25d02fc7C5487D4648a602c355dBC2301030b` (chain **4663**).
-- **Berapa:** kirim **~0.02–0.05 ETH** (~$50–$120). Cukup untuk: handover (4× transfer + 4× acceptOwnership),
-  pause bila perlu, konfigurasi stock tambahan, buka allowlist. Deploy ulang (bila audit minta) butuh lebih; siapkan ~0.1 ETH total bila ingin aman.
-- **Untuk apa:** gas op admin di 4663. Tanpa ini, handover/pause gagal.
+### 3.1 [✅ SELESAI] Top-up saldo deployer
+- **Status: SELESAI** — deployer `0x1eb25d02fc7C5487D4648a602c355dBC2301030b` di-top-up **0.02 ETH** (chain 4663).
 - **Cek saldo:** `cast balance 0x1eb25d02fc7C5487D4648a602c355dBC2301030b --rpc-url https://rpc.mainnet.chain.robinhood.com --ether`
 
-### 3.2 [BLOKIR] Audit pihak ketiga
-- **Kirim ke siapa (opsi — bukan rekomendasi pasti, pilih sendiri sesuai bujet/antrean):**
+### 3.2 [🟡 Internal review SELESAI — audit independen direkomendasikan] Review keamanan
+- **Status:** internal review tim COUR **SELESAI** (bukan audit independen). Audit pihak ketiga **masih direkomendasikan** sebelum buka publik.
+- **Kirim ke siapa (opsi bila ingin audit independen — pilih sesuai bujet/antrean):**
   - **Tier-1 (mahal, antre lama):** Trail of Bits, OpenZeppelin, Spearbit/Cantina — perkiraan **$30k–$80k+**, 2–6 minggu.
   - **Tier-2/boutique:** Zellic, Cyfrin, Guardian, Sigma Prime, ABDK, Dedaub — perkiraan **$15k–$40k**.
   - **Contest/crowdsourced:** Code4rena, Sherlock, Cantina Competitions — **$10k–$50k** pot, cakupan luas tapi perlu triase.
@@ -157,10 +160,9 @@ Private key masih di `.env` lokal (hot wallet).
 - **Scope:** `src/` (Factory, FeeVault, Hook, Router, Curve, PriceReader, GraduationImpl, Token, libraries). Fokus: graduasi/konservasi token, buyback guard, HOLDERS dividend, integrasi v4 hook + v3 oracle.
 - **Setelah selesai:** bila ada temuan → `docs/audit/POST_AUDIT_PLAYBOOK.md` → `audit-fix-v1` + redeploy; bila bersih → lanjut handover.
 
-### 3.3 [BLOKIR] Amankan private key deployer → hardware wallet
-- **Apa:** pindahkan kunci dari `.env` lokal (hot wallet) ke Ledger/Trezor atau signer aman. Jangan commit/print.
-- **Verifikasi:** `cast wallet address --private-key <baru>` cocok dengan alamat yang diinginkan.
-- **Biaya:** ~0. **Selesai bila:** op admin tak lagi butuh `.env` di mesin dev.
+### 3.3 [✅ Backup SELESAI — hapus `.env` setelah handover] Amankan private key deployer
+- **Status: SELESAI (backup)** — key deployer sudah di-backup ke hardware wallet.
+- **Sisa:** **hapus `DEPLOYER_PK` dari `.env` lokal** segera setelah handover ke Timelock terbukti on-chain (`docs/HANDOVER.md`). Sampai handover selesai, key masih dipakai untuk 1× menjalankan `04_HandOver`.
 
 ### 3.4 [BLOKIR] Safe 2-of-3 di 4663 → handover ke Timelock 48 jam
 - **Buat Safe:** via `app.safe.global` bila 4663 didukung; jika tidak, deploy Safe singleton+factory sendiri atau pakai `safe-cli`. Minimal **2-of-3 signer**. Biaya self-deploy ~**0.001 ETH**.

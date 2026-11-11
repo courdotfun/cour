@@ -34,9 +34,20 @@ Admin is `Ownable2Step` → to be a 48h `TimelockController` behind a Safe multi
 ## Decimal/price extremes
 - `CurveMath.k = vS0 * vT0` is a single `uint256`. For realistic launch params (start $4k, stock $1–$5000, decimals 6–18) it stays far below 2^256 (see AUDIT_SCOPE). Pathological admin params combined with extreme prices could overflow; `setLaunchParams` should stay within sane bounds.
 
-## Unaudited code live on mainnet (accepted, mitigated by the allowlist)
-- The contracts are **deployed to Robinhood Chain mainnet without a third-party audit** (closed test phase). This is an accepted risk for the controlled test, mitigated by: the launch **allowlist is enabled** (only the deployer can create tokens), ownership stays with the deployer EOA (no public multisig yet), and production launch params are restored (4000/60000) after the smoke test. Before opening to the public: commission an audit, move the key to a hardware wallet, hand over to a Safe + 48h Timelock, and only then disable the allowlist. See `docs/AUDIT_SCOPE.md`.
-- The deploy wallet is a hot EOA whose key lives in a local `.env`. It must be rotated / moved to a hardware wallet before holding any meaningful value or admin power long-term.
+## Security review status — INTERNAL review only, NO independent third-party audit
+- **Internal review completed by the COUR team (2026-11-11).** This is an *internal*
+  code review, **NOT an independent third-party audit.** It does not carry the
+  assurance of an external firm. An **independent audit is still recommended** before
+  the allowlist is opened to the public or the contracts hold meaningful value.
+- The contracts remain **live on Robinhood Chain mainnet without an independent
+  audit** (closed test phase). Accepted for the controlled test, mitigated by: the
+  launch **allowlist stays ENABLED** (only the deployer can create tokens),
+  production launch params restored (4000/60000), and ownership being handed to a
+  Safe multisig + 48h Timelock (in progress). Do not disable the allowlist before an
+  independent audit + completed handover. See `docs/AUDIT_SCOPE.md`, `docs/GO_LIVE.md`.
+- **Key custody (updated 2026-11-11):** the deployer key has been **backed up to a
+  hardware wallet.** The hot `.env` copy (`DEPLOYER_PK`) must be **removed** once the
+  Safe + Timelock handover is proven on-chain (see `docs/HANDOVER.md`).
 
 ## Environment / verified on-chain (2026-10-29)
 - Chain addresses, NVDA metadata, NVDA/USDG TWAP (~$214), WETH/USDG pool, and PositionManager ABI **verified on mainnet** (`test/fork/*`, `docs/CHAIN_FACTS.md`).
