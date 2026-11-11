@@ -7,12 +7,19 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:fixture": "node scripts/smoke.mjs --fixture",
+    "e2e": "node e2e/run.mjs",
+    "e2e:fork": "playwright test e2e/fork.spec.ts",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
     "viem": "^2.21.54"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "chrome-launcher": "^1.2.3",
+    "lighthouse": "^13.6.0",
     "puppeteer-core": "^25.16.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"

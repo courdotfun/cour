@@ -1,0 +1,216 @@
+# STATUS COUR — Snapshot Program (Bahasa Indonesia)
+
+> Tanggal: 2026-11-11 · Branch: `master` · Chain: Robinhood Chain (chainId **4663**)
+> Deployment AKTIF = tag **`audit-freeze-v1`** (`deployments/4663.json`, block 106215255).
+> Dokumen ini adalah ringkas-status tunggal: **yang selesai**, **yang belum**, dan **TODO manusia**.
+> Sumber detail: `docs/REPORT.md`, `docs/GO_LIVE.md`, `docs/FRONTEND_CHANGES.md`,
+> `docs/VERIFICATION.md`, `docs/audit/*`, `deployments/4663.json`.
+
+---
+
+## RINGKAS SATU LAYAR
+
+| Area | Status | Catatan singkat |
+|---|---|---|
+| Kontrak Fase 1 (src/) | ✅ **BEKU & final** | tag `audit-freeze-v1`, 107 test hijau, coverage baris 96,3% |
+| Deploy mainnet (4663) | ✅ **Live (tertutup)** | 7 kontrak, allowlist AKTIF, owner = EOA deployer |
+| Verifikasi explorer | 🟡 **Sebagian** | robin.etherscan.io ✅ 7/7; Blockscout ⏳ (manual) |
+| Indexer (Ponder) | 🟡 **Siap, belum di-host** | kode jalan + typecheck; belum ada hosting/Postgres/RPC prod |
+| Monitor | ✅ **Jalan (lokal)** | watcher + health + runbook; perlu host + Telegram token utk prod |
+| Frontend | 🟡 **~70% — ada gap** | lihat §2; render demo belum semua di-swap, belum E2E/Lighthouse/Vercel |
+| Audit manusia | ❌ **Belum** | paket siap dikirim; **BLOKIR peluncuran publik** |
+| Handover multisig/timelock | ❌ **Belum** | owner masih EOA; **BLOKIR peluncuran publik** |
+| Legal / geo-block | 🟡 **Teknis siap, legal belum** | middleware + daftar negara ada; perlu review hukum |
+
+**Keputusan inti:** allowlist launch **tetap AKTIF** (hanya deployer yang bisa launch) sampai
+audit bersih + handover selesai. Semua yang ditandai **BLOKIR** di bawah harus kelar sebelum
+`setLaunchAllowlistEnabled(false)` (buka publik).
+
+---
+
+## 1. YANG SUDAH SELESAI (dengan bukti)
+
+### 1.1 Kontrak (Fase 1) — ✅ final & beku
+- Tag beku: **`audit-freeze-v1`** (sourceCommit `458c358`). `git diff audit-freeze-v1 HEAD -- src script` = kosong.
+- **107 test hijau** (103 non-fork + 4 fork mainnet). Profil `ci` (10k fuzz, invariant 32.416 panggilan) lulus.
+- Coverage: **baris src 96,3%** (≥95% ✔), branch ~65% (target 80% belum — didokumentasikan jujur di `docs/REPORT.md §3`).
+- Slither: 103 temuan, **tanpa High/Medium** (`docs/slither-report.txt`), semua dibantah per file:line.
+- Fuzz stateful (medusa): 11/11 properti PASSED, 0 violation; campaign 25,2M panggilan (`docs/audit/`).
+- Perbaikan review manusia C-1/L-1/I-1 + L-2/L-3/L-4 semua di-commit per poin (lihat `git log`).
+- **Bukti:** `test/integration/LaunchToGraduation.t.sol`, `test/fork/*`, `test/invariant/*`, `docs/REPORT.md §1–3`.
+
+### 1.2 Deploy mainnet final (4663) — ✅ live (tertutup)
+Alamat AKTIF (tag `audit-freeze-v1`, block 106215255):
+
+| Kontrak | Alamat |
+|---|---|
+| COURFactory | `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C` |
+| COURFeeVault | `0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76` |
+| COURHook | `0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC` |
+| COURRouter | `0x835Afd54F9BA20b18b6807B44886123E85A586f9` |
+| COURPriceReader | `0xF7C914E7B7580a7653DcC3b7574bf041F615e359` |
+| COURCurve (impl) | `0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00` |
+| GraduationImpl | `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7` |
+
+- Param produksi: startMc **$4000**, gradMc **$60000**, minBuybackUsd **50**, launchFee **0**, allowlist **AKTIF**.
+- Dua deployment lama **di-pause & DEPRECATED** (`deployments/4663-DEPRECATED.json`).
+- Smoke mainnet penuh sukses (swap→launch→graduasi positionId on-chain→buyback-burn→claim): `docs/MAINNET_SMOKE_RESULT.md`.
+- **Bukti:** `deployments/4663.json`, commit `94d8a80`/`0e1faab`.
+
+### 1.3 Verifikasi explorer — 🟡 sebagian
+- **robin.etherscan.io: 7/7 kontrak VERIFIED** (`docs/VERIFICATION.md`), reproducible creation-bytecode sha256.
+- **Blockscout: ⏳ belum** (di balik Cloudflare; std-json siap di `deployments/verify-blockscout/*.standard.json`). → TODO §3.5.
+- **Bukti:** `docs/VERIFICATION.md`, `deployments/verify-4663.sh`.
+
+### 1.4 Indexer (Ponder 0.18.4) — 🟡 siap, belum di-host
+- Events → Postgres (pglite dev) + GraphQL + REST (`/tokens /token/:addr /candles /trades /holders /portfolio/:addr /top-users /stats`).
+- Terbukti **live-index token uji CSMOKE** dari block 106215255; typecheck lulus; REST+GraphQL valid.
+- Dockerfile + compose siap (Docker tak tersedia di mesin dev → image belum di-build).
+- **Belum:** hosting produksi + Postgres terkelola + RPC khusus (RPC publik rate-limit 429 saat backfill). → TODO §3.6.
+- **Bukti:** commit `6290391`, `docs/REPORT.md §3`.
+
+### 1.5 Monitor — ✅ jalan (lokal)
+- Watcher event + health (harga/saldo/paused/owner) → Telegram (fallback console) + `/status` + `/health`.
+- `tsc` lulus; smoke live mainnet jalan (baca NVDA ~$201). Handover+pause **teruji di fork** (`test/fork/HandoverAndPause.t.sol`, 2/2 PASS).
+- **Belum:** host 24/7 + token Telegram prod. **Bukti:** commit `7336e54`, `docs/INCIDENT_RUNBOOK.md`.
+
+### 1.6 Frontend — 🟡 sebagian (lihat §2 untuk gap rinci)
+- Desain `COUR-launchpad.html` dipindah ke app nyata (Vite+TS+viem) di `frontend/`; visual dipertahankan (30 screenshot, 5 view × 3 tema × 2 viewport, 0 error konsol; `pnpm build` PASS).
+- **Sudah tersambung nyata:** wallet EIP-6963, allowlist gating tombol Launch, admin panel owner-only (claimPlatform), lapisan data indexer REST + fallback on-chain, modul fitur (buy/sell/buyWithETH, createToken, claim/holder/platform, buyback, stock swap) di `window.COUR.features`, seeding harga nyata (simulator dimatikan via `COUR_LIVE`).
+- Edit kejujuran (LP 0% + LP dibakar, limit order → Coming soon, "pay with any token" → ETH/stock) selesai: `docs/FRONTEND_CHANGES.md`.
+- **Bukti:** commit `84e9bc3`, `docs/FRONTEND_CHANGES.md`.
+
+---
+
+## 2. YANG BELUM SELESAI (gap jujur)
+
+### 2.1 Frontend — gap utama (prioritas kerja saat ini)
+Render DOM **legacy demo** masih dipakai di beberapa jalur; data nyata sudah ada di `window.COUR`
+tapi renderer spesifik belum di-swap (butuh bongkar skrip inline ~8,5k baris):
+
+1. **Daftar market home / token card** masih iterasi array `tokens` hard-coded, bukan `/tokens` indexer.
+2. **Saldo wallet/portfolio** masih baca `_holdings` / `W.stocks`, bukan `/portfolio/:addr` + `balanceOf` on-chain.
+3. **Chart candle token-page** masih render buffer in-memory, bukan `/candles`.
+4. **Handler form** `ordSubmit` (buy/sell) & `ctLaunch` (launch) masih jalur demo; padanan nyata ada di `window.COUR.features` tapi belum di-wire ke tombol.
+
+> Catatan: di mode live (`COUR_LIVE=true`) simulator harga/fee **dimatikan**, jadi tidak ada angka
+> yang difabrikasi; tapi render di atas belum menampilkan data nyata (menampilkan nilai terakhir/empty).
+
+**Belum dijalankan sama sekali:**
+- **E2E Playwright** di fork (connect→buy→sell→launch→graduation→swap pool→claim→claimHolder→executeBuyback). Saat ini hanya smoke puppeteer.
+- **Lighthouse** (target ≥85) belum diukur.
+- **Deploy Vercel** (preview/prod) belum — CLI belum login, env belum diisi.
+- Demo data belum dihapus dari bundle produksi (masih ter-bundle sebagai fallback).
+
+### 2.2 Audit manusia — ❌ belum (BLOKIR PUBLIK)
+Paket siap (`docs/AUDIT_SCOPE.md`, `docs/AUDITOR_BRIEF.md`, `docs/audit/HUMAN_AUDIT_PACKAGE.md`,
+`OUTREACH_EMAIL.md`) tapi **belum dikirim/di-engage**. Kontrak sudah live tertutup **tanpa audit** (risiko diterima, `docs/RISKS.md`).
+
+### 2.3 Handover ownership — ❌ belum (BLOKIR PUBLIK)
+Owner semua kontrak masih **EOA deployer**. Belum ada Safe multisig, belum handover ke Timelock 48 jam.
+Private key masih di `.env` lokal (hot wallet).
+
+### 2.4 Operasional / infra
+- Indexer & monitor belum di-host 24/7.
+- Saldo deployer **rendah (~0.00147 ETH)** — di bawah ambang monitor; perlu top-up sebelum op admin.
+- Legal review (US persons/sekuritas) belum; daftar geo-block (`frontend/src/config/regions.ts`, saat ini hanya `["US"]`) perlu konfirmasi hukum.
+
+---
+
+## 3. TODO MANUSIA (urut, konkret, dengan perintah/link & perkiraan biaya)
+
+> Tanda **[BLOKIR]** = wajib sebelum buka allowlist publik. **[OPS]** = operasional/boleh menyusul.
+> Gas di 4663 sangat murah (~0.0005 ETH/op). "~$" asumsi ETH; sesuaikan.
+
+### 3.1 [OPS] Top-up saldo deployer — **lakukan lebih dulu** (memblok semua op admin)
+- **Alamat:** `0x1eb25d02fc7C5487D4648a602c355dBC2301030b` (chain **4663**).
+- **Berapa:** kirim **~0.02–0.05 ETH** (~$50–$120). Cukup untuk: handover (4× transfer + 4× acceptOwnership),
+  pause bila perlu, konfigurasi stock tambahan, buka allowlist. Deploy ulang (bila audit minta) butuh lebih; siapkan ~0.1 ETH total bila ingin aman.
+- **Untuk apa:** gas op admin di 4663. Tanpa ini, handover/pause gagal.
+- **Cek saldo:** `cast balance 0x1eb25d02fc7C5487D4648a602c355dBC2301030b --rpc-url https://rpc.mainnet.chain.robinhood.com --ether`
+
+### 3.2 [BLOKIR] Audit pihak ketiga
+- **Kirim ke siapa (opsi — bukan rekomendasi pasti, pilih sendiri sesuai bujet/antrean):**
+  - **Tier-1 (mahal, antre lama):** Trail of Bits, OpenZeppelin, Spearbit/Cantina — perkiraan **$30k–$80k+**, 2–6 minggu.
+  - **Tier-2/boutique:** Zellic, Cyfrin, Guardian, Sigma Prime, ABDK, Dedaub — perkiraan **$15k–$40k**.
+  - **Contest/crowdsourced:** Code4rena, Sherlock, Cantina Competitions — **$10k–$50k** pot, cakupan luas tapi perlu triase.
+  - **Solo/independent (lebih murah):** mis. via Cantina marketplace / warden independen — **$3k–$15k**.
+- **Apa yang dikirim:** tag `audit-freeze-v1` + `docs/AUDITOR_BRIEF.md` + `docs/audit/HUMAN_AUDIT_PACKAGE.md` + `docs/AUDIT_SCOPE.md` + alamat live (§1.2) + `docs/audit/OUTREACH_EMAIL.md`.
+- **Scope:** `src/` (Factory, FeeVault, Hook, Router, Curve, PriceReader, GraduationImpl, Token, libraries). Fokus: graduasi/konservasi token, buyback guard, HOLDERS dividend, integrasi v4 hook + v3 oracle.
+- **Setelah selesai:** bila ada temuan → `docs/audit/POST_AUDIT_PLAYBOOK.md` → `audit-fix-v1` + redeploy; bila bersih → lanjut handover.
+
+### 3.3 [BLOKIR] Amankan private key deployer → hardware wallet
+- **Apa:** pindahkan kunci dari `.env` lokal (hot wallet) ke Ledger/Trezor atau signer aman. Jangan commit/print.
+- **Verifikasi:** `cast wallet address --private-key <baru>` cocok dengan alamat yang diinginkan.
+- **Biaya:** ~0. **Selesai bila:** op admin tak lagi butuh `.env` di mesin dev.
+
+### 3.4 [BLOKIR] Safe 2-of-3 di 4663 → handover ke Timelock 48 jam
+- **Buat Safe:** via `app.safe.global` bila 4663 didukung; jika tidak, deploy Safe singleton+factory sendiri atau pakai `safe-cli`. Minimal **2-of-3 signer**. Biaya self-deploy ~**0.001 ETH**.
+- **Set `MULTISIG`** di `.env`.
+- **Handover (transfer factory/priceReader/feeVault/router → Timelock 48h):**
+  ```
+  export MULTISIG=<alamat Safe>
+  forge script script/04_HandOver.s.sol:HandOver --rpc-url $RH_RPC_URL --broadcast --slow
+  # lalu Timelock acceptOwnership() tiap kontrak via op multisig terjadwal (48 jam).
+  ```
+- **Biaya:** ~0.0005 ETH + 4× acceptOwnership. **Selesai bila:** `owner()` tiap kontrak == Timelock; multisig = proposer/executor.
+
+### 3.5 [OPS] Verifikasi Blockscout (manual)
+- **File:** `deployments/verify-blockscout/*.standard.json` (std-json input per kontrak) + constructor args di `deployments/verify-4663.sh`.
+- **Langkah:** buka Blockscout 4663 → tiap alamat (§1.2) → **Verify & Publish** → **Standard JSON Input** → upload file `*.standard.json` yang sesuai → isi constructor args dari `verify-4663.sh` → compiler `0.8.26`, viaIR true, optimizer runs `44444444`, evm `cancun`.
+- **Biaya:** ~0. **Selesai bila:** 7/7 "verified" di Blockscout (etherscan sudah ✅).
+
+### 3.6 [BLOKIR-publik] Host indexer (Railway/Render/Fly) + env
+- **Pilih host** (opsi): **Railway** (paling cepat, Postgres add-on) / **Render** (web service + Postgres) / **Fly.io** (Docker, global).
+- **Butuh:** Postgres terkelola + **RPC khusus 4663** (RPC publik kena 429 saat backfill).
+- **Env indexer:** `PONDER_RPC_URL_4663=<rpc khusus>`, `DATABASE_URL=<postgres>`, `PONDER_START_BLOCK=106215255`.
+- **Deploy:** `cd indexer && pnpm install && pnpm start` (prod) atau build image `indexer/Dockerfile` + `docker compose`.
+- **Selesai bila:** endpoint REST publik (mis. `https://indexer.cour.xxx`) menyajikan `/tokens`, `/stats`, dst. → dipakai `VITE_INDEXER_URL` frontend.
+
+### 3.7 [BLOKIR-publik] Vercel login + deploy + domain + env frontend
+- **Login & deploy:**
+  ```
+  cd frontend
+  npx vercel login            # (interaktif — jalankan di terminal Anda; di sesi ini pakai: ! npx vercel login)
+  npx vercel                  # preview
+  npx vercel --prod           # produksi
+  ```
+- **Env (Vercel Project Settings → Environment Variables):**
+  - `VITE_RPC_URL` = `https://rpc.mainnet.chain.robinhood.com` (atau RPC khusus)
+  - `VITE_INDEXER_URL` = URL indexer dari §3.6
+  - `VITE_WC_PROJECT_ID` = project id WalletConnect (dari cloud.walletconnect.com, gratis)
+  - `VITE_PINATA_JWT` = JWT Pinata untuk upload metadata/gambar IPFS (dari pinata.cloud)
+- **Domain:** tambah domain kustom di Vercel + set DNS. **Biaya:** Vercel hobby gratis; domain ~$10–15/thn.
+- **Selesai bila:** URL publik frontend live, konek wallet 4663, baca data dari indexer.
+
+### 3.8 [BLOKIR] Review legal + daftar negara geo-block
+- **Apa:** nasihat hukum soal token saham Robinhood (larangan US persons/sekuritas), ToS, disclaimer.
+- **Konfigurasi:** `frontend/src/config/regions.ts` (`BLOCKED_COUNTRIES`, saat ini `["US"]`) + `frontend/middleware.ts` (edge geo-block, HTTP 451).
+- **Selesai bila:** daftar negara dikonfirmasi pengacara; disclaimer siap.
+
+### 3.9 [BLOKIR — LANGKAH TERAKHIR] Buka allowlist publik
+- **Prasyarat:** 3.2 (audit bersih), 3.3 (key aman), 3.4 (handover), 3.6+3.7 (indexer+frontend live), 3.8 (legal), monitoring live.
+- **Lewat `docs/audit/POST_AUDIT_PLAYBOOK.md`**, ajukan via multisig ke Timelock, eksekusi setelah 48 jam:
+  ```
+  factory.setLaunchAllowlistEnabled(false)
+  ```
+- **Selesai bila:** `launchAllowlistEnabled() == false`; peluncuran publik pertama sukses & termonitor.
+
+### Yang MEMBLOKIR peluncuran publik (ringkas)
+**3.2 Audit · 3.3 Amankan key · 3.4 Handover multisig/timelock · 3.6 Host indexer · 3.7 Deploy frontend · 3.8 Legal.**
+(3.1 top-up & 3.5 Blockscout bukan pemblokir mutlak tapi praktis diperlukan lebih dulu.)
+
+---
+
+## 4. Referensi perintah cepat
+```
+# saldo deployer
+cast balance 0x1eb25d02fc7C5487D4648a602c355dBC2301030b --rpc-url https://rpc.mainnet.chain.robinhood.com --ether
+# verifikasi handover+pause di fork (tanpa dana)
+forge test --match-path 'test/fork/HandoverAndPause.t.sol' -vv
+# indexer / frontend / monitor (lokal)
+cd indexer && pnpm install && pnpm dev
+cd frontend && pnpm install && pnpm build && pnpm dev
+cd monitor && pnpm install && pnpm start
+```
+Sumber lengkap: `docs/GO_LIVE.md` (urutan go-live), `docs/REPORT.md` (laporan program), `docs/audit/` (paket audit).

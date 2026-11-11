@@ -35,6 +35,7 @@ import * as stockswap from "./features/stockswap";
 import * as format from "./ui/format";
 import { feeModeLabel } from "./data/types";
 import type { Hex, TokenRow } from "./data/types";
+import { installLive } from "./live/wire";
 
 // ---------------------------------------------------------------------------
 // 1. Real wallet adapter — mutate the existing COUR_WALLET object in place.
@@ -330,6 +331,9 @@ function init() {
       maybeMountAdmin().catch(() => {});
     });
     bootData().catch((e) => console.warn("[COUR] data boot failed:", e));
+    // Install the live wiring: drive the design's render paths + buy/sell/launch
+    // handlers with REAL indexer + on-chain data (replaces the demo flows).
+    installLive();
     // Re-check the launch gate when the user navigates (design uses showView).
     const w = window as any;
     if (typeof w.showView === "function") {

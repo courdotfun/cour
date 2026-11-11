@@ -2874,28 +2874,10 @@ window.COUR_LIVE = true;
   setTimeout(fitStage,120); setTimeout(fitStage,500);
   // ---------- token data ----------
   var _activityLog=[],_holdings={};
-  const tokens = [
-    {name:"Nova Protocol",tick:"NOVA",mc:"84.2M",fdv:"121M",chg:14.2,cat:"graduated",badge:"Graduated",age:"3d",addr:"0x9Ab4…24b0",h:[4,6,5,8,7,11,10,13],hue:96},
-    {name:"PixelForge",tick:"FORGE",mc:"41.5M",fdv:"58M",chg:8.4,cat:"graduated",badge:"Graduated",age:"8d",addr:"0x232f…97cd",h:[8,7,9,8,10,9,12,13],hue:150},
-    {name:"QuantCat",tick:"QCAT",mc:"28.9M",fdv:"—",chg:-3.1,cat:"new",badge:"New",age:"6h",addr:"0x5F79…0Cf8",h:[10,9,11,8,7,9,8,7],hue:270},
-    {name:"Hydra",tick:"HYD",mc:"24.1M",fdv:"31M",chg:5.7,cat:"graduated",badge:"Graduated",age:"9d",addr:"0xc08c…c362",h:[5,6,6,7,9,8,10,11],hue:190},
-    {name:"Aurora",tick:"AUR",mc:"19.7M",fdv:"24M",chg:22.9,cat:"trending",badge:"Trending",age:"2d",addr:"0xbFAb…04B8",h:[3,5,4,7,9,12,14,17],hue:44},
-    {name:"Voxel",tick:"VOX",mc:"15.3M",fdv:"20M",chg:-1.8,cat:"graduated",badge:"Graduated",age:"4d",addr:"0xAd5B…638b",h:[9,8,10,9,11,10,9,8],hue:210},
-    {name:"DeepMind Agent",tick:"DEEP",mc:"12.8M",fdv:"—",chg:6.3,cat:"new",badge:"New",age:"14h",addr:"0xB365…5c82",h:[6,7,7,9,8,10,11,12],hue:118},
-    {name:"Zephyr",tick:"ZEPH",mc:"11.2M",fdv:"14M",chg:2.1,cat:"graduated",badge:"Graduated",age:"12d",addr:"0x6ce4…b42A",h:[8,9,8,9,9,10,10,11],hue:168},
-    {name:"SolFlare",tick:"FLARE",mc:"9.4M",fdv:"11M",chg:17.5,cat:"trending",badge:"Trending",age:"1d",addr:"0x934e…782a",h:[4,5,7,6,9,11,13,15],hue:36},
-    {name:"GigaBrain",tick:"GIGA",mc:"7.1M",fdv:"—",chg:9.9,cat:"new",badge:"New",age:"5h",addr:"0x1EAF…B0f8",h:[5,6,8,7,9,10,12,13],hue:288},
-    {name:"Orbital",tick:"ORB",mc:"5.9M",fdv:"7M",chg:-4.4,cat:"graduated",badge:"Graduated",age:"20d",addr:"0x77c1…9de2",h:[11,10,9,10,8,9,7,6],hue:200},
-    {name:"Stonkzilla",tick:"ZILLA",mc:"3.8M",fdv:"5M",chg:31.4,cat:"trending",badge:"Trending",age:"1d",addr:"0x2c7E…a91d",h:[2,3,5,4,7,9,12,16],hue:12},
-    {name:"Tickr",tick:"TICKR",mc:"2.6M",fdv:"—",chg:4.8,cat:"new",badge:"New",age:"2h",addr:"0x88aF…3e10",h:[5,5,6,7,6,8,9,10],hue:228},
-    {name:"Nvidiot",tick:"NVDOT",mc:"3.1M",fdv:"4M",chg:19.2,cat:"trending",badge:"Trending",age:"20h",addr:"0x5aD1…c07e",h:[3,4,4,6,8,9,10,13],hue:84},
-    {name:"Tesla Frog",tick:"TFROG",mc:"2.4M",fdv:"3M",chg:26.8,cat:"trending",badge:"Trending",age:"11h",addr:"0x91Bc…77f2",h:[2,2,4,5,6,9,11,14],hue:0},
-    {name:"Bull Market",tick:"BULLM",mc:"1.9M",fdv:"2M",chg:14.1,cat:"trending",badge:"Trending",age:"2d",addr:"0xE03a…41b9",h:[5,6,6,7,8,9,11,12],hue:160},
-    {name:"Earnings Cat",tick:"ECAT",mc:"1.4M",fdv:"—",chg:7.2,cat:"new",badge:"New",age:"48m",addr:"0x3F2d…9a6c",h:[4,5,5,6,7,7,8,9],hue:305},
-    {name:"Robin Hood",tick:"RHOOD",mc:"980K",fdv:"—",chg:-2.4,cat:"new",badge:"New",age:"25m",addr:"0x7c6B…e5d4",h:[9,9,8,8,7,8,7,7],hue:140},
-    {name:"Wall St Bets",tick:"WSB",mc:"640K",fdv:"—",chg:12.9,cat:"new",badge:"New",age:"9m",addr:"0xA41e…0b3f",h:[3,4,5,5,7,8,9,11],hue:250},
-    {name:"MemeVault",tick:"VAULT",mc:"4.3M",fdv:"6M",chg:12.6,cat:"trending",badge:"Trending",age:"3d",addr:"0x4Bd0…f7a1",h:[4,6,5,7,8,9,11,12],hue:132},
-  ];
+  // Demo token data removed — the live layer (src/live/wire.ts) fills this array
+  // with REAL tokens from the indexer + on-chain reads via window.COUR_setTokens.
+  // Empty by default: the UI shows an honest empty state until real data loads.
+  const tokens = [];
 
   const badgeClass = {Graduated:"b-grad",New:"b-new",Trending:"b-trend"};
 
@@ -2969,6 +2951,9 @@ window.COUR_LIVE = true;
     document.getElementById("tokCount").textContent=tokens.length+" tokens \u00b7 8 stocks";
     if(window.initHScroll) initHScroll();
   }
+  // --- live seam: let the real-data layer replace the token list in-place ---
+  window.COUR_setTokens=function(a){ tokens.length=0; for(var i=0;i<a.length;i++) tokens.push(a[i]); };
+  window.COUR_getTokens=function(){ return tokens; };
   render();
   document.getElementById("topSearch").addEventListener("input",e=>{q=e.target.value.toLowerCase().trim();render();});
 
@@ -3617,6 +3602,11 @@ window.COUR_LIVE = true;
       document.getElementById('fImg').classList.toggle('bad',!logo); if(!logo) bad=true;
       if(bad){ if(window.courSfx) courSfx('fail'); return; }
       if(tokens.some(function(t){return t.tick===tick;})){ if(window.courSfx) courSfx('fail'); document.getElementById('fTick').classList.add('bad'); document.getElementById('fTick').querySelector('.err').textContent='That ticker is already live.'; return; }
+
+      // --- live seam: real factory.createToken (no scripted price action) ---
+      if(window.COUR_LIVE && window.COUR_launchReal){
+        return window.COUR_launchReal({name:name,tick:tick,pair:pair,buy:buy,desc:desc,logo:logo,fee:parseFloat(document.getElementById('ctFee').value)||1});
+      }
 
       fakeDeploy(function(){
         var hex='0123456789abcDEF', addr='0x';
@@ -5059,7 +5049,11 @@ window.COUR_LIVE = true;
   // live open candle (same feel as the LP chart): it wiggles toward its price, then closes on the next tick
   function tkCloseLive(k){ if(!k||k.tgt===undefined) return; k.c=k.tgt; k.h=Math.max(k.h,k.th,k.c); k.l=Math.min(k.l,k.tl,k.c); delete k.tgt; delete k.th; delete k.tl; }
   window.tkCloseLive=tkCloseLive;
+  // --- live seams: expose the open token + let real candles drive the chart ---
+  window.COUR_getTkTok=function(){ return _tkTok; };
+  window.COUR_setCandles=function(c){ if(!c||!c.length) return; _tkCandles=c; _tkMode='candle'; if(typeof tkComputeCache==='function') tkComputeCache(); if(_tkVc){ _tkVs=Math.max(0,_tkCandles.length-_tkVc); } if(typeof renderChart==='function') renderChart(true); };
   setInterval(function(){
+    if(window.COUR_LIVE) return; // live mode: no fabricated candle ticks
     var tv=document.getElementById('token'); if(!tv||!tv.classList.contains('active')||!_tkCandles||_tkMode!=='candle'||_tkDrag) return;
     var k=_tkCandles[_tkCandles.length-1]; if(!k||k.tgt===undefined) return;
     var span=Math.abs(k.tgt-k.o)+k.o*0.004;
@@ -5068,6 +5062,7 @@ window.COUR_LIVE = true;
     tkComputeCache(); renderChart(null);
   },250);
   setInterval(function(){
+    if(window.COUR_LIVE) return; // live mode: no fabricated price walk
     var tv=document.getElementById('token'); if(!tv||!tv.classList.contains('active')||!_tkTok) return;
     if(window._ctScript && _ctScript.tick===_tkTok.tick) return; // scripted launch drives this token
     var up=Math.random()>0.5;
@@ -6336,6 +6331,8 @@ window.COUR_LIVE = true;
   };
   var _oid=1;
   window.ordConfirm=function(){
+    // --- live seam: execute the real buy/sell on-chain via COURRouter ---
+    if(window.COUR_LIVE && window.COUR_tradeReal){ return window.COUR_tradeReal(); }
     var s=ordState(), t=s.t, msg, sub;
     if(s.waiting){
       var P=pairOf(t), o={id:_oid++,tick:t.tick,tok:t,side:s.sell?'sell':'buy',kind:s.earn?'range':'limit',lim:s.lim,lo:s.lo,hi:s.hi,

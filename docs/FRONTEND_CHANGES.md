@@ -169,3 +169,52 @@ of them fabricate numbers in live mode (the simulators are disabled via
 - `frontend/vercel.json` (vite framework, security headers) and
   `frontend/.env.example` (`VITE_RPC_URL`, `VITE_INDEXER_URL`,
   `VITE_WC_PROJECT_ID`, `VITE_PINATA_JWT`). Not deployed to production.
+
+---
+
+## 7. Live wiring completed (2026-11-11) — §4 "not yet rewired" closed
+
+The legacy demo render paths listed in §4 are now driven by **real data**. Rather
+than rewrite the 8.5k-line inline script, we added a few tiny **seams** inside the
+design's closures and a driver module (`src/live/`):
+
+**Seams added to `index.html`** (small, reversible):
+- the 20-entry demo `tokens` array is **removed** → `const tokens = []`, plus
+  `window.COUR_setTokens` / `window.COUR_getTokens` to fill it from real data;
+- `window.COUR_getTkTok()` (the open token) and `window.COUR_setCandles(ohlc)`
+  (real candle history into the chart host);
+- the two token-page **random-walk intervals are gated by `window.COUR_LIVE`**
+  (no fabricated candle ticks / price walk in production);
+- the launch button delegates to `window.COUR_launchReal` and `ordConfirm`
+  delegates to `window.COUR_tradeReal` in live mode.
+
+**Driver (`src/live/map.ts`, `src/live/wire.ts`, wired from `main.ts`):**
+- **Home list** renders real tokens from the indexer (`/tokens`, on-chain CSMOKE
+  fallback), mapped to the design's card shape — demo tickers are gone.
+- **Token page** seeds the real USD price and **real OHLC candles** (`/candles`).
+- **Buy / sell** execute via `COURRouter` (`features/trade`) with real quotes +
+  slippage; the review modal shows real numbers, confirm sends the tx.
+- **Launch** calls `factory.createToken` (`features/launch`), uploads the image to
+  IPFS when `VITE_PINATA_JWT` is set, and surfaces allowlist reverts honestly.
+- **Portfolio** renders from `/portfolio/:addr` with an on-chain `balanceOf`
+  fallback; honest empty state when there is nothing to show.
+
+**No fabricated numbers in production:** the simulators were already gated by
+`COUR_LIVE`; the remaining fabricated candle/price intervals are now gated too.
+
+**Verification (this repo):**
+- `pnpm build` (tsc + vite) passes.
+- `pnpm e2e` — Playwright UI E2E, **5/5 passing** on system Chrome: home renders
+  real tokens (demo absent), token page shows real price + real candle SVG,
+  create/launch form present, EIP-6963 connect works, portfolio data layer
+  returns real positions (`e2e/ui.spec.ts`, deterministic via a fixture indexer).
+- `pnpm smoke` — 5 views × 3 themes × 2 viewports screenshot matrix, 0-error
+  assertion, now also ignoring network-resource noise (`scripts/smoke.mjs`).
+- `pnpm lighthouse` — performance/a11y/best-practices gate ≥85 (`scripts/lighthouse.mjs`).
+- `pnpm e2e:fork` — **full on-chain** flow (connect→buy→sell→launch→claim/buyback)
+  against an anvil fork of 4663, env-gated (`e2e/fork.spec.ts` + `e2e/fork-setup.mjs`).
+  Not run in this sandbox (no funded fork reachable); the contract-level flow is
+  already green in `test/fork/*`. See `e2e/README.md`.
+
+**Still a human step:** Vercel deploy (CLI login) + env + domain — see
+`docs/STATUS.md §3.7`.
