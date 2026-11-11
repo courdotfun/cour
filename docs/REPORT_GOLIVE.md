@@ -1,0 +1,107 @@
+# Laporan Go-Live COUR (2026-11-11) — Bahasa Indonesia
+
+> Sesi: handover multisig, hosting indexer, domain cour.fun, env frontend,
+> optimasi performa, verifikasi. **Kontrak `src/` TETAP BEKU** (`audit-freeze-v1`),
+> tidak ada deploy kontrak baru, allowlist **tetap AKTIF**. Private key tidak pernah dicetak.
+
+---
+
+## 1. Status Handover (Safe + Timelock)
+
+| Item | Status |
+|---|---|
+| Safe v1.4.1 kanonik di 4663 | ✅ **ADA** (SafeProxyFactory `0x4e1D…ec67`, SafeL2 `0x29fc…C762`, fallback `0xfd07…Ec99`) — verified on-chain |
+| Script deploy Safe 2-of-3 | ✅ siap (`script/07_DeploySafe.s.sol`) — **butuh OWNER_1/2/3 dari Anda** |
+| Alamat Safe (MULTISIG) | ⬜ belum (menunggu owner) |
+| 04_HandOver (Timelock 48h) | ⬜ belum (jalan setelah MULTISIG ada) |
+| Timelock address | ⬜ belum |
+| Safe tx JSON (schedule/execute acceptOwnership) | ✅ generator siap (`script/08_SafeHandoverTxs.s.sol`) |
+| Bukti owner()==Timelock + deployer powerless | ✅ script siap (`script/verify_handover.sh`) |
+| owner() tiap kontrak saat ini | **deployer EOA** `0x1eb2…030b` (belum pindah) |
+
+Runbook lengkap: **`docs/HANDOVER.md`**. Owner EOA kini sudah di-backup ke hardware
+wallet; `DEPLOYER_PK` dihapus dari `.env` **setelah** handover terbukti.
+
+## 2. Indexer (Railway)
+
+| Item | Status |
+|---|---|
+| Dockerfile + `railway.json` + `.dockerignore` | ✅ siap di `indexer/` |
+| Panduan deploy | ✅ `docs/INDEXER_HOSTING.md` |
+| Deploy aktual | ⬜ **butuh `railway login` (browser) dari Anda** — CLI belum terautentikasi |
+| URL indexer | ⬜ belum |
+| `VITE_INDEXER_URL` di Vercel | ⬜ belum (diisi setelah URL ada) |
+
+Catatan: butuh **RPC khusus 4663** (RPC publik kena 429 saat backfill) + Postgres
+(plugin Railway → `DATABASE_URL` otomatis). Start block `106215255` sudah dipin di kode.
+
+## 3. Domain cour.fun + SSL
+
+| Item | Status |
+|---|---|
+| cour.fun + www.cour.fun ditambahkan ke project Vercel | ✅ |
+| Production di-alias ke cour.fun | ✅ (sisi Vercel) |
+| DNS | ⬜ **butuh Anda set** → `A @ 76.76.21.21` + `CNAME www cname.vercel-dns.com` |
+| Verifikasi + SSL | ⬜ otomatis aktif setelah DNS benar (watcher berjalan, cek tiap 2 menit) |
+| Nameserver saat ini | `horizon/orbit.dns-parking.com` (domain masih di registrar parkir) |
+| canonical / og:url / meta | ✅ di-set ke `https://cour.fun/` (SEO/OG/Twitter) |
+
+> Jika DNS dikelola Cloudflare: set record **"DNS only" (awan abu-abu)**, jangan proxied.
+> Alternatif: ganti nameserver ke `ns1/ns2.vercel-dns.com`.
+
+## 4. Env Frontend (Vercel `cour1/frontend`)
+
+| Var | Status | Catatan |
+|---|---|---|
+| `VITE_RPC_URL` | ✅ set (production) | RPC Robinhood |
+| `VITE_INDEXER_URL` | ⬜ | isi setelah indexer di-host (§2) |
+| `VITE_WC_PROJECT_ID` | ⬜ | gratis di **cloud.reown.com** |
+| `VITE_PINATA_JWT` | ⬜ | **pinata.cloud** (upload gambar IPFS) |
+
+Perilaku saat kosong **rapi, bukan error** (fallback on-chain, wallet injected tetap
+jalan, pesan jelas saat upload). Detail: `docs/FRONTEND_ENV.md`.
+
+## 5. Performa (desain visual dipertahankan)
+
+| Metric | Sebelum | Sesudah |
+|---|---|---|
+| **Lighthouse Performance (desktop)** | 42 | **96** |
+| **Lighthouse Performance (mobile)** | ~42 | **82** |
+| Accessibility / Best-Practices | 90 / 96 | 89–91 / 96 |
+| FCP (desktop) | 3.3 s | **0.7 s** |
+| LCP (desktop) | 4.2 s | **1.2 s** |
+| TBT (desktop) | ~780 ms | **10 ms** |
+| TTI (desktop) | 7.2 s | **1.2 s** |
+| Ukuran HTML dokumen | **1.16 MB** (gzip 352 KB) | **599 KB** (gzip 163 KB) |
+
+Cara: minify inline JS/CSS, externalize 430 KB base64 → aset ter-hash & cacheable,
+dan **hapus semua data demo/fabrikasi** dari bundle (yang memangkas TBT ~770 ms).
+Target **≥85 desktop / ≥70 mobile TERPENUHI**. Smoke 5×3×2 = 30 screenshot, 0 error.
+Detail: `docs/FRONTEND_CHANGES.md §8`.
+
+## 6. Verifikasi
+
+- **Playwright UI E2E 5/5 hijau**, **smoke 30 shot 0 error**, build lulus.
+- **cour.fun smoke**: menunggu DNS aktif (watcher jalan) — lalu smoke prod desktop+mobile.
+- **Blockscout**: API di balik Cloudflare; file standard-JSON **siap** di
+  `deployments/verify-blockscout/*.standard.json` (7 kontrak) + `args.txt`.
+  Langkah upload manual: `docs/VERIFICATION.md`. (robin.etherscan.io sudah 7/7 verified.)
+
+---
+
+## 7. YANG HARUS ANDA LAKUKAN (urut) sebelum allowlist dibuka
+
+> Allowlist **TETAP AKTIF**. `setLaunchAllowlistEnabled(false)` adalah **langkah terakhir**, hanya setelah semua di bawah.
+
+1. **DNS cour.fun** → `A @ 76.76.21.21`, `CNAME www cname.vercel-dns.com` (Cloudflare: DNS-only). *(watcher saya akan konfirmasi)*
+2. **Safe 2-of-3**: isi `OWNER_1/2/3` di `.env` → `forge script 07_DeploySafe … --broadcast` → set `MULTISIG`.
+3. **Handover**: `forge script 04_HandOver … --broadcast` → `TIMELOCK` → `08_SafeHandoverTxs` → import **schedule** JSON ke Safe (2-of-3).
+4. **Tunggu 48 jam** → import **execute** JSON ke Safe → `bash script/verify_handover.sh` harus lulus → **hapus `DEPLOYER_PK` dari `.env`**.
+5. **Indexer**: `railway login` → ikuti `docs/INDEXER_HOSTING.md` → set `VITE_INDEXER_URL` di Vercel → redeploy.
+6. **Env frontend**: isi `VITE_WC_PROJECT_ID` (reown) + `VITE_PINATA_JWT` (pinata) → redeploy.
+7. **Audit independen** (opsional tapi **direkomendasikan** — internal review ≠ audit independen; `docs/RISKS.md`).
+8. **Legal**: konfirmasi daftar geo-block (`frontend/src/config/regions.ts`) + disclaimer US persons.
+9. **(Opsional)** tambah `public/og.png` untuk kartu sosial; verifikasi Blockscout manual.
+10. **LANGKAH TERAKHIR** (via Safe → Timelock 48h): `factory.setLaunchAllowlistEnabled(false)`.
+
+**Pemblokir peluncuran publik:** 2–4 (handover), 5 (indexer), 6 (env), 7 (audit), 8 (legal).

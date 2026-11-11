@@ -35,5 +35,10 @@
   },
   "allowlistEnabled": true,
   "owner": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
-  "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Timelock+multisig pending — see GO_LIVE.md). Supersedes 029b233 (see 4663-DEPRECATED.json)."
+  "frontendUrl": "https://cour.fun",
+  "frontendVercel": "https://frontend-1tgwxq0ey-cour1.vercel.app",
+  "indexerUrl": "",
+  "safeMultisig": "",
+  "timelock": "",
+  "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Safe 2-of-3 + 48h Timelock in progress — see docs/HANDOVER.md). Frontend live on Vercel (cour.fun pending DNS). Supersedes 029b233 (see 4663-DEPRECATED.json)."
 }

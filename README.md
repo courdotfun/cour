@@ -6,6 +6,10 @@ The contracts are **deployed and verified** on Robinhood Chain (chainId 4663) fr
 `audit-freeze-v1`, allowlist-gated (closed beta). This repo is now a monorepo: on-chain contracts (`src/`),
 a Ponder **indexer** (`indexer/`), a **frontend** dApp (`frontend/`), and a **monitoring** service (`monitor/`).
 
+**Live frontend:** https://cour.fun (Vercel; domain pending DNS → fallback
+`https://frontend-1tgwxq0ey-cour1.vercel.app`). Admin handover to a Safe 2-of-3 +
+48h Timelock is in progress — see `docs/HANDOVER.md`, `docs/REPORT_GOLIVE.md`.
+
 ## Repo layout
 - `src/` — Solidity contracts (frozen at `audit-freeze-v1`; see `docs/AUDIT_SCOPE.md`).
 - `indexer/` — Ponder indexer (events → Postgres, GraphQL + REST). See `indexer/README.md`.
