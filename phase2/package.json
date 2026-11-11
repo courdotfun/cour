@@ -1,0 +1,14 @@
+{
+  "name": "cour-phase2",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "COUR Phase 2 off-chain services (no contract changes): notifications, screener/aggregator adapters, analytics. Branch phase2 only — do not merge/deploy.",
+  "scripts": {
+    "test": "node --test",
+    "notifier": "node notifier/index.ts",
+    "screener": "node screener/server.ts",
+    "analytics": "node analytics/server.ts"
+  },
+  "engines": { "node": ">=22.6" }
+}
