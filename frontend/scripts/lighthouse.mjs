@@ -9,7 +9,9 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { existsSync } from "node:fs";
 
 const PORT = Number(process.env.LH_PORT || 4194);
-const BASE = `http://localhost:${PORT}/`;
+// Measure a remote URL (deployed site) when LH_URL is set; else serve dist locally.
+const REMOTE = process.env.LH_URL || "";
+const BASE = REMOTE || `http://localhost:${PORT}/`;
 const MIN = Number(process.env.LH_MIN || 85);
 
 function findChrome() {
@@ -51,16 +53,22 @@ async function main() {
   }
 
   const chromePath = findChrome();
-  const preview = spawn("pnpm", ["preview", "--port", String(PORT), "--strictPort"], {
-    cwd: new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
-    shell: true,
-    stdio: "inherit",
-  });
-  const up = await waitForServer(BASE);
-  if (!up) {
-    console.error("LIGHTHOUSE: preview server did not start.");
-    preview.kill();
-    process.exit(2);
+  const preview = REMOTE
+    ? null
+    : spawn("pnpm", ["preview", "--port", String(PORT), "--strictPort"], {
+        cwd: new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+        shell: true,
+        stdio: "inherit",
+      });
+  if (!REMOTE) {
+    const up = await waitForServer(BASE);
+    if (!up) {
+      console.error("LIGHTHOUSE: preview server did not start.");
+      preview?.kill();
+      process.exit(2);
+    }
+  } else {
+    console.log("LIGHTHOUSE: measuring remote", BASE);
   }
 
   const chrome = await chromeLauncher.launch({
@@ -68,10 +76,20 @@ async function main() {
     chromeFlags: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage"],
   });
   try {
+    const desktop = process.env.LH_FORM === "desktop";
+    const settings = desktop
+      ? {
+          onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
+          formFactor: "desktop",
+          screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false },
+          throttling: { rttMs: 40, throughputKbps: 10240, cpuSlowdownMultiplier: 1 },
+        }
+      : { onlyCategories: ["performance", "accessibility", "best-practices", "seo"] };
+    console.log("LIGHTHOUSE form factor:", desktop ? "desktop" : "mobile (default)");
     const runnerResult = await lighthouse(
       BASE,
       { port: chrome.port, output: "json", logLevel: "error" },
-      { extends: "lighthouse:default", settings: { onlyCategories: ["performance", "accessibility", "best-practices", "seo"] } },
+      { extends: "lighthouse:default", settings },
     );
     const cats = runnerResult.lhr.categories;
     const scores = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, Math.round((v.score || 0) * 100)]));
@@ -102,7 +120,7 @@ async function main() {
     }
   } finally {
     await chrome.kill();
-    preview.kill();
+    preview?.kill();
   }
 }
 
