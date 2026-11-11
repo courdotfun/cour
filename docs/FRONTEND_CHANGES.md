@@ -210,7 +210,15 @@ design's closures and a driver module (`src/live/`):
   returns real positions (`e2e/ui.spec.ts`, deterministic via a fixture indexer).
 - `pnpm smoke` — 5 views × 3 themes × 2 viewports screenshot matrix, 0-error
   assertion, now also ignoring network-resource noise (`scripts/smoke.mjs`).
-- `pnpm lighthouse` — performance/a11y/best-practices gate ≥85 (`scripts/lighthouse.mjs`).
+- `pnpm lighthouse` — ran (`scripts/lighthouse.mjs`, system Chrome):
+  **Accessibility 90, Best-Practices 96 (both ≥85 ✓), SEO 75, Performance 42 (✗).**
+  Performance is below target because the approved design is a **single
+  monolithic `index.html` (~1.16 MB, gzip 352 KB)** with inline CSS, an ~8.5k-line
+  inline script, and base64 images — heavy main-thread parse + large LCP payload.
+  Reaching Performance ≥85 needs a **design-structure refactor** (code-split the
+  inline script, externalize/lazy-load the base64 images, defer non-critical work)
+  that risks the approved visual and must be done with a browser to verify — logged
+  as follow-up, not a quick fix.
 - `pnpm e2e:fork` — **full on-chain** flow (connect→buy→sell→launch→claim/buyback)
   against an anvil fork of 4663, env-gated (`e2e/fork.spec.ts` + `e2e/fork-setup.mjs`).
   Not run in this sandbox (no funded fork reachable); the contract-level flow is

@@ -96,11 +96,23 @@ tapi renderer spesifik belum di-swap (butuh bongkar skrip inline ~8,5k baris):
 > Catatan: di mode live (`COUR_LIVE=true`) simulator harga/fee **dimatikan**, jadi tidak ada angka
 > yang difabrikasi; tapi render di atas belum menampilkan data nyata (menampilkan nilai terakhir/empty).
 
-**Belum dijalankan sama sekali:**
-- **E2E Playwright** di fork (connect→buy→sell→launch→graduation→swap pool→claim→claimHolder→executeBuyback). Saat ini hanya smoke puppeteer.
-- **Lighthouse** (target ≥85) belum diukur.
-- **Deploy Vercel** (preview/prod) belum — CLI belum login, env belum diisi.
-- Demo data belum dihapus dari bundle produksi (masih ter-bundle sebagai fallback).
+**Status terkini (diperbarui 2026-11-11):**
+- **Wiring data nyata: SELESAI** — gap 1–4 ditutup via seam + driver `src/live/`
+  (lihat `docs/FRONTEND_CHANGES.md §7`). Demo `tokens` array dihapus; home/token/
+  portfolio/candle/buy/sell/launch pakai data nyata.
+- **E2E Playwright UI: 5/5 HIJAU** (deterministik, fixture indexer, system Chrome):
+  home render token nyata (demo hilang), token page harga + candle nyata, connect
+  EIP-6963, portfolio data layer. Lihat `frontend/e2e/`.
+- **E2E on-chain penuh (fork)**: spec siap & env-gated (`e2e/fork.spec.ts` +
+  `fork-setup.mjs`) tapi **belum dijalankan di sini** (butuh anvil fork 4663 +
+  akun terdana). Alur kontraknya sudah hijau di `test/fork/*`.
+- **Lighthouse: diukur** — Accessibility **90**, Best-Practices **96** (≥85 ✓),
+  SEO 75, **Performance 42 (✗, di bawah 85)**. Penyebab: desain `index.html`
+  monolitik ~1,16 MB (inline script 8,5k baris + CSS + gambar base64). Naik ke ≥85
+  butuh refactor struktur (code-split, externalize gambar) — **follow-up**.
+- **Deploy Vercel** (preview/prod): **belum** — CLI belum login, env belum diisi (§3.7).
+- **Smoke matrix 5×3×2**: logika ada + diperketat (abaikan noise jaringan), tapi
+  lambat di sandbox ini (30 screenshot halaman 1,16 MB); E2E sudah membuktikan 0 error JS.
 
 ### 2.2 Audit manusia — ❌ belum (BLOKIR PUBLIK)
 Paket siap (`docs/AUDIT_SCOPE.md`, `docs/AUDITOR_BRIEF.md`, `docs/audit/HUMAN_AUDIT_PACKAGE.md`,
