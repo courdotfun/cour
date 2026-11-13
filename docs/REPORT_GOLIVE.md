@@ -6,6 +6,38 @@
 
 ---
 
+## ⚡ Update 2026-11-13 — domain live + outage fixed + smoke passed
+
+**Insiden ditemukan & diperbaiki:** `https://cour.fun` sedang **DOWN** (HTTP 500
+`MIDDLEWARE_INVOCATION_FAILED`) di seluruh rute. Penyebab: Vercel menjalankan
+`frontend/middleware.ts` di runtime **Node ESM**, dan impor tanpa ekstensi
+`./src/config/regions` gagal (`ERR_MODULE_NOT_FOUND`). **Fix:** impor jadi
+`./src/config/regions.js` (tsconfig `bundler` + `allowImportingTsExtensions`
+menerima ini, satu sumber kebenaran untuk daftar geo-block tetap terjaga).
+tsc hijau → redeploy production → `cour.fun` **200 OK**.
+
+| Item | Status 2026-11-13 |
+|---|---|
+| DNS `cour.fun` → `76.76.21.21` | ✅ aktif (resolved) |
+| DNS `www` → `cname.vercel-dns.com` | ✅ aktif |
+| SSL / HTTPS + HSTS | ✅ aktif |
+| Production di `cour.fun` | ✅ **200 OK** (setelah fix) |
+| `www` → `cour.fun` redirect | ✅ 308 (host-redirect di `vercel.json`); root `/` sempat cache-HIT 200, bersih setelah revalidasi |
+| Smoke desktop (1366×900) | ✅ 200, COUR boot, **0 error console** |
+| Smoke mobile (iPhone 13) | ✅ 200, COUR boot, **0 error console** |
+| 3 tema (classic / cartoon / light) | ✅ semua apply |
+| Tombol launch "invite-only" (wallet non-allowlist) | ✅ "Launches are invite-only during beta", disabled (membuktikan baca allowlist on-chain hidup) |
+| Geo-block middleware | ✅ ter-deploy & jalan (tak crash lagi); butuh request ber-geo US untuk picu 451 |
+
+Alat smoke: `frontend/scripts/live-smoke.mjs` (screenshot di `frontend/screenshots/live-*.png`).
+
+**Masih diblokir kredensial Anda** (langkah persis: `docs/GO_LIVE_NEXT_STEPS.md`):
+indexer+monitor Railway butuh `RAILWAY_TOKEN`; Safe butuh `OWNER_1/2/3`;
+`VITE_WC_PROJECT_ID`/`VITE_PINATA_JWT` tak tersedia nilainya. `VITE_RPC_URL` sudah
+ter-set di Vercel. RPC indexer/monitor bisa pakai `RH_RPC_URL` yang sudah ada.
+
+---
+
 ## 1. Status Handover (Safe + Timelock)
 
 | Item | Status |

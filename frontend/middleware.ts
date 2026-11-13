@@ -3,7 +3,11 @@
 //
 // NOTE: The blocked-region list (src/config/regions.ts) is a LEGAL decision and
 // must be confirmed by a human (legal/compliance) before production use.
-import { BLOCKED_COUNTRIES, ALLOW_PATHS } from "./src/config/regions";
+// NOTE: the `.js` extension is REQUIRED. Vercel transpiles this middleware
+// per-file and runs it under the Node ESM runtime, where extensionless
+// relative imports fail (ERR_MODULE_NOT_FOUND). `bundler` moduleResolution +
+// allowImportingTsExtensions let tsc accept the `.js` specifier for a .ts file.
+import { BLOCKED_COUNTRIES, ALLOW_PATHS } from "./src/config/regions.js";
 
 // Vercel Edge Middleware runs this on the Edge runtime. Returning `undefined`
 // lets the request continue; returning a Response short-circuits it.

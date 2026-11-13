@@ -1,10 +1,16 @@
 # STATUS COUR — Snapshot Program (Bahasa Indonesia)
 
-> Tanggal: 2026-11-11 · Branch: `master` · Chain: Robinhood Chain (chainId **4663**)
+> Tanggal: 2026-11-13 · Branch: `master` · Chain: Robinhood Chain (chainId **4663**)
 > Deployment AKTIF = tag **`audit-freeze-v1`** (`deployments/4663.json`, block 106215255).
 > Dokumen ini adalah ringkas-status tunggal: **yang selesai**, **yang belum**, dan **TODO manusia**.
-> Sumber detail: `docs/REPORT.md`, `docs/GO_LIVE.md`, `docs/FRONTEND_CHANGES.md`,
-> `docs/VERIFICATION.md`, `docs/audit/*`, `deployments/4663.json`.
+> Sumber detail: `docs/REPORT.md`, `docs/GO_LIVE.md`, `docs/GO_LIVE_NEXT_STEPS.md`,
+> `docs/REPORT_GOLIVE.md`, `docs/FRONTEND_CHANGES.md`, `docs/VERIFICATION.md`,
+> `docs/audit/*`, `deployments/4663.json`.
+>
+> **2026-11-13:** `cour.fun` sempat DOWN (500 middleware ESM import) → **diperbaiki**,
+> kini **LIVE 200** (DNS+SSL aktif, www→apex 308, smoke desktop+mobile 0 error, 3 tema,
+> invite-only gate hidup). Sisa: indexer+monitor (butuh `RAILWAY_TOKEN`), Safe
+> (butuh `OWNER_1/2/3`) — langkah persis di `docs/GO_LIVE_NEXT_STEPS.md`.
 
 ---
 
@@ -15,13 +21,14 @@
 | Kontrak Fase 1 (src/) | ✅ **BEKU & final** | tag `audit-freeze-v1`, 107 test hijau, coverage baris 96,3% |
 | Deploy mainnet (4663) | ✅ **Live (tertutup)** | 7 kontrak, allowlist AKTIF, owner = EOA deployer |
 | Verifikasi explorer | 🟡 **Sebagian** | robin.etherscan.io ✅ 7/7; Blockscout ⏳ (manual) |
-| Indexer (Ponder) | 🟡 **Deploy sedang disiapkan** | Railway (Dockerfile+railway.json siap); butuh login + Postgres + RPC khusus |
-| Monitor | ✅ **Jalan (lokal)** | watcher + health + runbook; perlu host + Telegram token utk prod |
-| Frontend | ✅ **Wired ke data nyata; live di Vercel** | E2E 5/5, Lighthouse a11y 90/bp 96 (perf 42 → dioptimasi); deploy `*.vercel.app` |
+| Indexer (Ponder) | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | CLI token-based siap (`docs/GO_LIVE_NEXT_STEPS.md`); RPC pakai `RH_RPC_URL`; Postgres plugin |
+| Monitor | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | service terpisah; Telegram opsional (log-only bila kosong); `docs/GO_LIVE_NEXT_STEPS.md` |
+| Frontend | ✅ **LIVE di https://cour.fun** | fix outage 500 (middleware ESM import 2026-11-13); smoke desktop+mobile 0 error, 3 tema, invite-only gate |
+| Indexer URL di frontend | 🟡 **belum** | `VITE_INDEXER_URL` diisi setelah indexer Railway up |
 | Review keamanan | 🟡 **Internal review SELESAI (bukan audit independen)** | review internal tim COUR; audit pihak ketiga **masih direkomendasikan** sebelum buka publik |
 | Handover multisig/timelock | 🟡 **Sedang dikerjakan** | Safe v1.4.1 ADA di 4663; perlu 3 owner (OWNER_1/2/3) → Safe 2-of-3 → Timelock 48h |
 | Deployer | ✅ **Top-up 0.02 ETH; key di hardware wallet** | siap untuk op admin (handover) |
-| Domain cour.fun | 🟡 **Ditambahkan ke Vercel; tunggu DNS** | set `A @ 76.76.21.21` + `CNAME www cname.vercel-dns.com` |
+| Domain cour.fun | ✅ **LIVE + SSL aktif** | DNS `A @ 76.76.21.21` + `CNAME www` aktif; production 200; www→apex 308 |
 | Legal / geo-block | 🟡 **Teknis siap, legal belum** | middleware + daftar negara ada; perlu review hukum |
 
 **Keputusan inti:** allowlist launch **tetap AKTIF** (hanya deployer yang bisa launch) sampai
