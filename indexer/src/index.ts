@@ -25,7 +25,10 @@ import {
   toWhole,
   updateCandles,
   latestClient,
+  getStockUsdForTrade,
+  trackedStocks,
 } from "./lib";
+import { COUR_POOL_IDS, LOADER_OK } from "./poolIds";
 import { isExcludedHolder, ZERO } from "./addresses";
 
 const GLOBAL = "global";
@@ -102,6 +105,8 @@ ponder.on("COURFactory:TokenLaunched", async ({ event, context }) => {
   } catch {
     /* leave undefined */
   }
+
+  trackedStocks.add((a.stock as string).toLowerCase()); // realtime poll will snapshot its USD price
 
   const startPriceX = a.startPriceX as bigint;
   const priceStock = priceStockWhole(startPriceX, stockDecimals);
@@ -181,12 +186,7 @@ ponder.on("COURCurve:CurveTrade", async ({ event, context }) => {
   const priceX18 = priceX18FromReserves(vS, vT);
   const priceStock = priceStockWhole(priceX18, stockDecimals);
 
-  const stockUsdX18 = await getStockUsdX18(
-    context,
-    stockAddr,
-    event.block.number,
-    ts,
-  );
+  const stockUsdX18 = await getStockUsdForTrade(context, stockAddr, ts);
   const sUsd = stockUsdFloat(stockUsdX18);
   const priceUsd = sUsd === null ? null : priceStock * sUsd;
 
@@ -288,6 +288,21 @@ ponder.on("COURFactory:Graduated", async ({ event, context }) => {
     .onConflictDoNothing();
 
   await bumpGlobal(context, { totalGraduated: 1 });
+
+  // Auto-track newly graduated pools without a static list / manual redeploy:
+  // PoolManager is topic-filtered by the poolIds known at STARTUP (src/poolIds.ts).
+  // If this poolId wasn't in that set, a pool graduated AFTER we started — exit so
+  // Railway (restartPolicy=ON_FAILURE) restarts us; the loader then includes it and
+  // the re-sync indexes its swaps. Historical graduations are already in the set, so
+  // this never fires during backfill.
+  const known = COUR_POOL_IDS.some((p) => p.toLowerCase() === poolId.toLowerCase());
+  if (!known && LOADER_OK) {
+    console.warn(
+      `[cour-indexer] new pool graduated (${poolId}) not in startup filter — ` +
+        `exiting to restart and pick it up (Railway auto-restarts).`,
+    );
+    process.exit(1);
+  }
 });
 
 // ----------------------------------------------------------------- FeeTaken (x2)
@@ -442,12 +457,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const stockWhole = toWhole(stockAmt, stockDecimals);
   const priceStock = tokenWhole > 0 ? stockWhole / tokenWhole : 0;
 
-  const stockUsdX18 = await getStockUsdX18(
-    context,
-    p.stock as Hex,
-    event.block.number,
-    ts,
-  );
+  const stockUsdX18 = await getStockUsdForTrade(context, p.stock as Hex, ts);
   const sUsd = stockUsdFloat(stockUsdX18);
   const priceUsd = sUsd === null ? null : priceStock * sUsd;
   const volUsd = sUsd === null ? 0 : stockWhole * sUsd;
@@ -608,4 +618,17 @@ ponder.on("COURRouter:EthInPathSet", async ({ event, context }) => {
     stock: a.stock,
     path: a.path,
   });
+});
+
+// -------------------------------------------------- realtime stockUsd price poll
+// Fires every ~60s (see ponder.config.ts "StockUsdPoll", startBlock ≈ head) and
+// records a stockUsd snapshot per tracked stock into `stockPrice`. Realtime trades
+// value USD from the nearest snapshot (getStockUsdForTrade), not a fresh per-trade
+// read. Only runs near the tip, so backfill isn't flooded (backfill trades use the
+// current price — documented in src/lib.ts).
+ponder.on("StockUsdPoll:block", async ({ event, context }) => {
+  const ts = Number(event.block.timestamp);
+  for (const stock of trackedStocks) {
+    await getStockUsdX18(context, stock as Hex, event.block.number, ts);
+  }
 });

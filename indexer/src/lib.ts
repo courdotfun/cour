@@ -38,6 +38,31 @@ export const INTERVALS: { label: string; size: number }[] = [
 // RPC at LATEST (see note above) so this is a handful of calls during backfill.
 const stockUsdCache = new Map<string, { priceX18: bigint | null; at: number }>();
 
+// Stocks seen in TokenLaunched — the realtime block poll snapshots each of these.
+export const trackedStocks = new Set<string>();
+
+// Latest stockUsd SNAPSHOT per stock, written by the realtime block-interval poll
+// (see index.ts "StockUsdPoll:block"). Realtime trades value USD using the most
+// recent snapshot at/just-before the trade (not a fresh per-trade read). Keyed by
+// lowercased stock address -> { ts, priceX18 }.
+const stockSnapshot = new Map<string, { ts: number; priceX18: bigint }>();
+
+/**
+ * USD price (1e18) to value a TRADE at `ts`. Prefers the nearest realtime snapshot
+ * (from the block poll); if none exists yet (e.g. during historical backfill), falls
+ * back to reading the current price (documented approximation). Returns null if
+ * unavailable. Also records the fallback read as a snapshot/stockPrice row.
+ */
+export async function getStockUsdForTrade(
+  context: Context,
+  stock: Hex,
+  ts: number,
+): Promise<bigint | null> {
+  const snap = stockSnapshot.get(stock.toLowerCase());
+  if (snap) return snap.priceX18;
+  return getStockUsdX18(context, stock, 0n, ts); // backfill fallback: current price
+}
+
 /**
  * Read PriceReader.stockUsd(stock) (1e18-scaled USD per whole stock) at the LATEST
  * block, cached per stock (60s TTL). Returns null when the TWAP is not ready
@@ -76,6 +101,8 @@ export async function getStockUsdX18(
   }
 
   if (priceX18 !== null) {
+    // Keep the realtime snapshot used by trades fresh.
+    stockSnapshot.set(key, { ts, priceX18 });
     const bucketTs = Math.floor(ts / 60) * 60;
     await context.db
       .insert(stockPrice)

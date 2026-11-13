@@ -18,7 +18,7 @@ import {
   POOL_MANAGER,
   START_BLOCK,
 } from "./src/addresses";
-import { POOL_ID_FILTER } from "./src/poolIds";
+import { POOL_ID_FILTER, POLL_START_BLOCK } from "./src/poolIds";
 
 const rpc = process.env.PONDER_RPC_URL_4663;
 
@@ -99,6 +99,16 @@ export default createConfig({
         parameter: "token",
         startBlock: START_BLOCK,
       }),
+    },
+  },
+  // Realtime stockUsd price poll (~60s at ~10 blocks/s). Starts near head so it only
+  // runs in realtime (keeps backfill light); handler in src/index.ts snapshots each
+  // tracked stock's USD price into `stockPrice` for trade/candle USD valuation.
+  blocks: {
+    StockUsdPoll: {
+      chain: CHAIN_NAME,
+      startBlock: POLL_START_BLOCK,
+      interval: 600,
     },
   },
 });
