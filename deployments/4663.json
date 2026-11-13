@@ -40,7 +40,19 @@
   "frontendLiveVerified": "2026-11-13",
   "indexerUrl": "",
   "monitorUrl": "",
-  "safeMultisig": "",
+  "safeMultisig": "0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2",
+  "safe": {
+    "version": "1.4.1",
+    "threshold": 2,
+    "owners": [
+      "0x594527d8656D917DdfD32fcD5729DAb349C75527",
+      "0x4e284Abb6881C5a62753088bB0e11cb9c447EE0E",
+      "0x4B24652793d667C8840bCa1Fa991F855D896F1f7"
+    ],
+    "saltNonce": 4663,
+    "deployed": "2026-11-13",
+    "note": "2-of-3 Safe deployed (07_DeploySafe). Ownership handover (04_HandOver) NOT yet run — protocol owner is still the deployer EOA pending the pause/Timelock decision in docs/HANDOVER.md."
+  },
   "timelock": "",
   "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Safe 2-of-3 + 48h Timelock in progress — see docs/HANDOVER.md). Frontend LIVE at https://cour.fun (DNS A @ 76.76.21.21 + CNAME www→cname.vercel-dns.com; SSL active; www→apex 308 redirect). 2026-11-13: fixed prod outage (edge middleware ERR_MODULE_NOT_FOUND — extensionless import), smoke passed desktop+mobile 0 console errors, 3 themes, invite-only gate live. indexerUrl/monitorUrl pending Railway deploy (needs RAILWAY_TOKEN); safeMultisig/timelock pending OWNER_1/2/3. Supersedes 029b233 (see 4663-DEPRECATED.json)."
 }

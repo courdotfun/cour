@@ -9,9 +9,12 @@ import { fileURLToPath } from "node:url";
 
 const TARGET = process.env.SMOKE_URL || "https://cour.fun/";
 const mockWallet = readFileSync(fileURLToPath(new URL("../e2e/fixtures/mock-wallet.js", import.meta.url)), "utf8");
-const isNoise = (t) => /Failed to load resource|ERR_CONNECTION|ERR_NETWORK|net::|favicon|status of 4|status of 5|fetch/i.test(t);
+const isNoise = (t) => /Failed to load resource|ERR_CONNECTION|ERR_NETWORK|net::|favicon|status of 4|status of 5|fetch|walletconnect|relay\.wallet|reown|w3m|appkit|explorer-api|verify\.wallet|pulse\.wallet/i.test(t);
 
-const out = { url: TARGET, desktop: {}, mobile: {}, themes: {}, inviteOnly: {}, errors: [] };
+const out = { url: TARGET, desktop: {}, mobile: {}, themes: {}, wallet: {}, upload: {}, inviteOnly: {}, errors: [] };
+
+// 1x1 PNG (base64) for an in-browser upload test through /api/upload.
+const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
 function attachErrors(page, bucket) {
   page.on("console", (m) => { if (m.type() === "error" && !isNoise(m.text())) bucket.push("console: " + m.text()); });
@@ -44,6 +47,35 @@ try {
   // restore default
   await page.evaluate(() => window.setTheme && window.setTheme("cartoon"));
 
+  // ---- Connect modal: injected + WalletConnect present ----
+  try {
+    await page.evaluate(() => window.openConnect && window.openConnect());
+    await page.waitForTimeout(500);
+    const opts = await page.evaluate(() =>
+      [...document.querySelectorAll("#cwList .cw-opt")].map((b) => b.dataset.w || b.textContent.trim()),
+    );
+    out.wallet.options = opts;
+    out.wallet.hasWalletConnect = opts.some((o) => /walletconnect/i.test(o));
+    out.wallet.hasInjected = opts.some((o) => /mock wallet|metamask|injected|smart wallet/i.test(o));
+    // Click WalletConnect → the WC/Web3Modal QR dialog should mount.
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll("#cwList .cw-opt")].find((x) => /walletconnect/i.test(x.dataset.w || ""));
+      if (b) b.click();
+    });
+    const wcModal = await page
+      .waitForFunction(
+        () => !!document.querySelector("w3m-modal, wcm-modal, w3m-router, [class*='w3m'], appkit-modal"),
+        { timeout: 10000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+    out.wallet.walletConnectModalMounted = wcModal;
+    await page.evaluate(() => window.closeConnect && window.closeConnect());
+    await page.waitForTimeout(300);
+  } catch (e) {
+    out.wallet.error = String(e).slice(0, 200);
+  }
+
   // ---- Invite-only gate (non-allowlisted mock wallet) ----
   try {
     const addr = await page.evaluate(async () => (await window.COUR_WALLET.connect("Mock Wallet")).addr);
@@ -60,6 +92,21 @@ try {
   } catch (e) {
     out.inviteOnly.error = String(e).slice(0, 200);
   }
+  // ---- Upload works in-browser (server-side Pinata via /api/upload) ----
+  try {
+    const up = await page.evaluate(async (b64) => {
+      const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const fd = new FormData();
+      fd.append("file", new Blob([bin], { type: "image/png" }), "smoke.png");
+      const r = await fetch("/api/upload", { method: "POST", body: fd });
+      const j = await r.json().catch(() => ({}));
+      return { status: r.status, cid: j.cid || null };
+    }, PNG_B64);
+    out.upload = { status: up.status, cid: up.cid, ok: up.status === 200 && !!up.cid };
+  } catch (e) {
+    out.upload.error = String(e).slice(0, 200);
+  }
+
   out.desktop.errors = errors;
   out.errors.push(...errors);
   await ctx.close();

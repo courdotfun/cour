@@ -17,10 +17,21 @@ with the `monitor/` service, which raises the alerts referenced below and expose
 | NVDA stock | `0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC` |
 | USDG | `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168` |
 
-> **Ownership today = the deployer EOA.** Handover to Timelock + multisig is
-> pending (see `GO_LIVE.md`). **In production every admin op below must go through
-> the multisig / timelock, not a raw EOA key.** The raw `cast send` forms are
-> shown for the current pre-handover state and for break-glass only.
+> **Ownership today = the deployer EOA** (`0x1eb2…030b`). A **Safe 2-of-3**
+> (`0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2`, v1.4.1) is deployed but ownership
+> has **not** been transferred to it yet — the ownership model is a pending decision
+> (see **`HANDOVER.md` → "⚠️ DECISION NEEDED"**). The raw `cast send` forms below
+> are the current pre-handover state and for break-glass only.
+>
+> **⏱️ CRITICAL — response time depends on the ownership model:**
+> - **EOA (now)** or **Safe-direct (option a):** emergency `setLaunchesPaused` is
+>   **immediate** (one EOA tx, or 2-of-3 Safe signatures).
+> - **After 48h Timelock handover (`04_HandOver`):** EVERY owner op — including the
+>   `setLaunchesPaused` kill-switch — becomes **schedule → wait 48h → execute**.
+>   There is **no separate fast pauser role** (all levers are `onlyOwner`, and
+>   `src/` is frozen). Plan incident response around this: do **not** hand over to
+>   the 48h Timelock until you accept a 48h pause latency (recommended only for the
+>   public phase; keep the Safe as direct, fast owner during the allowlist beta).
 
 ### What the admin controls can and cannot do
 
