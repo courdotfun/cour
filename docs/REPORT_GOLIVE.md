@@ -38,6 +38,44 @@ ter-set di Vercel. RPC indexer/monitor bisa pakai `RH_RPC_URL` yang sudah ada.
 
 ---
 
+## ⚡ Update 2026-11-13 (sesi 2) — Pinata server-side, WalletConnect, Safe
+
+Setelah kredensial diisi (`RAILWAY_TOKEN`, `VITE_WC_PROJECT_ID`, `PINATA_JWT`
+server-side, `OWNER_1/2/3`):
+
+**1. Pinata AMAN (upload server-side).** JWT dipindah ke server; tak pernah ke
+browser. Fungsi Edge `frontend/api/upload.ts`: POST gambar (≤2 MB, tipe dicek via
+**magic bytes** png/jpeg/webp/gif), rate-limit per IP (10/10 menit), atau POST JSON
+metadata → `{cid,url}`; error rapi 400/405/413/415/429/500 tanpa bocor rahasia.
+`VITE_PINATA_JWT` dihapus dari kode + `.env.example`. **Bukti:** nilai JWT muncul di
+**0** file `dist/` (grep nilai persis = 0; tak ada token berbentuk `eyJ…`). **Tes
+upload nyata:** gambar → CID `Qma6z76Xiyw9MPDJhZEWLbjquYEqLeWhzL7MAje5chAwBB`;
+metadata → CID `QmdSrNVcNr2sHoqCo711hzq3TwmyQGaRNViaWAY6tABDCB`; PNG palsu → **415**.
+Launch form kini `uploadImage → uploadMetadata → metadataURI = ipfs://<cid JSON>`.
+
+**2. WalletConnect.** `@walletconnect/ethereum-provider` di-lazy-load & disambung ke
+adapter + opsi "WalletConnect" di modal connect (QR/mobile) di samping wallet
+injected. `VITE_WC_PROJECT_ID` di-set (production + preview). Smoke: opsi WC muncul,
+klik → modal QR ter-mount. **TODO Anda:** tambah `cour.fun` + `www.cour.fun` ke
+allowed domains di dashboard Reown (cloud.reown.com).
+
+**3. Safe 2-of-3 (DEPLOY SAJA).** Safe v1.4.1 ter-deploy:
+`MULTISIG=0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2`. Verifikasi on-chain:
+`getOwners()`=OWNER_1/2/3, `getThreshold()`=2, `VERSION()`="1.4.1". Owner EIP-55
+valid, berbeda, bukan deployer. **Handover BELUM** dijalankan — menunggu pilihan
+model pause darurat (lihat `HANDOVER.md` → "⚠️ DECISION NEEDED"; rekomendasi: opsi
+(a) Safe jadi owner langsung saat beta, Timelock 48 jam sebelum publik).
+
+**4. Indexer + Monitor (Railway) — MASIH TERBLOKIR.** `RAILWAY_TOKEN` yang diberikan
+**tidak valid**: API Railway menolak sebagai account-token (`Not Authorized`) dan
+project-token (`not found`), dan formatnya bukan token Railway. Perlu token baru yang
+valid (Railway → Account/Project → Tokens). Runbook token-based siap di
+`docs/GO_LIVE_NEXT_STEPS.md`. Catatan: RPC indexer/monitor pakai `RH_RPC_URL`; dari
+Railway (cloud) endpoint itu normal — **di mesin lokal ini** host RPC di-hijack DNS
+oleh ISP (Indosat/ioh.co.id), jadi deploy Safe tadi lewat proxy lokal ke IP asli.
+
+---
+
 ## 1. Status Handover (Safe + Timelock)
 
 | Item | Status |

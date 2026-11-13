@@ -23,10 +23,13 @@
 | Verifikasi explorer | 🟡 **Sebagian** | robin.etherscan.io ✅ 7/7; Blockscout ⏳ (manual) |
 | Indexer (Ponder) | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | CLI token-based siap (`docs/GO_LIVE_NEXT_STEPS.md`); RPC pakai `RH_RPC_URL`; Postgres plugin |
 | Monitor | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | service terpisah; Telegram opsional (log-only bila kosong); `docs/GO_LIVE_NEXT_STEPS.md` |
-| Frontend | ✅ **LIVE di https://cour.fun** | fix outage 500 (middleware ESM import 2026-11-13); smoke desktop+mobile 0 error, 3 tema, invite-only gate |
+| Frontend | ✅ **LIVE di https://cour.fun** | outage 500 diperbaiki; WalletConnect live; upload IPFS server-side (JWT tak ke client); smoke 0 error, 3 tema, invite-only gate |
+| Pinata upload | ✅ **server-side (`api/upload.ts`)** | JWT server-only; magic-byte+2MB+rate-limit; tes nyata CID OK; 0 secret di dist/ |
+| WalletConnect | ✅ **live di modal connect** | `VITE_WC_PROJECT_ID` set; TODO: allowed domains di dashboard Reown |
+| Indexer + Monitor (Railway) | 🔴 **BLOKIR: `RAILWAY_TOKEN` tidak valid** | token ditolak API Railway; perlu token baru. Runbook: `GO_LIVE_NEXT_STEPS.md` |
 | Indexer URL di frontend | 🟡 **belum** | `VITE_INDEXER_URL` diisi setelah indexer Railway up |
 | Review keamanan | 🟡 **Internal review SELESAI (bukan audit independen)** | review internal tim COUR; audit pihak ketiga **masih direkomendasikan** sebelum buka publik |
-| Handover multisig/timelock | 🟡 **Sedang dikerjakan** | Safe v1.4.1 ADA di 4663; perlu 3 owner (OWNER_1/2/3) → Safe 2-of-3 → Timelock 48h |
+| Handover multisig/timelock | 🟡 **Safe 2-of-3 DEPLOYED (belum handover)** | `0xDca6…7fA2` v1.4.1, threshold 2, owners OWNER_1/2/3 (verified on-chain). Handover MENUNGGU keputusan model pause (HANDOVER.md) |
 | Deployer | ✅ **Top-up 0.02 ETH; key di hardware wallet** | siap untuk op admin (handover) |
 | Domain cour.fun | ✅ **LIVE + SSL aktif** | DNS `A @ 76.76.21.21` + `CNAME www` aktif; production 200; www→apex 308 |
 | Legal / geo-block | 🟡 **Teknis siap, legal belum** | middleware + daftar negara ada; perlu review hukum |
