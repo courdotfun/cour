@@ -56,13 +56,14 @@ SAFE="$FAKE_SAFE" RPC_URL="$ANVIL_RPC" bash "$HERE/accept-ownership.sh" >/dev/nu
 source "$ROOT/script/safe/out/accept.env"
 echo "safeTxHash: $SAFE_TX_HASH"
 
-echo "Two owners sign (--no-hash) …"
-SIG1=$(cast wallet sign --no-hash "$SAFE_TX_HASH" --private-key "$K1")
-SIG2=$(cast wallet sign --no-hash "$SAFE_TX_HASH" --private-key "$K2")
+echo "Owner A signs via PATH (a) EIP-712 typed data (mimics Ledger --data)…"
+SIG1=$(cast wallet sign --private-key "$K1" --data --from-file "$ROOT/script/safe/out/accept-712.json")
+echo "Owner B signs via PATH (b) eth_sign/personal_sign (mimics Ledger blind hash)…"
+SIG2=$(cast wallet sign --private-key "$K2" "$SAFE_TX_HASH")   # NO --no-hash: EIP-191 prefix
 
-echo "execTransaction via exec.sh (auto-sorted) …"
+echo "execTransaction via exec.sh (auto-detect scheme + verify + sorted)…"
 SAFE="$FAKE_SAFE" RPC_URL="$ANVIL_RPC" bash "$HERE/exec.sh" "$ROOT/script/safe/out/accept.env" \
-  "$A1" "$SIG1" "$A2" "$SIG2" --private-key "$K1" >/dev/null
+  "$A1" "$SIG1" "$A2" "$SIG2" --private-key "$K1"
 echo "executed."
 
 echo "=== ASSERT owner()==fakeSafe on all 4 ==="

@@ -62,3 +62,30 @@ safe_tx_hash_call() {
     "getTransactionHash(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256)(bytes32)" \
     "$1" 0 "$2" 0 0 0 0 "$ZERO" "$ZERO" "$3" --rpc-url "$RPC_URL"
 }
+
+# Write the EIP-712 SafeTx typed-data JSON (for `cast wallet sign --data`).
+# usage: write_eip712 <outfile> <to> <value> <data0x> <operation> <nonce>
+write_eip712() {
+  node "$ROOT_NODE/script/safe/make-712.mjs" "$1" 4663 "$SAFE" "$2" "$3" "$4" "$5" "$6" 1>&2
+}
+
+# Verify a SINGLE signature against the Safe via checkNSignatures (eth_call).
+# Returns 0 (valid, signer is an owner) / non-zero otherwise.
+verify_sig_single() { # <safeTxHash> <sig0x>
+  cast call "$SAFE" "checkNSignatures(bytes32,bytes,bytes,uint256)" "$1" 0x "$2" 1 --rpc-url "$RPC_URL" >/dev/null 2>&1
+}
+
+# Flip a 65-byte signature's v byte by +4 (EIP-712 27/28 -> eth_sign 31/32).
+flip_v_plus4() { # <sig0x> -> prints adjusted sig
+  local s v; s="$(strip0x "$1")"; v=$(( 16#${s: -2} + 4 ))
+  printf '0x%s%02x' "${s:0:128}" "$v"
+}
+
+# Normalize a signature to a Safe-valid form: as-is if it verifies (EIP-712
+# path a), else try v+4 (eth_sign path b). Prints the valid sig; empty on failure.
+normalize_sig() { # <safeTxHash> <sig0x>
+  if verify_sig_single "$1" "$2"; then echo "$2"; return 0; fi
+  local f; f="$(flip_v_plus4 "$2")"
+  if verify_sig_single "$1" "$f"; then echo "$f"; return 0; fi
+  return 1
+}

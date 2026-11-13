@@ -86,9 +86,10 @@ reverts. Use the cast-based Safe flow (validated on an anvil fork):
 ```bash
 # 1) Build the pause tx + get the hash to sign (true = stop launches; false = resume)
 RPC_URL=<your-4663-rpc> bash script/safe/pause.sh true
-# 2) TWO owners sign the printed safeTxHash (offline, no RPC):
-cast wallet sign --ledger --no-hash <safeTxHash>     # (or --trezor)
-# 3) Any one owner executes (auto-sorts signatures):
+# 2) TWO owners sign (offline, no RPC). Prefer (a); fall back to (b) if device refuses:
+cast wallet sign --ledger --data --from-file script/safe/out/pause-true-712.json   # (a) EIP-712
+cast wallet sign --ledger <safeTxHash>                                              # (b) eth_sign fallback
+# 3) Any one owner executes (auto-detects scheme, verifies, sorts):
 RPC_URL=<your-4663-rpc> bash script/safe/exec.sh script/safe/out/pause-true.env \
   <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger
 # 4) Verify:

@@ -33,33 +33,40 @@ four contracts at once.
 
 **Who signs:** any **two** of the three Safe owners
 (`0x5945…5527`, `0x4e28…EE0E`, `0x4B24…F1f7`). Signing is **offline (no RPC)**.
+**Executor = owner #1 (`0x5945…5527`)** — it has the most ETH for gas.
 
-**The exact hash to sign** (Safe nonce 0 — regenerate with
-`bash script/safe/accept-ownership.sh` if the Safe nonce has changed):
-
+**Step 0 — generate + dry-run** (prints the hash, nonce, decoded batch, and the
+EIP-712 file so you can match your device screen):
+```bash
+RPC_URL=<your-4663-rpc> bash script/safe/accept-ownership.sh
+```
+Expected (Safe nonce 0): one MultiSend (operation=1) to MultiSendCallOnly, batch =
+4× `acceptOwnership()` on Factory/PriceReader/FeeVault/Router, and
 ```
 safeTxHash = 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
 ```
 
-**Step 1 — two owners each sign the hash** (hardware wallet; no RPC needed):
+**Step 1 — two owners sign.** Hardware wallets usually REFUSE raw-hash blind
+signing, so use **path (a)**; only if the device rejects typed data, use **path (b)**.
+Both are auto-detected + verified by `exec.sh`.
 ```bash
-# Ledger owner:
-cast wallet sign --ledger --no-hash 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
-# Trezor owner:
-cast wallet sign --trezor --no-hash 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
-```
-`--no-hash` signs the raw safeTxHash (= the Safe EIP-712 digest), producing a
-v=27/28 signature — exactly what Safe's EIP-712 verification path expects. Each
-command prints a `0x…` (65-byte) signature; record which **owner address** produced
-each one.
+# (a) EIP-712 typed data — PREFERRED (device shows the SafeTx fields):
+cast wallet sign --ledger --data --from-file script/safe/out/accept-712.json
+#   Trezor: swap --ledger for --trezor. Signature is used as-is (v=27/28).
 
-**Step 2 — any one owner executes** (needs gas; signatures are auto-sorted ascending):
+# (b) eth_sign fallback (device blind-signs the hash; exec.sh adjusts v to 31/32):
+cast wallet sign --ledger 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
+```
+Each prints a `0x…` (65-byte) signature; record which **owner address** produced each.
+(Both paths are validated end-to-end on an anvil fork — `script/safe/simulate.sh`
+signs one owner via (a) and one via (b) in the same tx and passes.)
+
+**Step 2 — owner #1 executes** (needs gas). `exec.sh` auto-detects each signature's
+scheme, verifies BOTH against `Safe.checkNSignatures` AND simulates the full
+execTransaction (eth_call) before broadcasting — it refuses if anything is off:
 ```bash
-# First (re)generate the tx file for the current nonce:
-RPC_URL=<your-4663-rpc> bash script/safe/accept-ownership.sh
-# Then submit with the two (address, signature) pairs:
 RPC_URL=<your-4663-rpc> bash script/safe/exec.sh script/safe/out/accept.env \
-  <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger
+  <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger   # --ledger = owner #1's device
 ```
 
 > ⚠️ RPC note: on the Indosat/ISP network `rpc.mainnet.chain.robinhood.com` is

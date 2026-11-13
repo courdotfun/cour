@@ -27,6 +27,7 @@ TX_DATA=$TX_DATA
 NONCE=$NONCE
 SAFE_TX_HASH=$SAFE_TX_HASH
 EOF
+write_eip712 "$ROOT/script/safe/out/pause-$VAL-712.json" "$FACTORY" 0 "$TX_DATA" 0 "$NONCE"
 
 cat <<EOF
 
@@ -34,13 +35,14 @@ cat <<EOF
   COUR Safe — setLaunchesPaused($VAL)   (incident switch; onlyOwner)
 =========================================================================
   Safe:        $SAFE
-  Target:      COURFactory $FACTORY (operation=0 CALL)
+  Target:      COURFactory $FACTORY  (operation=0 CALL)   setLaunchesPaused($VAL)
   Nonce:       $NONCE
   safeTxHash:  $SAFE_TX_HASH
 
-  TWO owners sign:
-    cast wallet sign --ledger --no-hash $SAFE_TX_HASH      # (or --trezor)
-  Execute:
+  TWO owners sign — (a) preferred, (b) fallback:
+    (a) cast wallet sign --ledger --data --from-file script/safe/out/pause-$VAL-712.json
+    (b) cast wallet sign --ledger $SAFE_TX_HASH
+  Execute (sigs auto-detected/verified):
     RPC_URL=$RPC_URL bash script/safe/exec.sh $OUT \\
       <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger
   Verify:
