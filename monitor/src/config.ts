@@ -37,13 +37,22 @@ export interface Deployment {
   nvda: Address;
   usdg: Address;
   weth: Address;
+  safeMultisig: Address | null;
+  safeOwners: Address[];
 }
 
 function loadDeployment(): Deployment {
   const file = env('DEPLOYMENT_FILE') ?? resolve(repoRoot, 'deployments/4663.json');
   const raw = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
   const addr = (k: string): Address => getAddress(String(raw[k]));
+  const safe = (raw.safe ?? {}) as { owners?: unknown };
+  const safeOwners = Array.isArray(safe.owners)
+    ? (safe.owners as unknown[]).map((o) => getAddress(String(o)))
+    : [];
+  const safeMultisig = raw.safeMultisig ? getAddress(String(raw.safeMultisig)) : null;
   return {
+    safeMultisig,
+    safeOwners,
     chainId: Number(raw.chainId),
     network: String(raw.network ?? 'unknown'),
     startBlock: Number(raw.startBlock ?? raw.block ?? 0),
@@ -73,6 +82,9 @@ export const config = {
   healthIntervalMs: num('HEALTH_INTERVAL_MS', 60_000),
   // Deployer ETH balance threshold (in ETH) below which we alert.
   deployerMinEth: num('DEPLOYER_MIN_ETH', 0.05),
+  // Safe-owner ETH balance threshold (in ETH). Owners need gas to execute Safe txs
+  // (incident pause, config) once ownership is the Safe. Alert below this.
+  ownerMinEth: num('OWNER_MIN_ETH', 0.001),
   // Percent deviation in stockUsd(NVDA) between two consecutive reads that triggers an alert.
   stockDeviationPct: num('STOCK_DEVIATION_PCT', 10),
   // FeeTaken stockFee (in whole stock units) above which we flag it as "large/anomalous".

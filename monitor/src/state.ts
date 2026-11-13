@@ -12,6 +12,8 @@ export interface HealthSnapshot {
   launchAllowlistEnabled: boolean | null;
   stockPaused: boolean | null; // null = probe unsupported/unknown
   owners: Record<string, string>;
+  pendingOwners: Record<string, string>; // contract -> pendingOwner (0x0 if none)
+  ownerBalances: Record<string, string>; // Safe owner addr -> ETH (human)
   lastHealthCheckAt: string | null;
   lastError: string | null;
 }
@@ -28,6 +30,8 @@ export const snapshot: HealthSnapshot = {
   launchAllowlistEnabled: null,
   stockPaused: null,
   owners: {},
+  pendingOwners: {},
+  ownerBalances: {},
   lastHealthCheckAt: null,
   lastError: null,
 };
