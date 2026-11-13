@@ -4,7 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_RPC_URL?: string;
   readonly VITE_INDEXER_URL?: string;
   readonly VITE_WC_PROJECT_ID?: string;
-  readonly VITE_PINATA_JWT?: string;
+  // NOTE: no VITE_PINATA_JWT — IPFS upload is server-side only (api/upload.ts).
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;

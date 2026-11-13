@@ -61,6 +61,19 @@ function installWalletAdapter() {
   if (!adapter) return;
 
   adapter.connect = async (via?: string) => {
+    // WalletConnect path — lazy-load the WC provider and reuse the same adapter.
+    if (via && /walletconnect/i.test(via)) {
+      const { connectWalletConnect } = await import("./chain/walletconnect");
+      const provider = await connectWalletConnect(); // opens the QR modal
+      const st = await walletConnect(provider);
+      try {
+        await ensureChain();
+      } catch {
+        /* wallet may not support adding 4663; still connected */
+      }
+      return { addr: st.address as string, via: "WalletConnect" };
+    }
+
     const detail = pickProvider(via);
     if (!detail) {
       throw new Error(

@@ -93,25 +93,54 @@ export async function createToken(params: CreateParams): Promise<LaunchResult> {
   return { txHash: hash, token, curve };
 }
 
-// ---- IPFS image upload (Pinata) -------------------------------------------
-const PINATA_JWT = import.meta.env.VITE_PINATA_JWT as string | undefined;
+// ---- IPFS upload (via our server function, /api/upload) --------------------
+// The Pinata JWT lives ONLY on the server (see frontend/api/upload.ts); it is
+// never exposed to the browser. Uploads are always attempted and failures are
+// surfaced honestly by the caller.
 
-export function pinataConfigured(): boolean {
-  return !!PINATA_JWT;
+export interface TokenMeta {
+  name: string;
+  symbol: string;
+  description?: string;
+  image?: string; // ipfs://<cid>
+  links?: Record<string, string>;
 }
 
-export async function uploadImageToIpfs(file: File): Promise<string> {
-  if (!PINATA_JWT) {
-    throw new Error("Image upload unavailable: VITE_PINATA_JWT is not set.");
+export function pinataConfigured(): boolean {
+  // Upload is handled server-side; the endpoint is always available. If the
+  // server is missing PINATA_JWT it returns a clean error the caller handles.
+  return true;
+}
+
+async function postUpload(init: RequestInit): Promise<string> {
+  const res = await fetch("/api/upload", init);
+  if (!res.ok) {
+    let msg = `Upload failed (${res.status})`;
+    try {
+      const j = (await res.json()) as { message?: string };
+      if (j?.message) msg = j.message;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
   }
+  const data = (await res.json()) as { cid: string };
+  if (!data?.cid) throw new Error("Upload failed: no CID returned");
+  return `ipfs://${data.cid}`;
+}
+
+/** Upload a logo image → returns ipfs://<imageCid>. */
+export async function uploadImageToIpfs(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+  return postUpload({ method: "POST", body: form });
+}
+
+/** Upload a token metadata JSON → returns ipfs://<metadataCid> for metadataURI. */
+export async function uploadMetadata(meta: TokenMeta): Promise<string> {
+  return postUpload({
     method: "POST",
-    headers: { Authorization: `Bearer ${PINATA_JWT}` },
-    body: form,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(meta),
   });
-  if (!res.ok) throw new Error(`Pinata upload failed (${res.status})`);
-  const data = (await res.json()) as { IpfsHash: string };
-  return `ipfs://${data.IpfsHash}`;
 }

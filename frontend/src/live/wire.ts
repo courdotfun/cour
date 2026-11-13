@@ -262,14 +262,31 @@ export async function launchReal(p: {
     if (cls) el.classList.add(cls);
   };
   try {
-    // Step 0: metadata (IPFS when configured, else inline data URI).
+    // Step 0: metadata — upload the logo image, then pin a metadata JSON
+    // (name/symbol/description/image/links) and use ITS cid as the metadataURI.
+    // Uploads go through our server (/api/upload); the Pinata JWT never touches
+    // the client. Any failure degrades gracefully to an empty metadataURI.
     stepState(0, "run");
     let metadataURI = "";
-    if (p.logo && launch.pinataConfigured()) {
+    if (p.logo) {
       try {
         const blob = await (await fetch(p.logo)).blob();
         const file = new File([blob], `${p.tick}.png`, { type: blob.type || "image/png" });
-        metadataURI = await launch.uploadImageToIpfs(file);
+        const image = await launch.uploadImageToIpfs(file);
+        const txt = (id: string) =>
+          (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value?.trim() || undefined;
+        const links: Record<string, string> = {};
+        const web = txt("ctLinkWeb"); if (web) links.website = web;
+        const x = txt("ctLinkX"); if (x) links.x = x;
+        const tg = txt("ctLinkTg"); if (tg) links.telegram = tg;
+        const dc = txt("ctLinkDc"); if (dc) links.discord = dc;
+        metadataURI = await launch.uploadMetadata({
+          name: p.name,
+          symbol: p.tick,
+          description: txt("ctDesc"),
+          image,
+          links: Object.keys(links).length ? links : undefined,
+        });
       } catch {
         metadataURI = "";
       }
