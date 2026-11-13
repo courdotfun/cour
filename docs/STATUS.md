@@ -28,7 +28,7 @@
 | Frontend | ✅ **LIVE di https://cour.fun** | outage 500 diperbaiki; WalletConnect live; upload IPFS server-side (JWT tak ke client); smoke 0 error, 3 tema, invite-only gate |
 | Pinata upload | ✅ **server-side (`api/upload.ts`)** | JWT server-only; magic-byte+2MB+rate-limit; tes nyata CID OK; 0 secret di dist/ |
 | WalletConnect | ✅ **live di modal connect** | `VITE_WC_PROJECT_ID` set; TODO: allowed domains di dashboard Reown |
-| Indexer (Railway) | ✅ **LIVE, backfilling** | `indexer-production-f5ef70d7.up.railway.app` + Postgres; /health 200, /ready 503 sampai backfill (106215255→head) selesai |
+| Indexer (Railway) | ✅ **LIVE, SYNCED** | `indexer-production-f5ef70d7.up.railway.app`; `/ready=200`, CSMOKE terindex. Backfill 116h→**4s** (filter PoolManager + latest-reads; RPC gratis cukup) |
 | Monitor (Railway) | ✅ **LIVE (log-only)** | `monitor-production-8079dfd3.up.railway.app`; watching factory/vault/router/hook; Telegram kosong → console |
 | Indexer URL di frontend | 🟡 **belum** | `VITE_INDEXER_URL` diisi setelah indexer Railway up |
 | Review keamanan | 🟡 **Internal review SELESAI (bukan audit independen)** | review internal tim COUR; audit pihak ketiga **masih direkomendasikan** sebelum buka publik |

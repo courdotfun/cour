@@ -6,6 +6,31 @@
 
 ---
 
+## ⚡ Update 2026-11-14 (sesi 4) — indexer cepat, Safe tanpa UI, monitor owner
+
+**1. Indexer dipercepat 116 jam → 4 detik** (tanpa ubah `src/` kontrak). Dua akar
+masalah: (a) PoolManager di-index tanpa filter → Ponder ambil SELURUH swap v4
+se-chain. Tambah topic-filter statis pada `id`/PoolId = poolId COUR
+(`indexer/src/poolIds.ts`; 0 pool graduated → sentinel). (b) Handler baca state
+historis via `context.client` → RPC publik NON-ARCHIVE tolak eth_call historis →
+Ponder retry bermenit. Dialihkan ke `latestClient` (baca block latest;
+config/name/symbol immutable = eksak; stockUsd cache 60s). Hasil `/ready=200`,
+CSMOKE terindex. **RPC berbayar TIDAK wajib** (archive hanya untuk USD historis eksak).
+
+**2. Safe accept ownership TANPA Safe UI** (app.safe.global tak dukung 4663).
+Toolkit cast di `script/safe/`, divalidasi end-to-end di anvil fork (`simulate.sh`
+→ owner()==Safe di 4 kontrak ✅): `accept-ownership.sh` (1 tx MultiSend + safeTxHash),
+owner tanda tangan offline `cast wallet sign --ledger --no-hash <hash>` (v=27/28),
+`exec.sh` (gabung 2 sig urut alamat + execTransaction), `pause.sh` (incident).
+**safeTxHash accept (nonce 0): `0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1`.**
+Langkah copy-paste: `docs/HANDOVER.md`; pause: `docs/INCIDENT_RUNBOOK.md`.
+
+**3. Monitor**: berhenti pantau saldo deployer; pantau saldo ETH 3 owner Safe
+(ambang 0.001) + perubahan `owner()`/`pendingOwner()` di 4 kontrak. Live:
+owner balances 0.037/0.0021/0.0020; pendingOwner=Safe. ⚠️ owner #2/#3 ~0.002 ETH.
+
+---
+
 ## ⚡ Update 2026-11-13 — domain live + outage fixed + smoke passed
 
 **Insiden ditemukan & diperbaiki:** `https://cour.fun` sedang **DOWN** (HTTP 500
