@@ -1,0 +1,61 @@
+{
+  "chainId": 4663,
+  "network": "Robinhood Chain",
+  "deployedTag": "audit-freeze-v1",
+  "sourceCommit": "458c358",
+  "block": 106215255,
+  "startBlock": 106215255,
+  "deployer": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
+  "treasury": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
+  "factory": "0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C",
+  "feeVault": "0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76",
+  "hook": "0xD516b7F1F5F8556b731c5eaA1F0B0E19b080A0CC",
+  "router": "0x835Afd54F9BA20b18b6807B44886123E85A586f9",
+  "priceReader": "0xF7C914E7B7580a7653DcC3b7574bf041F615e359",
+  "curveImpl": "0x7E9dc67a6e0ADF7F35045569efdaE1424D023c00",
+  "graduationImpl": "0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7",
+  "poolManager": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+  "positionManager": "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
+  "usdg": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+  "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+  "nvda": "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC",
+  "nvdaUsdgPool": "0xd4EB21209C4D6093f80B5b84f5C45cc093EA14a3",
+  "compiler": {
+    "solc": "0.8.26",
+    "viaIR": true,
+    "optimizerRuns": 44444444,
+    "evmVersion": "cancun"
+  },
+  "params": {
+    "startMcUsd": 4000,
+    "gradMcUsd": 60000,
+    "minRefLiqUsd": 50000,
+    "launchFee": 0,
+    "minBuybackUsd": 50
+  },
+  "allowlistEnabled": true,
+  "owner": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
+  "frontendUrl": "https://cour.fun",
+  "frontendVercel": "https://frontend-kfc5ovakn-cour1.vercel.app",
+  "frontendLiveVerified": "2026-11-13",
+  "indexerUrl": "https://indexer-production-f5ef70d7.up.railway.app",
+  "monitorUrl": "https://monitor-production-8079dfd3.up.railway.app",
+  "railwayProject": "cour (3ea985e0-fa8e-4fa7-93bc-f69d9dc4b865)",
+  "safeMultisig": "0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2",
+  "safe": {
+    "version": "1.4.1",
+    "threshold": 2,
+    "owners": [
+      "0x594527d8656D917DdfD32fcD5729DAb349C75527",
+      "0x4e284Abb6881C5a62753088bB0e11cb9c447EE0E",
+      "0x4B24652793d667C8840bCa1Fa991F855D896F1f7"
+    ],
+    "saltNonce": 4663,
+    "deployed": "2026-11-13",
+    "ownershipModel": "option-a: Safe is direct owner during allowlist beta; 48h Timelock installed before public launch",
+    "handoverStatus": "transfer-initiated (Ownable2Step) 2026-11-13 — pendingOwner=Safe on factory/priceReader/feeVault/router; owner() still deployer until the Safe accepts (2-of-3). Accept via deployments/safe-accept-ownership.json. No Timelock yet.",
+    "note": "2-of-3 Safe deployed (07_DeploySafe) + ownership transfer to Safe initiated (09_TransferOwnershipToSafe, option a). Safe must acceptOwnership() on all 4 via safe-accept-ownership.json to finalize. 48h Timelock (04_HandOver) deferred to just before setLaunchAllowlistEnabled(false)."
+  },
+  "timelock": "",
+  "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Safe 2-of-3 + 48h Timelock in progress — see docs/HANDOVER.md). Frontend LIVE at https://cour.fun (DNS A @ 76.76.21.21 + CNAME www→cname.vercel-dns.com; SSL active; www→apex 308 redirect). 2026-11-13: fixed prod outage (edge middleware ERR_MODULE_NOT_FOUND — extensionless import), smoke passed desktop+mobile 0 console errors, 3 themes, invite-only gate live. indexerUrl/monitorUrl pending Railway deploy (needs RAILWAY_TOKEN); safeMultisig/timelock pending OWNER_1/2/3. Supersedes 029b233 (see 4663-DEPRECATED.json)."
+}

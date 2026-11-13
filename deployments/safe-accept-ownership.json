@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "chainId": "4663",
+  "createdAt": 1794588224928,
+  "meta": {
+    "name": "COUR — acceptOwnership to Safe (2-of-3)",
+    "description": "Option (a): Safe accepts admin ownership of the 4 Ownable COUR contracts (Ownable2Step). Execute via Safe 2-of-3. No Timelock yet — a 48h Timelock is installed before public launch.",
+    "txBuilderVersion": "1.16.5"
+  },
+  "transactions": [
+    {
+      "to": "0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": {
+        "inputs": [],
+        "name": "acceptOwnership",
+        "payable": false
+      },
+      "contractInputsValues": {}
+    },
+    {
+      "to": "0xF7C914E7B7580a7653DcC3b7574bf041F615e359",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": {
+        "inputs": [],
+        "name": "acceptOwnership",
+        "payable": false
+      },
+      "contractInputsValues": {}
+    },
+    {
+      "to": "0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": {
+        "inputs": [],
+        "name": "acceptOwnership",
+        "payable": false
+      },
+      "contractInputsValues": {}
+    },
+    {
+      "to": "0x835Afd54F9BA20b18b6807B44886123E85A586f9",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": {
+        "inputs": [],
+        "name": "acceptOwnership",
+        "payable": false
+      },
+      "contractInputsValues": {}
+    }
+  ]
+}
