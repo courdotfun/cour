@@ -13,6 +13,10 @@
 //   PINATA_GATEWAY   optional — gateway base for the returned `url`
 export const config = { runtime: "edge" };
 
+// `process.env` is available in the Vercel Edge runtime; declare it so this file
+// typechecks without pulling in @types/node (it is outside the app tsconfig).
+declare const process: { env: Record<string, string | undefined> };
+
 const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 const RATE_MAX = 10; // uploads
 const RATE_WINDOW_MS = 10 * 60 * 1000; // per 10 minutes, per IP
@@ -99,10 +103,10 @@ function sanitizeMeta(body: Record<string, unknown>): Record<string, unknown> | 
   return meta;
 }
 
-async function pinFile(bytes: Uint8Array, mime: string): Promise<string> {
+async function pinFile(ab: ArrayBuffer, mime: string): Promise<string> {
   const ext = mime.split("/")[1] || "bin";
   const form = new FormData();
-  form.append("file", new Blob([bytes], { type: mime }), `logo.${ext}`);
+  form.append("file", new Blob([ab], { type: mime }), `logo.${ext}`);
   form.append("pinataMetadata", JSON.stringify({ name: "cour-token-image" }));
   const res = await fetch(PIN_FILE, { method: "POST", headers: { Authorization: `Bearer ${PINATA_JWT}` }, body: form });
   if (!res.ok) throw new Error("pin_file_failed");
@@ -147,11 +151,11 @@ export default async function handler(req: Request): Promise<Response> {
       const file = form.get("file");
       if (!(file instanceof File)) return json(400, { error: "no_file", message: "Attach an image as `file`." });
       if (file.size > MAX_BYTES) return json(413, { error: "too_large", message: "Max image size is 2 MB." });
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      if (bytes.byteLength > MAX_BYTES) return json(413, { error: "too_large", message: "Max image size is 2 MB." });
-      const mime = sniffImage(bytes);
+      const ab = await file.arrayBuffer();
+      if (ab.byteLength > MAX_BYTES) return json(413, { error: "too_large", message: "Max image size is 2 MB." });
+      const mime = sniffImage(new Uint8Array(ab));
       if (!mime) return json(415, { error: "unsupported_type", message: "Only PNG, JPEG, WebP or GIF images are allowed." });
-      const cid = await pinFile(bytes, mime);
+      const cid = await pinFile(ab, mime);
       return json(200, { cid, url: `${GATEWAY}/ipfs/${cid}` });
     }
 
