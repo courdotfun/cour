@@ -34,3 +34,4 @@ fizz_data/
 
 # crytic-compile export (regenerated)
 crytic-export/
+script/safe/out/

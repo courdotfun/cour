@@ -78,6 +78,28 @@ cast call $FACTORY 'launchesPaused()(bool)' --rpc-url $RPC   # expect true
 
 Un-pause with `... setLaunchesPaused(bool) false ...`.
 
+### EMERGENCY via the Safe (once owner()==Safe) — no Safe UI on 4663
+
+When the Safe (2-of-3, `0xDca6…7fA2`) owns the Factory, the raw-key form above
+reverts. Use the cast-based Safe flow (validated on an anvil fork):
+
+```bash
+# 1) Build the pause tx + get the hash to sign (true = stop launches; false = resume)
+RPC_URL=<your-4663-rpc> bash script/safe/pause.sh true
+# 2) TWO owners sign the printed safeTxHash (offline, no RPC):
+cast wallet sign --ledger --no-hash <safeTxHash>     # (or --trezor)
+# 3) Any one owner executes (auto-sorts signatures):
+RPC_URL=<your-4663-rpc> bash script/safe/exec.sh script/safe/out/pause-true.env \
+  <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger
+# 4) Verify:
+cast call $FACTORY 'launchesPaused()(bool)' --rpc-url <your-4663-rpc>   # expect true
+```
+
+> Needs 2 signers available — keep owner signing devices reachable for incidents.
+> `setLaunchesPaused` only stops NEW launches (existing trading is unstoppable by
+> design). If/when ownership moves to the 48h Timelock, this same call becomes
+> schedule→wait-48h→execute — see `docs/HANDOVER.md`.
+
 ---
 
 ## Quick triage

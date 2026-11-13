@@ -24,21 +24,65 @@
 > Safe executes `acceptOwnership()` (2-of-3). No gap: the deployer stays in control
 > until then.
 
-### ▶ Option (a) — finalize now: Safe accepts ownership (2-of-3)
+### ▶ Option (a) — finalize now: Safe accepts ownership (2-of-3) — NO Safe UI
 
-Import **`deployments/safe-accept-ownership.json`** into a Safe Transaction Builder
-(custom-network UI or `safe-cli`, since app.safe.global lacks chain 4663) and
-execute it with 2-of-3 signatures. It batches four `acceptOwnership()` calls (one
-per contract, selector `0x79ba5097`). After execution, verify:
+app.safe.global does not support chain 4663, so we drive the Safe with **cast**
+(scripts in `script/safe/`, end-to-end dry-run PASSED on an anvil fork of 4663 —
+`bash script/safe/simulate.sh`). One MultiSend transaction accepts ownership of all
+four contracts at once.
 
-```bash
-for C in <factory> <priceReader> <feeVault> <router>; do
-  cast call $C 'owner()(address)' --rpc-url <rpc>   # expect the Safe 0xDca6…7fA2
-done
+**Who signs:** any **two** of the three Safe owners
+(`0x5945…5527`, `0x4e28…EE0E`, `0x4B24…F1f7`). Signing is **offline (no RPC)**.
+
+**The exact hash to sign** (Safe nonce 0 — regenerate with
+`bash script/safe/accept-ownership.sh` if the Safe nonce has changed):
+
+```
+safeTxHash = 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
 ```
 
-From that point the Safe (2-of-3) can `setLaunchesPaused`, manage the allowlist,
-etc. **immediately** — the fast incident response that motivated option (a).
+**Step 1 — two owners each sign the hash** (hardware wallet; no RPC needed):
+```bash
+# Ledger owner:
+cast wallet sign --ledger --no-hash 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
+# Trezor owner:
+cast wallet sign --trezor --no-hash 0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1
+```
+`--no-hash` signs the raw safeTxHash (= the Safe EIP-712 digest), producing a
+v=27/28 signature — exactly what Safe's EIP-712 verification path expects. Each
+command prints a `0x…` (65-byte) signature; record which **owner address** produced
+each one.
+
+**Step 2 — any one owner executes** (needs gas; signatures are auto-sorted ascending):
+```bash
+# First (re)generate the tx file for the current nonce:
+RPC_URL=<your-4663-rpc> bash script/safe/accept-ownership.sh
+# Then submit with the two (address, signature) pairs:
+RPC_URL=<your-4663-rpc> bash script/safe/exec.sh script/safe/out/accept.env \
+  <ownerAddrA> <sigA> <ownerAddrB> <sigB> --ledger
+```
+
+> ⚠️ RPC note: on the Indosat/ISP network `rpc.mainnet.chain.robinhood.com` is
+> DNS-hijacked. For the execute step either (a) switch your DNS to 1.1.1.1/8.8.8.8
+> or use a VPN, or (b) run the local forwarding proxy and set
+> `RPC_URL=http://127.0.0.1:8599` (see `docs/REPORT_GOLIVE.md`). **Signing (step 1)
+> needs no RPC**, so owners on any network can sign.
+
+**Step 3 — verify** `owner()` == the Safe on all four:
+```bash
+for C in 0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C \
+         0xF7C914E7B7580a7653DcC3b7574bf041F615e359 \
+         0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76 \
+         0x835Afd54F9BA20b18b6807B44886123E85A586f9; do
+  cast call $C 'owner()(address)' --rpc-url <your-4663-rpc>
+done
+# all four must print 0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2
+```
+
+From that point the Safe (2-of-3) can `setLaunchesPaused`, manage the allowlist, etc.
+**immediately** — the fast incident response that motivated option (a). (The
+`deployments/safe-accept-ownership.json` Transaction-Builder file is also still
+provided if you ever use a custom-network Safe UI / safe-cli.)
 
 ### ▶ Later — before `setLaunchAllowlistEnabled(false)` (public launch)
 
