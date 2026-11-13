@@ -36,10 +36,11 @@
   "allowlistEnabled": true,
   "owner": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
   "frontendUrl": "https://cour.fun",
-  "frontendVercel": "https://frontend-q030gm8zf-cour1.vercel.app",
+  "frontendVercel": "https://frontend-kfc5ovakn-cour1.vercel.app",
   "frontendLiveVerified": "2026-11-13",
-  "indexerUrl": "",
-  "monitorUrl": "",
+  "indexerUrl": "https://indexer-production-f5ef70d7.up.railway.app",
+  "monitorUrl": "https://monitor-production-8079dfd3.up.railway.app",
+  "railwayProject": "cour (3ea985e0-fa8e-4fa7-93bc-f69d9dc4b865)",
   "safeMultisig": "0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2",
   "safe": {
     "version": "1.4.1",
@@ -51,7 +52,9 @@
     ],
     "saltNonce": 4663,
     "deployed": "2026-11-13",
-    "note": "2-of-3 Safe deployed (07_DeploySafe). Ownership handover (04_HandOver) NOT yet run — protocol owner is still the deployer EOA pending the pause/Timelock decision in docs/HANDOVER.md."
+    "ownershipModel": "option-a: Safe is direct owner during allowlist beta; 48h Timelock installed before public launch",
+    "handoverStatus": "transfer-initiated (Ownable2Step) 2026-11-13 — pendingOwner=Safe on factory/priceReader/feeVault/router; owner() still deployer until the Safe accepts (2-of-3). Accept via deployments/safe-accept-ownership.json. No Timelock yet.",
+    "note": "2-of-3 Safe deployed (07_DeploySafe) + ownership transfer to Safe initiated (09_TransferOwnershipToSafe, option a). Safe must acceptOwnership() on all 4 via safe-accept-ownership.json to finalize. 48h Timelock (04_HandOver) deferred to just before setLaunchAllowlistEnabled(false)."
   },
   "timelock": "",
   "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Safe 2-of-3 + 48h Timelock in progress — see docs/HANDOVER.md). Frontend LIVE at https://cour.fun (DNS A @ 76.76.21.21 + CNAME www→cname.vercel-dns.com; SSL active; www→apex 308 redirect). 2026-11-13: fixed prod outage (edge middleware ERR_MODULE_NOT_FOUND — extensionless import), smoke passed desktop+mobile 0 console errors, 3 themes, invite-only gate live. indexerUrl/monitorUrl pending Railway deploy (needs RAILWAY_TOKEN); safeMultisig/timelock pending OWNER_1/2/3. Supersedes 029b233 (see 4663-DEPRECATED.json)."

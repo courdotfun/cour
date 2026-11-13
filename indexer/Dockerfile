@@ -11,8 +11,9 @@ WORKDIR /app
 # ---- dependencies (cached layer) ----
 FROM base AS deps
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile || pnpm install
+# NOTE: no BuildKit cache mount — Railway's builder requires a cacheKey-prefixed
+# id, so a plain install is used for portability.
+RUN pnpm install --frozen-lockfile || pnpm install
 
 # ---- runtime ----
 FROM base AS runner
