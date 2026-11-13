@@ -6,6 +6,39 @@
 
 ---
 
+## ⚡ Update 2026-11-14 (sesi 5) — Safe hardware-wallet, indexer auto-pool + USD snapshot
+
+**1. Safe + hardware wallet (dua jalur, diuji fork).** Simulasi lama pakai raw-hash
+(`--no-hash`) yang Ledger umumnya tolak. Sekarang:
+- (a) **EIP-712 typed data** (disarankan): `script/safe/make-712.mjs` menulis JSON
+  SafeTx (domain chainId 4663 + verifyingContract=Safe); owner tanda tangan
+  `cast wallet sign --ledger --data --from-file script/safe/out/accept-712.json`
+  (dipakai apa adanya, v=27/28).
+- (b) **fallback eth_sign**: `cast wallet sign --ledger <safeTxHash>` (prefix),
+  `exec.sh` auto-naikkan v jadi 31/32.
+- `exec.sh` **mendeteksi** tipe tiap signature, verifikasi via `checkNSignatures`
+  **dan** simulasi `execTransaction` (eth_call) SEBELUM broadcast; tolak kalau gagal.
+  `accept-ownership.sh`/`pause.sh` cetak **dry-run** (hash, nonce, acceptOwnership×4)
+  untuk dicocokkan dgn layar Ledger. Eksekutor = **owner #1** (saldo terbesar).
+- Fork test `simulate.sh`: owner A pakai (a), owner B pakai (b), dalam SATU
+  execTransaction → `owner()==Safe` di 4 kontrak ✅.
+
+**2. Indexer pool otomatis (tanpa daftar statis).** `poolIds.ts` query event
+`Graduated` saat startup (async config) → filter PoolManager. Graduasi baru saat
+berjalan: handler `process.exit` → Railway restart → loader muat pool baru → re-sync
+indeks swap-nya (di-gate `LOADER_OK` agar tak loop saat RPC error). *(Jalur hook-only
+tak dipakai: FeeTaken tak punya amount in/out & StateView tak ter-deploy.)* Diuji:
+loader mengembalikan 0 pool (belum ada graduasi), `/ready=200`. Catatan: E2E
+graduasi penuh butuh $60k mcap — mekanika graduasi dicakup
+`test/integration/LaunchToGraduation.t.sol`; handler PoolManager:Swap tak berubah.
+
+**3. Indexer USD snapshot.** Block-interval poll (~60s, mulai dekat head) menyimpan
+`stockUsd` tiap stock ke tabel `stockPrice`; trade/candle USD pakai **snapshot
+terdekat** (bukan harga per-trade terkini). Backfill lama pakai harga terkini
+(didokumentasikan). Diuji live: snapshot NVDA tiap 60 detik ($161.x).
+
+---
+
 ## ⚡ Update 2026-11-14 (sesi 4) — indexer cepat, Safe tanpa UI, monitor owner
 
 **1. Indexer dipercepat 116 jam → 4 detik** (tanpa ubah `src/` kontrak). Dua akar
