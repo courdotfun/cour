@@ -9,15 +9,42 @@
 - [x] **Safe 2-of-3 created** — `MULTISIG=0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2`
       (2026-11-13). On-chain verified: `VERSION()=1.4.1`, `getThreshold()=2`,
       `getOwners()` = OWNER_1/2/3. Saved to `.env` + `deployments/4663.json`.
-- [ ] **DECISION NEEDED** — ownership model (see "⚠️ DECISION" below) **before** any handover
-- [ ] `04_HandOver` run (Timelock deployed, ownership transfer initiated) — **NOT run; awaiting your choice**
-- [ ] `acceptOwnership` scheduled via Safe (Timelock) for all 4 contracts
-- [ ] 48h elapsed → `acceptOwnership` executed via Safe
-- [ ] Proven on-chain: `owner()` == Timelock for all 4; deployer powerless
-- [ ] `DEPLOYER_PK` removed from `.env`
+- [x] **Ownership model chosen: OPTION (a)** — Safe is direct owner during the
+      allowlist beta; a 48h Timelock is installed just before public launch.
+- [x] **Ownership transfer to Safe INITIATED** (2026-11-13, `09_TransferOwnershipToSafe`)
+      — on-chain `pendingOwner` = Safe on factory/priceReader/feeVault/router.
+- [ ] **YOU: Safe `acceptOwnership` (2-of-3)** — import `deployments/safe-accept-ownership.json`
+      → finalizes `owner()` = Safe on all 4. **← next action**
+- [ ] Verify `owner()` == Safe for all 4 (fast incident response now live via 2-of-3)
+- [ ] (LATER, before public) `04_HandOver` → 48h Timelock; schedule/execute accept; verify
+- [ ] `DEPLOYER_PK` removed from `.env` (after the Timelock handover for the public phase)
 
 > Current `owner()` of factory/priceReader/feeVault/router is STILL the deployer
-> EOA (`0x1eb2…030b`). Nothing has been handed over yet — only the Safe exists.
+> EOA (`0x1eb2…030b`) — Ownable2Step pending; it only becomes the Safe once the
+> Safe executes `acceptOwnership()` (2-of-3). No gap: the deployer stays in control
+> until then.
+
+### ▶ Option (a) — finalize now: Safe accepts ownership (2-of-3)
+
+Import **`deployments/safe-accept-ownership.json`** into a Safe Transaction Builder
+(custom-network UI or `safe-cli`, since app.safe.global lacks chain 4663) and
+execute it with 2-of-3 signatures. It batches four `acceptOwnership()` calls (one
+per contract, selector `0x79ba5097`). After execution, verify:
+
+```bash
+for C in <factory> <priceReader> <feeVault> <router>; do
+  cast call $C 'owner()(address)' --rpc-url <rpc>   # expect the Safe 0xDca6…7fA2
+done
+```
+
+From that point the Safe (2-of-3) can `setLaunchesPaused`, manage the allowlist,
+etc. **immediately** — the fast incident response that motivated option (a).
+
+### ▶ Later — before `setLaunchAllowlistEnabled(false)` (public launch)
+
+Run the 48h-Timelock handover (`04_HandOver` → `08_SafeHandoverTxs` → schedule →
+wait 48h → execute, all via the Safe) so the public phase has the advance-notice
+guarantee. Steps 2–7 below cover this.
 
 Safe v1.4.1 canonical contracts are **confirmed live on 4663** (SafeProxyFactory
 `0x4e1D…ec67`, SafeL2 singleton `0x29fc…C762`, fallback `0xfd07…Ec99`), so no Safe

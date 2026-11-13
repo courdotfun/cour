@@ -1,8 +1,21 @@
 # Go-Live — exact remaining steps (operator runbook)
 
-Updated **2026-11-13**. These are the steps that need a credential only you can
-provide. Everything that could be done autonomously is already done (frontend is
-**LIVE at https://cour.fun** — see `docs/REPORT_GOLIVE.md`).
+Updated **2026-11-13**. Everything that could be done autonomously is done.
+
+**✅ COMPLETED since this doc was written:**
+- Frontend **LIVE** at https://cour.fun (+ server-side Pinata upload, WalletConnect).
+- **Indexer LIVE** — `https://indexer-production-f5ef70d7.up.railway.app` (+ Postgres), backfilling.
+- **Monitor LIVE** — `https://monitor-production-8079dfd3.up.railway.app` (log-only).
+- **`VITE_INDEXER_URL`** set (prod+preview); frontend redeployed.
+- **Safe 2-of-3** deployed + ownership transfer to Safe **initiated** (option a).
+
+**⏳ REMAINING (you):**
+1. **Safe `acceptOwnership` (2-of-3)** → import `deployments/safe-accept-ownership.json` (see `HANDOVER.md`).
+2. **Top up deployer ETH** (0.0215 < 0.05 — monitor alerts) for future admin gas.
+3. **Rotate `RAILWAY_TOKEN`** (it was shared in chat).
+4. **Later, before public:** 48h Timelock handover (`04_HandOver`), then `setLaunchAllowlistEnabled(false)`.
+
+The credential-based runbook below is kept for reference / re-deploys.
 
 `src/` stays frozen (`audit-freeze-v1`). Allowlist stays **enabled**. Never commit secrets.
 

@@ -76,6 +76,38 @@ oleh ISP (Indosat/ioh.co.id), jadi deploy Safe tadi lewat proxy lokal ke IP asli
 
 ---
 
+## ⚡ Update 2026-11-13 (sesi 3) — Railway live + handover opsi (a)
+
+Token Railway valid (`rlwy_wksp_…`, workspace token) + pilihan **opsi (a)** diterima.
+
+**Indexer + Monitor LIVE di Railway** (project **"cour"**, via API + project-token
+karena CLI menolak workspace token untuk perintah account-scoped):
+- **Indexer:** `https://indexer-production-f5ef70d7.up.railway.app` (Ponder + Postgres).
+  `/health`=200, `/status`/`/stats`/`/tokens`/`/graphql`=200. `/ready`=503 **sampai
+  backfill selesai** (106215255→~113.5M block; lambat di RPC publik = risiko rate-limit
+  terdokumentasi). Data token/chart/trades/holders muncul seiring sync.
+- **Monitor:** `https://monitor-production-8079dfd3.up.railway.app` (log-only; Telegram
+  kosong). Watching factory/vault/router/hook; `/health`+`/status`=200;
+  `allowlistEnabled=true`, `launchesPaused=false`. ⚠️ alert: **saldo ETH deployer rendah
+  0.0215** (<0.05) — top-up untuk op admin mendatang.
+- Perbaikan deploy: Dockerfile indexer (hapus cache-mount yang ditolak Railway; start
+  bind `0.0.0.0:$PORT --schema public`); hapus `monitor/pnpm-workspace.yaml` (bikin
+  `--frozen-lockfile` gagal); monitor baca alamat dari `deployment-4663.json`.
+- **`VITE_INDEXER_URL`** di-set (prod+preview) + frontend redeploy ke cour.fun.
+
+**Safe handover — OPSI (a) DIINISIASI.** Ownership factory/priceReader/feeVault/router
+di-`transferOwnership(Safe)` (`09_TransferOwnershipToSafe`, Ownable2Step). On-chain:
+`pendingOwner`=Safe di keempatnya; `owner()` masih deployer sampai Safe **accept 2-of-3**.
+File tanda tangan: **`deployments/safe-accept-ownership.json`** (4× `acceptOwnership()`).
+Timelock 48 jam **ditunda** sampai sebelum `setLaunchAllowlistEnabled(false)`.
+
+**Yang harus Anda lakukan:** (1) import `safe-accept-ownership.json` ke Safe, tanda
+tangan 2-of-3 → `owner()`=Safe (respons insiden instan aktif); (2) top-up ETH deployer;
+(3) **rotasi `RAILWAY_TOKEN`** (ter-paste di chat); (4) nanti sebelum publik: `04_HandOver`
+(Timelock 48h). Backfill indexer berjalan sendiri.
+
+---
+
 ## 1. Status Handover (Safe + Timelock)
 
 | Item | Status |
