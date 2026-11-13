@@ -18,6 +18,7 @@ import {
   POOL_MANAGER,
   START_BLOCK,
 } from "./src/addresses";
+import { POOL_ID_FILTER } from "./src/poolIds";
 
 const rpc = process.env.PONDER_RPC_URL_4663;
 
@@ -64,6 +65,14 @@ export default createConfig({
       abi: PoolManagerAbi,
       address: POOL_MANAGER,
       startBlock: START_BLOCK,
+      // Only index COUR pools (topic filter on the indexed `id`/PoolId), NOT every
+      // pool on the chain. Without this, backfill scans millions of chain-wide v4
+      // swaps. See src/poolIds.ts (regenerate on new graduations).
+      filter: [
+        { event: "Swap", args: { id: POOL_ID_FILTER } },
+        { event: "ModifyLiquidity", args: { id: POOL_ID_FILTER } },
+        { event: "Initialize", args: { id: POOL_ID_FILTER } },
+      ],
     },
 
     // ------------------------------------------------------- dynamic contracts

@@ -24,6 +24,7 @@ import {
   priceX18FromReserves,
   toWhole,
   updateCandles,
+  latestClient,
 } from "./lib";
 import { isExcludedHolder, ZERO } from "./addresses";
 
@@ -70,7 +71,7 @@ ponder.on("COURFactory:TokenLaunched", async ({ event, context }) => {
   let vT0 = 0n;
   let vTStop = 0n;
   try {
-    const cfg: any = await context.client.readContract({
+    const cfg: any = await latestClient!.readContract({
       abi: COURCurveAbi,
       address: curveAddr,
       functionName: "config",
@@ -87,12 +88,12 @@ ponder.on("COURFactory:TokenLaunched", async ({ event, context }) => {
   let symbol: string | undefined;
   try {
     [name, symbol] = (await Promise.all([
-      context.client.readContract({
+      latestClient!.readContract({
         abi: COURTokenAbi,
         address: tokenAddr,
         functionName: "name",
       }),
-      context.client.readContract({
+      latestClient!.readContract({
         abi: COURTokenAbi,
         address: tokenAddr,
         functionName: "symbol",
@@ -501,6 +502,26 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
     txHash: event.transaction.hash,
     ts: Number(event.block.timestamp),
   });
+});
+
+// PoolManager:Initialize — records a COUR pool at v4 init (only COUR pools reach
+// here via the poolId topic filter). Graduated normally creates the pool row first;
+// this is a safe backstop that resolves token/stock from the currencies.
+ponder.on("PoolManager:Initialize", async ({ event, context }) => {
+  const id = event.args.id as Hex;
+  const existing: any = await context.db.find(pool, { id });
+  if (existing) return;
+  const c0 = event.args.currency0 as Hex;
+  const c1 = event.args.currency1 as Hex;
+  const t0: any = await context.db.find(token, { address: c0 });
+  const t1: any = await context.db.find(token, { address: c1 });
+  const tokenAddr = t0 ? c0 : t1 ? c1 : null;
+  if (!tokenAddr) return; // neither currency is a known COUR token
+  const stockAddr = tokenAddr === c0 ? c1 : c0;
+  await context.db
+    .insert(pool)
+    .values({ id, token: tokenAddr, stock: stockAddr, tokenIsCurrency0: tokenAddr === c0 })
+    .onConflictDoNothing();
 });
 
 // ------------------------------------------------------------------ admin events

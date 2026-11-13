@@ -1,11 +1,31 @@
 import type { Context } from "ponder:registry";
 import { candle, stockPrice } from "ponder:schema";
-import type { Hex } from "viem";
+import { createPublicClient, http, type Hex } from "viem";
 
 import { COURPriceReaderAbi } from "../abis/COURPriceReader";
 import { PRICE_READER } from "./addresses";
 
 const WAD = 10n ** 18n;
+
+// Standalone client used ONLY for stockUsd reads. We read at the LATEST block
+// (not the event's historical block) because PriceReader.stockUsd needs current
+// state and the public RPC is NOT an archive node — a historical eth_call there
+// fails ("invalid parameters") and Ponder retries for minutes, stalling backfill.
+// Reading latest succeeds on any node. Trade-off: during historical backfill,
+// trades are valued at the CURRENT stock/USD rate (an approximation; the
+// stock-denominated price `priceStock` remains exact). With an ARCHIVE RPC you
+// could restore exact per-block USD by reading at the event block instead.
+const STOCK_USD_RPC = process.env.PONDER_RPC_URL_4663;
+/**
+ * Shared client that reads at the LATEST block (not pinned to an event's historical
+ * block like Ponder's `context.client`). Use this for handler reads of IMMUTABLE
+ * on-chain data (curve config, token name/symbol, decimals) so backfill works on a
+ * NON-ARCHIVE RPC — latest == historical for immutable values. Null if no RPC env.
+ */
+export const latestClient = STOCK_USD_RPC
+  ? createPublicClient({ transport: http(STOCK_USD_RPC) })
+  : null;
+const STOCK_USD_TTL_MS = 60_000; // re-read a stock's USD price at most once/min
 
 export const INTERVALS: { label: string; size: number }[] = [
   { label: "1m", size: 60 },
@@ -14,13 +34,16 @@ export const INTERVALS: { label: string; size: number }[] = [
   { label: "1d", size: 86400 },
 ];
 
-// Per-block cache of stockUsd reads so we hit the RPC at most once per (stock, block).
-const stockUsdCache = new Map<string, bigint | null>();
+// Cache of stockUsd reads per stock, with a short wall-clock TTL. Reads hit the
+// RPC at LATEST (see note above) so this is a handful of calls during backfill.
+const stockUsdCache = new Map<string, { priceX18: bigint | null; at: number }>();
 
 /**
- * Read PriceReader.stockUsd(stock) (1e18-scaled USD per whole stock), cached per
- * (stock, block). Returns null when the TWAP is not ready (contract reverts) so
- * callers can keep stock-denominated values and skip USD.
+ * Read PriceReader.stockUsd(stock) (1e18-scaled USD per whole stock) at the LATEST
+ * block, cached per stock (60s TTL). Returns null when the TWAP is not ready
+ * (contract reverts) or no RPC is configured, so callers keep stock-denominated
+ * values and skip USD. `block` is accepted for signature stability but not used
+ * (latest-read; see the module note on archive vs non-archive RPC).
  */
 export async function getStockUsdX18(
   context: Context,
@@ -28,23 +51,29 @@ export async function getStockUsdX18(
   block: bigint,
   ts: number,
 ): Promise<bigint | null> {
-  const key = `${stock.toLowerCase()}-${block}`;
-  if (stockUsdCache.has(key)) return stockUsdCache.get(key)!;
-
-  let priceX18: bigint | null = null;
-  try {
-    const res = (await context.client.readContract({
-      abi: COURPriceReaderAbi,
-      address: PRICE_READER,
-      functionName: "stockUsd",
-      args: [stock],
-    })) as readonly [bigint, number];
-    priceX18 = res[0];
-  } catch {
-    priceX18 = null; // TwapNotReady / StockNotAllowed
+  const key = stock.toLowerCase();
+  const now = Date.now();
+  const cached = stockUsdCache.get(key);
+  let priceX18: bigint | null;
+  if (cached && now - cached.at < STOCK_USD_TTL_MS) {
+    priceX18 = cached.priceX18;
+  } else {
+    priceX18 = null;
+    if (latestClient) {
+      try {
+        const res = (await latestClient.readContract({
+          abi: COURPriceReaderAbi,
+          address: PRICE_READER,
+          functionName: "stockUsd",
+          args: [stock],
+        })) as readonly [bigint, number];
+        priceX18 = res[0];
+      } catch {
+        priceX18 = null; // TwapNotReady / StockNotAllowed / transient
+      }
+    }
+    stockUsdCache.set(key, { priceX18, at: now });
   }
-
-  stockUsdCache.set(key, priceX18);
 
   if (priceX18 !== null) {
     const bucketTs = Math.floor(ts / 60) * 60;
