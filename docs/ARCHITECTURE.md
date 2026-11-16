@@ -74,3 +74,40 @@ Beyond the contracts, COUR now ships three off-chain services (each with its own
 
 Data flow: contracts (chain 4663) → indexer (Postgres) → frontend (reads indexer REST/GraphQL + direct
 on-chain for quotes/balances/allowlist). Monitor reads the chain directly, independent of the indexer.
+
+---
+
+## `app/` — Next.js app (v8 port, in progress 2026-11-17)
+
+Replaces the Vite `frontend/`. Single Next.js (App Router + TS) project deployed to
+the same Vercel/`cour.fun`. Frontend + backend in one app.
+
+```
+app/
+  app/                      # routes (App Router)
+    page.tsx                # Home/Market (shell; v8 port in progress)
+    layout.tsx              # loads /public/v8.css (verbatim design CSS)
+    api/
+      ix/[...path]/         # server-side indexer read proxy (INDEXER_URL)
+      auth/{nonce,verify,me,logout}/   # SIWE (EIP-4361) session
+      profile/ follow/ search/ safe-tx/ upload/
+      token/[address]/updates/         # creator-only posts
+  lib/
+    chain/ data/ features/ ui/ config/ live/   # reused from frontend/src (NEXT_PUBLIC_*)
+    env.ts                  # public config
+    server/{session,ratelimit,chain,safe,indexer}.ts   # server-only
+    util/address.ts
+  db/{schema,client,migrate}.ts + migrations/   # Drizzle + Postgres (schema "app")
+  styles/globals.css        # shell tweaks only; v8.css served via <link>
+  public/{v8.css,assets/}   # extracted from design/cour-v8.html (scripts/extract-v8.mjs)
+  test/                     # vitest
+```
+
+Data flow: browser → `/api/*` (Next route handlers) → indexer (`INDEXER_URL`, cached)
++ Postgres (`APP_DATABASE_URL`) + chain (viem). Wallet writes go directly from the
+browser via `app/lib/features/*` (viem wallet client). Admin owner actions never go
+through a wallet — `/api/safe-tx` emits an EIP-712 SafeTx for `script/safe/signer.html`
+(owner = Safe 2-of-3). Indexer + monitor remain separate Railway services.
+
+See `docs/UI_PORT_PLAN.md` for the remaining per-view port work and `docs/FRONTEND_ENV.md`
+for env. Decisions in `docs/DECISIONS.md` (v8 → Next.js section).

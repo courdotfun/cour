@@ -40,3 +40,28 @@ printf '%s' "https://<indexer-url>" | vercel env add VITE_INDEXER_URL production
 printf '%s' "https://<indexer-url>" | vercel env add VITE_INDEXER_URL preview
 vercel deploy --prod --yes
 ```
+
+---
+
+## `app/` (Next.js) — new app env (2026-11-17)
+
+The v8 port lives in `app/` (Next.js App Router). It replaces the Vite `frontend/`.
+Set these in the Vercel project (same `cour.fun`). Full template: `app/.env.example`.
+
+**Public (browser-exposed — never secrets):**
+- `NEXT_PUBLIC_RPC_URL` — 4663 RPC (default `https://rpc.mainnet.chain.robinhood.com`).
+- `NEXT_PUBLIC_WC_PROJECT_ID` — WalletConnect/Reown project id.
+- `NEXT_PUBLIC_INDEXER_PROXY` — optional; default `/api/ix` (the same-origin indexer proxy).
+
+**Server-only (set in Vercel → Environment Variables; never `NEXT_PUBLIC_`):**
+- `INDEXER_URL` — Ponder indexer base (default = Railway `indexer-production-…`).
+- `PINATA_JWT` (+ optional `PINATA_GATEWAY`) — IPFS uploads (`/api/upload`).
+- `APP_DATABASE_URL` — Postgres for off-chain data (profiles/follows/updates); uses
+  schema `app`. Can reuse the Railway Postgres or a new Neon/Vercel-PG DB. Apply
+  migrations once: `APP_DATABASE_URL=… pnpm -C app db:migrate`.
+- `SESSION_SECRET` — ≥32-byte random (`openssl rand -hex 32`) for SIWE session cookies.
+- `RPC_URL` — server RPC for safe-tx nonce + creator checks (falls back to NEXT_PUBLIC_RPC_URL).
+
+The browser reads indexer data only through `/api/ix/*`; the indexer URL is never
+exposed client-side. Admin actions never send owner tx from a wallet — `/api/safe-tx`
+emits an EIP-712 SafeTx JSON for `script/safe/signer.html`.
