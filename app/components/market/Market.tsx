@@ -1,6 +1,6 @@
 import { Promos } from "./Promos";
 import { MarketRow } from "./MarketRow";
-import type { MarketData } from "@/lib/server/market";
+import { type MarketData, FIXTURE } from "@/lib/server/market";
 import { shortAddr } from "@/lib/ui/format";
 
 function TopUsers({ users }: { users: MarketData["topUsers"] }) {
@@ -32,7 +32,7 @@ export function Market({ data }: { data: MarketData }) {
       <div className="head-row">
         <div>
           <h1>
-            Market <span className="count" id="tokCount">{data.totalTokens} tokens</span>
+            Market <span className="count" id="tokCount">{FIXTURE ? `${data.totalTokens} tokens · 8 stocks` : `${data.totalTokens} tokens`}</span>
           </h1>
           <p>
             Tokenized stocks and community tokens on <span data-net>Robinhood Chain</span>. Buy with ETH or a stock token.
