@@ -18,6 +18,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* v8 design CSS, served verbatim (see styles/globals.css note). */}
+        <link rel="stylesheet" href="/v8.css" />
+      </head>
       <body>{children}</body>
     </html>
   );
