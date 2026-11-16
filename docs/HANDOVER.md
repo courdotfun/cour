@@ -13,18 +13,25 @@
       allowlist beta; a 48h Timelock is installed just before public launch.
 - [x] **Ownership transfer to Safe INITIATED** (2026-11-13, `09_TransferOwnershipToSafe`)
       — on-chain `pendingOwner` = Safe on factory/priceReader/feeVault/router.
-- [ ] **YOU: Safe `acceptOwnership` (2-of-3)** — import `deployments/safe-accept-ownership.json`
-      → finalizes `owner()` = Safe on all 4. **← next action**
-- [ ] Verify `owner()` == Safe for all 4 (fast incident response now live via 2-of-3)
+- [x] **Safe `acceptOwnership` (2-of-3) DONE** (2026-11-16) — signed via MetaMask
+      (`script/safe/signer.html`), MultiSend `acceptOwnership()`×4, safeTxHash
+      `0x50e1…6ed1`, tx `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15`
+      (block 115869100, executed by owner #1 `0x5945…5527`).
+- [x] **Verified `owner()` == Safe for all 4** and `pendingOwner()==0` (fast incident
+      response now live via 2-of-3). Monitor `/health ok:true`, snapshot `owners=Safe`.
+- [x] **`DEPLOYER_PK` removed from `.env`** (2026-11-16) — key stays on the hardware
+      wallet; admin now flows through the Safe only (no CI/service depends on it).
 - [ ] (LATER, before public) `04_HandOver` → 48h Timelock; schedule/execute accept; verify
-- [ ] `DEPLOYER_PK` removed from `.env` (after the Timelock handover for the public phase)
 
-> Current `owner()` of factory/priceReader/feeVault/router is STILL the deployer
-> EOA (`0x1eb2…030b`) — Ownable2Step pending; it only becomes the Safe once the
-> Safe executes `acceptOwnership()` (2-of-3). No gap: the deployer stays in control
-> until then.
+> `owner()` of factory/priceReader/feeVault/router is now the **Safe 2-of-3**
+> (`0xDca6…7fA2`); `pendingOwner()==0`. Ownable2Step handover (option a) is COMPLETE.
 
-### ▶ Option (a) — finalize now: Safe accepts ownership (2-of-3) — NO Safe UI
+### ▶ Option (a) — Safe accepts ownership (2-of-3) — NO Safe UI  ✅ DONE 2026-11-16
+
+> ✅ **Executed 2026-11-16** — tx `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15`
+> (block 115869100). `owner()==Safe`, `pendingOwner()==0` on all four. The procedure
+> below (and the MetaMask walkthrough further down) is kept as the reference/runbook,
+> e.g. for the incident `setLaunchesPaused` flow which reuses the same mechanism.
 
 app.safe.global does not support chain 4663, so we drive the Safe with **cast**
 (scripts in `script/safe/`, end-to-end dry-run PASSED on an anvil fork of 4663 —

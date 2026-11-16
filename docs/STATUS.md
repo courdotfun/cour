@@ -10,9 +10,15 @@
 > **2026-11-13:** `cour.fun` **LIVE** (fix outage; DNS+SSL; www→apex 308; smoke 0 error;
 > 3 tema; WalletConnect; upload IPFS server-side). **Indexer + Monitor LIVE di Railway**
 > (project "cour"). **Safe 2-of-3** ter-deploy + ownership **ditransfer ke Safe (opsi a,
-> diinisiasi)** — tinggal Safe `acceptOwnership` 2-of-3. Sisa tugas user: accept
-> ownership, (nanti) Timelock 48h sebelum publik, top-up gas deployer. Detail:
-> `docs/HANDOVER.md`, `docs/REPORT_GOLIVE.md`.
+> diinisiasi)** — tinggal Safe `acceptOwnership` 2-of-3.
+>
+> **2026-11-16 — HANDOVER KE SAFE SELESAI ✅:** Safe 2-of-3 `0xDca6…7fA2` meng-`acceptOwnership()`
+> keempat kontrak (MultiSend, safeTxHash `0x50e1…6ed1`) — tx
+> `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15` (block 115869100).
+> On-chain terverifikasi: `owner()==Safe` dan `pendingOwner()==0` di Factory/PriceReader/
+> FeeVault/Router. **`DEPLOYER_PK` sudah dihapus dari `.env`.** Monitor sehat (`/health ok:true`,
+> snapshot `owners=Safe`). Sisa: (nanti) Timelock 48h sebelum buka publik. Owner sign via
+> MetaMask (`script/safe/signer.html`). Detail: `docs/HANDOVER.md`, `docs/REPORT_GOLIVE.md`.
 
 ---
 
@@ -21,7 +27,7 @@
 | Area | Status | Catatan singkat |
 |---|---|---|
 | Kontrak Fase 1 (src/) | ✅ **BEKU & final** | tag `audit-freeze-v1`, 107 test hijau, coverage baris 96,3% |
-| Deploy mainnet (4663) | ✅ **Live (tertutup)** | 7 kontrak, allowlist AKTIF, owner = EOA deployer |
+| Deploy mainnet (4663) | ✅ **Live (tertutup)** | 7 kontrak, allowlist AKTIF, **owner = Safe 2-of-3** `0xDca6…7fA2` (handover 2026-11-16) |
 | Verifikasi explorer | 🟡 **Sebagian** | robin.etherscan.io ✅ 7/7; Blockscout ⏳ (manual) |
 | Indexer (Ponder) | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | CLI token-based siap (`docs/GO_LIVE_NEXT_STEPS.md`); RPC pakai `RH_RPC_URL`; Postgres plugin |
 | Monitor | 🟡 **Siap deploy; BLOKIR `RAILWAY_TOKEN`** | service terpisah; Telegram opsional (log-only bila kosong); `docs/GO_LIVE_NEXT_STEPS.md` |
@@ -32,8 +38,8 @@
 | Monitor (Railway) | ✅ **LIVE (log-only)** | `monitor-production-8079dfd3.up.railway.app`; watching factory/vault/router/hook; Telegram kosong → console |
 | Indexer URL di frontend | 🟡 **belum** | `VITE_INDEXER_URL` diisi setelah indexer Railway up |
 | Review keamanan | 🟡 **Internal review SELESAI (bukan audit independen)** | review internal tim COUR; audit pihak ketiga **masih direkomendasikan** sebelum buka publik |
-| Handover multisig/timelock | 🟡 **Opsi (a): transfer ke Safe DIINISIASI** | `pendingOwner`=Safe `0xDca6…7fA2` di 4 kontrak; `owner()` masih deployer sampai Safe accept 2-of-3 (`deployments/safe-accept-ownership.json`). Timelock 48h nanti sebelum publik |
-| Deployer | ✅ **Top-up 0.02 ETH; key di hardware wallet** | siap untuk op admin (handover) |
+| Handover multisig/timelock | ✅ **Opsi (a): owner = Safe 2-of-3 (SELESAI 2026-11-16)** | `owner()==Safe` & `pendingOwner()==0` di 4 kontrak; tx `0xf93b…1b15` (block 115869100). Timelock 48h nanti sebelum buka publik |
+| Deployer | ✅ **Key dihapus dari `.env` (2026-11-16)** | handover selesai; key tetap ada di hardware wallet; tak lagi dipakai untuk op admin (lewat Safe) |
 | Domain cour.fun | ✅ **LIVE + SSL aktif** | DNS `A @ 76.76.21.21` + `CNAME www` aktif; production 200; www→apex 308 |
 | Legal / geo-block | 🟡 **Teknis siap, legal belum** | middleware + daftar negara ada; perlu review hukum |
 
@@ -141,10 +147,13 @@ pihak ketiga independen**. Audit independen **masih direkomendasikan** sebelum b
 atau sebelum kontrak memegang nilai signifikan. Paket audit siap bila ingin engage firma
 (`docs/AUDIT_SCOPE.md`, `docs/AUDITOR_BRIEF.md`, `docs/audit/*`). Lihat `docs/RISKS.md`.
 
-### 2.3 Handover ownership — 🟡 sedang dikerjakan
-Owner semua kontrak masih **EOA deployer** untuk saat ini. Safe v1.4.1 kanonik **sudah ada
-di 4663** → Safe 2-of-3 + Timelock 48h sedang disiapkan (butuh 3 owner dari kamu). Lihat `docs/HANDOVER.md`.
-Private key deployer **sudah di-backup ke hardware wallet**; copy `.env` dihapus setelah handover terbukti.
+### 2.3 Handover ownership — ✅ owner = Safe 2-of-3 (opsi a) SELESAI 2026-11-16
+Owner semua kontrak (Factory/PriceReader/FeeVault/Router) sekarang **Safe 2-of-3**
+`0xDca6…7fA2`; `pendingOwner()==0`. Dieksekusi via MetaMask (`script/safe/signer.html`) —
+tx `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15` (block 115869100).
+**`DEPLOYER_PK` sudah dihapus dari `.env`** (key tetap di hardware wallet). Admin kini
+2-of-3 (pause/allowlist langsung, tanpa delay). **Sisa:** Timelock 48h sebelum buka publik
+(`04_HandOver` → schedule → tunggu 48h → execute). Lihat `docs/HANDOVER.md`.
 
 ### 2.4 Operasional / infra
 - Indexer deploy ke Railway sedang disiapkan; monitor belum di-host 24/7.
@@ -173,20 +182,27 @@ Private key deployer **sudah di-backup ke hardware wallet**; copy `.env` dihapus
 - **Scope:** `src/` (Factory, FeeVault, Hook, Router, Curve, PriceReader, GraduationImpl, Token, libraries). Fokus: graduasi/konservasi token, buyback guard, HOLDERS dividend, integrasi v4 hook + v3 oracle.
 - **Setelah selesai:** bila ada temuan → `docs/audit/POST_AUDIT_PLAYBOOK.md` → `audit-fix-v1` + redeploy; bila bersih → lanjut handover.
 
-### 3.3 [✅ Backup SELESAI — hapus `.env` setelah handover] Amankan private key deployer
-- **Status: SELESAI (backup)** — key deployer sudah di-backup ke hardware wallet.
-- **Sisa:** **hapus `DEPLOYER_PK` dari `.env` lokal** segera setelah handover ke Timelock terbukti on-chain (`docs/HANDOVER.md`). Sampai handover selesai, key masih dipakai untuk 1× menjalankan `04_HandOver`.
+### 3.3 [✅ SELESAI 2026-11-16] Amankan private key deployer
+- **Status: SELESAI** — key deployer di-backup ke hardware wallet, dan **`DEPLOYER_PK` sudah
+  dihapus dari `.env`** setelah handover ke Safe terbukti on-chain.
+- Admin kini lewat Safe 2-of-3 (MetaMask `script/safe/signer.html` atau `script/safe/exec.sh`) —
+  **tidak** memerlukan `DEPLOYER_PK`. Script deploy/handover lama (`01/02/04/06/09_*.s.sol`,
+  smoke/rehearsal) masih menyebut `DEPLOYER_PK` tapi bersifat sekali-pakai/rehearsal; tak ada
+  CI (`.github` tak ada) maupun layanan (indexer/monitor) yang bergantung padanya.
 
-### 3.4 [BLOKIR] Safe 2-of-3 di 4663 → handover ke Timelock 48 jam
-- **Buat Safe:** via `app.safe.global` bila 4663 didukung; jika tidak, deploy Safe singleton+factory sendiri atau pakai `safe-cli`. Minimal **2-of-3 signer**. Biaya self-deploy ~**0.001 ETH**.
-- **Set `MULTISIG`** di `.env`.
-- **Handover (transfer factory/priceReader/feeVault/router → Timelock 48h):**
+### 3.4 [✅ opsi (a) SELESAI — Timelock 48h menyusul sebelum publik] Handover ke Safe 2-of-3
+- **Status: SELESAI (2026-11-16)** — `owner()` keempat kontrak = Safe 2-of-3 `0xDca6…7fA2`,
+  `pendingOwner()==0`. Dieksekusi via MetaMask (`script/safe/signer.html`), MultiSend
+  `acceptOwnership()`×4, safeTxHash `0x50e1…6ed1`, tx
+  `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15` (block 115869100).
+- **Sisa (sebelum buka allowlist publik):** install Timelock 48h sebagai langkah terakhir —
   ```
-  export MULTISIG=<alamat Safe>
+  export MULTISIG=0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2
   forge script script/04_HandOver.s.sol:HandOver --rpc-url $RH_RPC_URL --broadcast --slow
-  # lalu Timelock acceptOwnership() tiap kontrak via op multisig terjadwal (48 jam).
+  # lalu schedule → tunggu 48h → execute acceptOwnership() tiap kontrak via Safe.
   ```
-- **Biaya:** ~0.0005 ETH + 4× acceptOwnership. **Selesai bila:** `owner()` tiap kontrak == Timelock; multisig = proposer/executor.
+  (`04_HandOver` butuh kunci pengaju; karena `DEPLOYER_PK` sudah dihapus, jalankan transfer
+  ini **dari Safe** — lihat `08_SafeHandoverTxs` + `docs/HANDOVER.md` langkah 2–7.)
 
 ### 3.5 [OPS] Verifikasi Blockscout (manual)
 - **File:** `deployments/verify-blockscout/*.standard.json` (std-json input per kontrak) + constructor args di `deployments/verify-4663.sh`.

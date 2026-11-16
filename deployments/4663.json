@@ -34,7 +34,8 @@
     "minBuybackUsd": 50
   },
   "allowlistEnabled": true,
-  "owner": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
+  "owner": "0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2",
+  "ownerPrev": "0x1eb25d02fc7C5487D4648a602c355dBC2301030b",
   "frontendUrl": "https://cour.fun",
   "frontendVercel": "https://frontend-kfc5ovakn-cour1.vercel.app",
   "frontendLiveVerified": "2026-11-13",
@@ -53,8 +54,12 @@
     "saltNonce": 4663,
     "deployed": "2026-11-13",
     "ownershipModel": "option-a: Safe is direct owner during allowlist beta; 48h Timelock installed before public launch",
-    "handoverStatus": "transfer-initiated (Ownable2Step) 2026-11-13 — pendingOwner=Safe on factory/priceReader/feeVault/router; owner() still deployer until the Safe accepts (2-of-3). Accept via deployments/safe-accept-ownership.json. No Timelock yet.",
-    "note": "2-of-3 Safe deployed (07_DeploySafe) + ownership transfer to Safe initiated (09_TransferOwnershipToSafe, option a). Safe must acceptOwnership() on all 4 via safe-accept-ownership.json to finalize. 48h Timelock (04_HandOver) deferred to just before setLaunchAllowlistEnabled(false)."
+    "handoverStatus": "COMPLETE (option a) 2026-11-16 — Safe accepted ownership of factory/priceReader/feeVault/router via MultiSend acceptOwnership() (2-of-3). owner()==Safe and pendingOwner()==0 verified on-chain. DEPLOYER_PK removed from .env. No Timelock yet (deferred to just before public launch).",
+    "acceptTxHash": "0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15",
+    "acceptBlock": 115869100,
+    "acceptSafeTxHash": "0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1",
+    "executor": "0x594527d8656D917DdfD32fcD5729DAb349C75527",
+    "note": "2-of-3 Safe deployed (07_DeploySafe) + ownership transferred to Safe (09_TransferOwnershipToSafe) + Safe acceptOwnership() on all 4 FINALIZED 2026-11-16 (option a; signed via MetaMask using script/safe/signer.html). owner()==Safe on all 4. 48h Timelock (04_HandOver) deferred to just before setLaunchAllowlistEnabled(false)."
   },
   "timelock": "",
   "note": "Final deploy from tag audit-freeze-v1 (C-1/L-1/I-1 + L-2/L-3/L-4). Allowlist enabled; owner = deployer EOA (handover to Safe 2-of-3 + 48h Timelock in progress — see docs/HANDOVER.md). Frontend LIVE at https://cour.fun (DNS A @ 76.76.21.21 + CNAME www→cname.vercel-dns.com; SSL active; www→apex 308 redirect). 2026-11-13: fixed prod outage (edge middleware ERR_MODULE_NOT_FOUND — extensionless import), smoke passed desktop+mobile 0 console errors, 3 themes, invite-only gate live. indexerUrl/monitorUrl pending Railway deploy (needs RAILWAY_TOKEN); safeMultisig/timelock pending OWNER_1/2/3. Supersedes 029b233 (see 4663-DEPRECATED.json)."

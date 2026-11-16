@@ -1,7 +1,9 @@
 # GO LIVE — Dari Deploy Tertutup ke Publik (COUR, Robinhood Chain 4663)
 
-> Kondisi SEKARANG: kontrak live di mainnet, **allowlist launch AKTIF** (hanya deployer), owner = **EOA
-> deployer**, param produksi 4000/60000, smoke test sukses (lihat `MAINNET_SMOKE_RESULT.md`). Dokumen ini
+> Kondisi SEKARANG: kontrak live di mainnet, **allowlist launch AKTIF** (hanya deployer yang bisa launch),
+> **owner = Safe 2-of-3 `0xDca6…7fA2`** (handover opsi (a) SELESAI 2026-11-16 — tx
+> `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15`; `DEPLOYER_PK` sudah dihapus dari
+> `.env`), param produksi 4000/60000, smoke test sukses (lihat `MAINNET_SMOKE_RESULT.md`). Dokumen ini
 > adalah urutan langkah menuju pembukaan publik. Tandai: **[WAJIB]** sebelum publik, **[OPSIONAL]** boleh
 > menyusul. "Siapa": 🧑 manusia / 🤖 Claude Code. Biaya gas sangat murah di 4663 (~0.0005 ETH/op).
 
@@ -16,10 +18,12 @@ router `0x24Caa2B0aa97da71C9359F361e3dD43c2a7B1449`, hook `0xFC1bC2f2C0cEA16509d
 - **Deployment mainnet AKTIF** = tag **`audit-freeze-v1`** (`deployments/4663.json`). Memuat **C-1/L-1/I-1 +
   L-2/L-3/L-4**. Alamat final di §"Alamat (FINAL)" di bawah. **Semua 7 kontrak terverifikasi** di
   robin.etherscan.io (langkah 3 ✅, `docs/VERIFICATION.md`).
-- Allowlist **AKTIF** (hanya deployer), owner = deployer EOA. Dua deployment lama di-pause & DEPRECATED.
-- **Sisa menuju publik:** amankan key (1), audit manusia terhadap kode live (2), multisig (4), handover
-  timelock (5), legal (6), indexer/frontend (8), monitoring (9) → baru buka allowlist (10). Jika audit minta
-  perubahan → `audit-fix-v1` + redeploy (`docs/audit/POST_AUDIT_PLAYBOOK.md`).
+- Allowlist **AKTIF**, **owner = Safe 2-of-3** `0xDca6…7fA2` (✅ handover opsi (a) selesai 2026-11-16;
+  `owner()==Safe`, `pendingOwner()==0` di 4 kontrak). Dua deployment lama di-pause & DEPRECATED.
+- **Sudah selesai:** amankan key (1 ✅ — `DEPLOYER_PK` dihapus), multisig (4 ✅ — Safe 2-of-3),
+  handover ke Safe (opsi a ✅). **Sisa menuju publik:** audit independen (2), Timelock 48h (5), legal (6),
+  indexer/frontend (8), monitoring (9) → baru buka allowlist (10). Jika audit minta perubahan →
+  `audit-fix-v1` + redeploy (`docs/audit/POST_AUDIT_PLAYBOOK.md`).
 
 ### Alamat (FINAL, tag audit-freeze-v1)
 factory `0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C`, feeVault `0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76`,
@@ -29,13 +33,12 @@ graduationImpl `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7`.
 
 ---
 
-## 1. [WAJIB] Amankan private key deployer — 🧑
-- **Apa**: pindahkan kunci deployer (sekarang di `.env` lokal, hot wallet) ke hardware wallet / signer
-  aman. Jangan pernah commit/print kunci.
-- **Perintah**: impor kunci ke Ledger/Trezor atau buat signer baru dan transfer kepemilikan ke sana.
-  Verifikasi: `cast wallet address --private-key <baru>`.
-- **Biaya**: ~0.
-- **Selesai bila**: admin ops tidak lagi butuh `.env` di mesin dev; kunci lama dinonaktifkan/dibuang.
+## 1. [✅ WAJIB — SELESAI 2026-11-16] Amankan private key deployer — 🧑
+- **Status: SELESAI** — kunci deployer di-backup ke hardware wallet dan **`DEPLOYER_PK` sudah dihapus
+  dari `.env`** setelah handover ke Safe terbukti on-chain.
+- **Hasil**: admin ops **tidak lagi** butuh `.env`/`DEPLOYER_PK` — semua lewat Safe 2-of-3
+  (MetaMask `script/safe/signer.html`, owner tanda tangan `eth_signTypedData_v4`). Tak ada CI/layanan
+  yang bergantung pada `DEPLOYER_PK`.
 
 ## 2. [WAJIB] Audit pihak ketiga — 🧑
 - **Apa**: kirim `docs/AUDIT_SCOPE.md` + repo (commit final) ke auditor. Perbaiki temuan High/Medium
@@ -52,15 +55,15 @@ graduationImpl `0xD98f73470D88CDFaCc55a63D34A341bC53efFCc7`.
 - **Biaya**: ~0 (butuh API key gratis dari robin.etherscan.io).
 - **Selesai bila**: semua 7 kontrak "verified" di explorer.
 
-## 4. [WAJIB] Buat Safe multisig (atau alternatif) — 🧑
-- **Apa**: buat Safe{Wallet} di Robinhood Chain (chainId 4663). Jika Safe belum mendukung 4663, pakai
-  alternatif multisig yang ada di 4663 (mis. deploy Safe singleton+factory sendiri, atau gnosis-safe
-  via CLI), minimal 2-of-3 signer.
-- **Perintah**: via app.safe.global bila 4663 didukung, atau deploy Safe contracts + `safe-cli`.
-- **Biaya**: ~0.001 ETH (deploy Safe) bila self-deploy.
-- **Selesai bila**: alamat multisig ada & bisa menandatangani tx di 4663. Set `MULTISIG` di `.env`.
+## 4. [✅ WAJIB — SELESAI] Buat Safe multisig + handover owner ke Safe (opsi a) — 🧑
+- **Status: SELESAI** — Safe v1.4.1 2-of-3 `0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2` live di 4663
+  (`07_DeploySafe`). Karena `app.safe.global` tak mendukung 4663, Safe dikendalikan tanpa UI via
+  `cast`/MetaMask (`script/safe/`). `MULTISIG` sudah di `.env` + `deployments/4663.json`.
+- **Owner handover (opsi a) SELESAI 2026-11-16** — Safe meng-`acceptOwnership()` keempat kontrak
+  (MultiSend, safeTxHash `0x50e1…6ed1`), tx `0xf93b0270b7c3bff8da1fcbe22a15dcd352aec8d1f7eed7cf71bbe2edec121b15`
+  (block 115869100). `owner()==Safe`, `pendingOwner()==0` terverifikasi on-chain.
 
-## 5. [WAJIB] Hand over ke Timelock 48 jam — 🧑/🤖
+## 5. [WAJIB — belum] Hand over ke Timelock 48 jam (sebelum buka publik) — 🧑/🤖
 - **Apa**: transfer ownership factory/priceReader/feeVault **dan router** ke `TimelockController` (48h)
   yang proposer/executor-nya = multisig.
 - **Catatan kode**: `script/04_HandOver.s.sol` membaca `deployments/4663.json` dan mentransfer
