@@ -92,3 +92,17 @@ strings), so porting = reimplementing those render functions as React using the
 Same Vercel project (cour.fun). Env: server-only `PINATA_JWT`, `APP_DATABASE_URL`,
 `SESSION_SECRET`, `INDEXER_URL`, `RPC_URL`; public `NEXT_PUBLIC_WC_PROJECT_ID`,
 `NEXT_PUBLIC_RPC_URL`. Preview → smoke/E2E → promote. Remove `frontend/` after green.
+
+## Update 2026-11-17 (session cont.)
+- **DB provisioned via Railway Public GraphQL API** (workspace token): separate
+  `app-db` Postgres in project "cour" (not the indexer's DB) — service+volume+vars+
+  public TCP proxy. `APP_DATABASE_URL` set in `.env` + Vercel (prod/preview/dev);
+  migrated; `app.profiles/follows/token_updates` verified. DB endpoints live on
+  preview (GET 200; POST without SIWE → 401). Script: `app/scripts/railway-provision.mjs`.
+- **v8 #stage sizing replicated** (`lib/stage.ts`) — biggest pixel-parity lever.
+- **Visual-parity harness + fixture + baseline** (`test/parity.mjs`, `lib/fixture.ts`,
+  `docs/VISUAL_PARITY.md`): home baseline ~12% (classic)/~23% (cartoon,light); 0/45
+  at the 0.1% bar — fix loop + remaining-view ports pending (see VISUAL_PARITY.md).
+- **Still TODO:** Profile/User, Wallet modal, Scan QR, Pools, Collection, Stock,
+  Oink/tour/risk-gate, bottom nav, all modals/dropdowns, hash redirects; then drive
+  the parity matrix to ≤0.1%, fork E2E, Lighthouse. No production promote; frontend/ kept.
