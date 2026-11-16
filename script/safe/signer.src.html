@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>COUR Safe signer (MetaMask, chain 4663)</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#131a22; --panel2:#0f151c; --line:#243041;
+    --fg:#e7edf3; --mut:#93a4b7; --acc:#4da3ff; --ok:#3ecf8e; --bad:#ff6b6b;
+    --warn:#ffcf5c; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  a{color:var(--acc)}
+  .wrap{max-width:980px;margin:0 auto;padding:24px 18px 80px}
+  h1{font-size:20px;margin:0 0 2px}
+  h2{font-size:15px;margin:0 0 10px;color:var(--acc)}
+  .sub{color:var(--mut);margin:0 0 18px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row.tight{gap:6px}
+  label.fld{display:block;color:var(--mut);font-size:12px;margin:10px 0 4px}
+  input[type=text],textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--fg);
+    border-radius:8px;padding:9px 10px;font-family:var(--mono);font-size:12px}
+  textarea{min-height:70px;resize:vertical}
+  button{background:#1b2631;border:1px solid var(--line);color:var(--fg);border-radius:9px;
+    padding:9px 14px;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.primary{background:#14324f;border-color:#2b5c8a}
+  button.go{background:#123a2a;border-color:#1f6b4c}
+  button.warn{background:#3a2d12;border-color:#6b561f}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+  .b-ok{color:var(--ok);border-color:#1f6b4c;background:#0f2019}
+  .b-bad{color:var(--bad);border-color:#6b2020;background:#200f0f}
+  .b-mut{color:var(--mut)}
+  .mono{font-family:var(--mono)}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:12px}
+  .kv .k{color:var(--mut)}
+  .kv .v{font-family:var(--mono);word-break:break-all}
+  .calls{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  .call{font-family:var(--mono);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin:6px 0;background:var(--panel2)}
+  .muted{color:var(--mut)}
+  .hint{color:var(--mut);font-size:12px;margin-top:6px}
+  #log{font-family:var(--mono);font-size:12px;white-space:pre-wrap;background:#06090d;border:1px solid var(--line);
+    border-radius:8px;padding:10px;max-height:260px;overflow:auto;color:#c4d0dd}
+  .step{color:var(--warn);font-weight:600}
+  .ok{color:var(--ok)} .bad{color:var(--bad)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}.kv{grid-template-columns:110px 1fr}}
+  .sep{height:1px;background:var(--line);margin:14px 0}
+  code.sel{color:var(--warn)}
+  .copybtn{padding:4px 9px;font-size:12px}
+  .hdrbadges{margin-left:auto;display:flex;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>COUR Safe signer — MetaMask</h1>
+  <p class="sub">Single static page. No backend, no analytics, nothing leaves your browser except the JSON-RPC calls
+  MetaMask itself makes. Works offline for signing (<span class="mono">file://</span>). Safe 2-of-3 on Robinhood Chain (4663).</p>
+
+  <!-- 1. WALLET -->
+  <div class="panel">
+    <div class="row"><h2 style="margin:0">1 · Wallet</h2>
+      <div class="hdrbadges">
+        <span id="accBadge" class="badge b-mut">not connected</span>
+        <span id="chainBadge" class="badge b-mut">chain —</span>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <select id="providerPick" style="display:none;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px"></select>
+      <button id="btnConnect" class="primary">Connect MetaMask</button>
+      <button id="btnChain" class="warn" style="display:none">Add / switch to 4663</button>
+    </div>
+    <label class="fld" for="rpcUrl">4663 RPC URL (only used for <span class="mono">wallet_addEthereumChain</span>)</label>
+    <input id="rpcUrl" type="text" placeholder="https://rpc.mainnet.chain.robinhood.com" />
+    <div class="hint">Owner gating &amp; reads use whatever RPC MetaMask is configured with for 4663. Signing needs no RPC.</div>
+  </div>
+
+  <!-- 2. LOAD TX -->
+  <div class="panel">
+    <h2>2 · Load transaction (accept-712.json / pause-*-712.json)</h2>
+    <div class="row">
+      <input id="fileInput" type="file" accept="application/json,.json" />
+      <button id="btnLoadFile" class="primary">Load file</button>
+    </div>
+    <label class="fld" for="pasteJson">…or paste the EIP-712 JSON</label>
+    <textarea id="pasteJson" placeholder='{ "types": {...}, "domain": {...}, "message": {...} }'></textarea>
+    <div class="row tight" style="margin-top:8px"><button id="btnLoadPaste">Load pasted JSON</button></div>
+
+    <div id="summary" style="display:none;margin-top:14px">
+      <div class="kv">
+        <div class="k">Safe</div><div class="v"><span id="sSafe"></span> <span id="sSafeBadge" class="badge b-mut"></span></div>
+        <div class="k">nonce</div><div class="v" id="sNonce"></div>
+        <div class="k">to</div><div class="v"><span id="sTo"></span> <span id="sToBadge" class="badge b-mut"></span></div>
+        <div class="k">operation</div><div class="v" id="sOp"></div>
+        <div class="k">value</div><div class="v" id="sValue"></div>
+        <div class="k">safeTxHash</div><div class="v"><span id="sHash"></span></div>
+        <div class="k">hash check</div><div class="v"><span id="sHashBadge" class="badge b-mut"></span></div>
+      </div>
+      <div class="calls" id="calls"></div>
+    </div>
+  </div>
+
+  <!-- 3. SIGN -->
+  <div class="panel">
+    <h2>3 · Sign (owner)</h2>
+    <div class="hint">Signs the SafeTx with <span class="mono">eth_signTypedData_v4</span> from the active MetaMask account.
+      Rejected unless that account is one of the Safe owners.</div>
+    <div class="row" style="margin-top:10px"><button id="btnSign" class="go" disabled>Sign with MetaMask</button></div>
+    <div id="signOut" style="display:none;margin-top:12px">
+      <div class="kv">
+        <div class="k">owner</div><div class="v" id="oAddr"></div>
+        <div class="k">signature</div><div class="v" id="oSig"></div>
+        <div class="k">local verify</div><div class="v"><span id="oVerify" class="badge b-mut"></span></div>
+      </div>
+      <div class="row tight" style="margin-top:8px">
+        <button class="copybtn" id="btnCopySig">Copy signature</button>
+        <button class="copybtn" id="btnCopyPair">Copy address:signature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. EXECUTE -->
+  <div class="panel">
+    <h2>4 · Execute (owner #1 — needs gas)</h2>
+    <div class="hint">Paste the two owner signatures. The page sorts them by address, checks them against
+      <span class="mono">Safe.checkNSignatures</span>, simulates <span class="mono">execTransaction</span> (eth_call),
+      and only then asks MetaMask to broadcast.</div>
+    <div class="grid2" style="margin-top:10px">
+      <div>
+        <label class="fld">signer A — address</label><input id="eAddrA" type="text" placeholder="0x…"/>
+        <label class="fld">signer A — signature</label><textarea id="eSigA" placeholder="0x… (65 bytes)"></textarea>
+      </div>
+      <div>
+        <label class="fld">signer B — address</label><input id="eAddrB" type="text" placeholder="0x…"/>
+        <label class="fld">signer B — signature</label><textarea id="eSigB" placeholder="0x… (65 bytes)"></textarea>
+      </div>
+    </div>
+    <div class="row tight" style="margin-top:6px">
+      <button id="btnUseMine" class="copybtn">Use my signature as A</button>
+      <button id="btnVerify" class="primary" disabled>Verify &amp; simulate</button>
+      <button id="btnExec" class="go" disabled>Broadcast execTransaction</button>
+    </div>
+    <div id="execOut" style="display:none;margin-top:12px">
+      <div class="kv">
+        <div class="k">tx hash</div><div class="v" id="xHash"></div>
+        <div class="k">status</div><div class="v"><span id="xStatus" class="badge b-mut"></span></div>
+      </div>
+      <div id="postState" class="calls" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Log</h2>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script id="ethers-bundle">
+//__ETHERS_BUNDLE__
+</script>
+<script>
+"use strict";
+(function(){
+const E = window.ethers;
+if(!E){ document.body.insertAdjacentHTML('afterbegin','<p style="color:#ff6b6b">ethers bundle failed to load</p>'); return; }
+
+/* ---------- constants (production COUR / 4663) ---------- */
+const SAFE_PROD = "0xDca6d36E44E848a7C4088Fb5d12FfDEd22EA7fA2";
+const CHAIN_ID  = 4663, CHAIN_HEX = "0x1237";
+const EXPLORER  = "https://robin.etherscan.io";
+const MULTISEND = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2";
+const KNOWN_ACCEPT_HASH = "0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1";
+const OWNERS_FALLBACK = [
+  "0x594527d8656D917DdfD32fcD5729DAb349C75527",
+  "0x4e284Abb6881C5a62753088bB0e11cb9c447EE0E",
+  "0x4B24652793d667C8840bCa1Fa991F855D896F1f7"];
+const LABELS = {
+  "0x771a90ff8e9be8dc9091494d9466c35d162c0f4c":"Factory",
+  "0xf7c914e7b7580a7653dcc3b7574bf041f615e359":"PriceReader",
+  "0x69263a34bebdef24db3384bfdf9c52794b3a0c76":"FeeVault",
+  "0x835afd54f9ba20b18b6807b44886123e85a586f9":"Router",
+};
+const COUR_CONTRACTS = [
+  ["Factory",    "0x771a90Ff8E9Be8dC9091494D9466C35D162c0f4C"],
+  ["PriceReader","0xF7C914E7B7580a7653DcC3b7574bf041F615e359"],
+  ["FeeVault",   "0x69263a34BebDeF24Db3384bfdf9c52794B3a0C76"],
+  ["Router",     "0x835Afd54F9BA20b18b6807B44886123E85A586f9"],
+];
+const SELECTORS = { "0x79ba5097":"acceptOwnership()", "0x618701e5":"setLaunchesPaused(bool)" };
+const ZERO = "0x0000000000000000000000000000000000000000";
+
+const ifaceMS   = new E.Interface(["function multiSend(bytes transactions)"]);
+const ifacePause= new E.Interface(["function setLaunchesPaused(bool)"]);
+const ifaceSafe = new E.Interface([
+  "function getOwners() view returns (address[])",
+  "function getThreshold() view returns (uint256)",
+  "function nonce() view returns (uint256)",
+  "function checkNSignatures(bytes32 dataHash, bytes data, bytes signatures, uint256 requiredSignatures) view",
+  "function execTransaction(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,bytes signatures) payable returns (bool)",
+]);
+const ifaceOwn  = new E.Interface([
+  "function owner() view returns (address)",
+  "function launchesPaused() view returns (bool)",
+]);
+
+/* ---------- tiny DOM + log helpers ---------- */
+const $ = id => document.getElementById(id);
+function log(msg, cls){ const el=$("log"); const t=new Date().toISOString().slice(11,19);
+  el.innerHTML += `<div><span class="muted">${t}</span> <span class="${cls||''}">${msg}</span></div>`;
+  el.scrollTop = el.scrollHeight; }
+function badge(el, text, kind){ el.textContent=text; el.className = "badge "+(kind==='ok'?'b-ok':kind==='bad'?'b-bad':'b-mut'); }
+const lc = s => (s||"").toLowerCase();
+const strip0x = s => s.startsWith("0x")?s.slice(2):s;
+function labelFor(addr){ return LABELS[lc(addr)] || "unknown"; }
+async function copy(text){ try{ await navigator.clipboard.writeText(text); log("copied to clipboard"); }
+  catch(e){ log("clipboard blocked: "+e.message,"bad"); } }
+
+/* ---------- state ---------- */
+let injected=null;          // raw EIP-1193 provider (MetaMask)
+let bp=null;                // ethers BrowserProvider
+let account=null;           // active address (checksummed)
+let chainId=null;
+let TD=null;                // loaded typed data {types,domain,message}
+let safeTxHash=null;
+let safeAddr=null;          // Safe from TD.domain.verifyingContract
+let safeOwners=null;        // from getOwners() (or fallback)
+let safeThreshold=2;
+let mySig=null;             // {addr,sig}
+let txKind=null;            // 'accept' | 'pause' | 'other'
+
+/* ---------- wallet / EIP-6963 ---------- */
+const discovered=[];
+window.addEventListener("eip6963:announceProvider", ev=>{
+  const d=ev.detail; if(discovered.some(x=>x.info.uuid===d.info.uuid)) return;
+  discovered.push(d); renderPickers();
+});
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+function renderPickers(){
+  const sel=$("providerPick");
+  if(discovered.length<=1){ sel.style.display="none"; return; }
+  sel.style.display=""; sel.innerHTML="";
+  discovered.forEach((d,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=d.info.name; sel.appendChild(o); });
+}
+function pickInjected(){
+  if(discovered.length){ const i=Number($("providerPick").value||0); return discovered[i].provider; }
+  return window.ethereum || null;
+}
+async function refreshChain(){
+  try{ const cid=await injected.request({method:"eth_chainId"}); chainId=parseInt(cid,16); }
+  catch(e){ chainId=null; }
+  const ok = chainId===CHAIN_ID;
+  badge($("chainBadge"), chainId==null?"chain —":("chain "+chainId+(ok?" ✓":" ✗")), ok?'ok':'bad');
+  $("btnChain").style.display = ok?"none":"";
+}
+async function connect(){
+  injected = pickInjected();
+  if(!injected){ log("No injected wallet found (install MetaMask).","bad"); return; }
+  bp = new E.BrowserProvider(injected);
+  const accs = await injected.request({method:"eth_requestAccounts"});
+  account = E.getAddress(accs[0]);
+  badge($("accBadge"), account.slice(0,6)+"…"+account.slice(-4), 'ok');
+  log("connected "+account);
+  injected.on && injected.on("accountsChanged", a=>{ account=a&&a[0]?E.getAddress(a[0]):null;
+    badge($("accBadge"), account?account.slice(0,6)+"…"+account.slice(-4):"not connected", account?'ok':'bad');
+    log("account changed → "+account); updateSignEnabled(); });
+  injected.on && injected.on("chainChanged", ()=>{ refreshChain(); });
+  await refreshChain();
+  await loadOwners();
+  updateSignEnabled(); updateExecEnabled();
+}
+async function addOrSwitchChain(){
+  const rpc = $("rpcUrl").value.trim();
+  if(!rpc){ log("enter the 4663 RPC URL first","bad"); return; }
+  try{
+    await injected.request({ method:"wallet_addEthereumChain", params:[{
+      chainId: CHAIN_HEX, chainName:"Robinhood Chain",
+      nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},
+      rpcUrls:[rpc], blockExplorerUrls:[EXPLORER] }]});
+    log("wallet_addEthereumChain ok");
+  }catch(e){ log("addEthereumChain: "+(e.message||e),"muted"); }
+  try{
+    await injected.request({ method:"wallet_switchEthereumChain", params:[{chainId:CHAIN_HEX}]});
+    log("switched to 4663");
+  }catch(e){ log("switchEthereumChain: "+(e.message||e),"bad"); }
+  await refreshChain(); await loadOwners(); updateSignEnabled(); updateExecEnabled();
+}
+
+/* read Safe owners/threshold on-chain (fallback to the published list) */
+async function loadOwners(){
+  safeOwners=null;
+  if(!safeAddr) safeAddr = SAFE_PROD;
+  try{
+    const o = await rawCall(safeAddr, ifaceSafe.encodeFunctionData("getOwners",[]));
+    safeOwners = ifaceSafe.decodeFunctionResult("getOwners",o)[0].map(E.getAddress);
+    const t = await rawCall(safeAddr, ifaceSafe.encodeFunctionData("getThreshold",[]));
+    safeThreshold = Number(ifaceSafe.decodeFunctionResult("getThreshold",t)[0]);
+    log(`Safe ${safeAddr.slice(0,8)}… owners=${safeOwners.length} threshold=${safeThreshold} (on-chain)`);
+  }catch(e){
+    safeOwners = OWNERS_FALLBACK.map(E.getAddress); safeThreshold=2;
+    log("could not read getOwners() on-chain; using published owner list","muted");
+  }
+}
+function isOwner(addr){ return (safeOwners||OWNERS_FALLBACK).some(o=>lc(o)===lc(addr)); }
+
+/* ---------- raw eth_call through the connected provider ---------- */
+async function rawCall(to, data, from){
+  return await injected.request({method:"eth_call", params:[ from?{to,data,from}:{to,data}, "latest"]});
+}
+
+/* ---------- load / decode typed data ---------- */
+function parseTD(text){
+  const j = JSON.parse(text);
+  if(!j.types || !j.types.SafeTx || !j.domain || !j.message) throw new Error("not a SafeTx EIP-712 file");
+  return j;
+}
+function decodeInner(packedHex){
+  const b = E.getBytes(packedHex); let i=0; const out=[];
+  while(i < b.length){
+    const op=b[i]; i+=1;
+    const to=E.getAddress(E.hexlify(b.slice(i,i+20))); i+=20;
+    const val=BigInt(E.hexlify(b.slice(i,i+32))||"0x0"); i+=32;
+    const len=Number(BigInt(E.hexlify(b.slice(i,i+32))||"0x0")); i+=32;
+    const data=E.hexlify(b.slice(i,i+len)); i+=len;
+    out.push({op,to,val,data});
+  }
+  return out;
+}
+function fnName(data){ const sel=(data||"0x").slice(0,10); return SELECTORS[sel] || ("selector "+sel); }
+
+function renderSummary(){
+  const dmChain = Number(TD.domain.chainId);
+  safeAddr = E.getAddress(TD.domain.verifyingContract);
+  const to = E.getAddress(TD.message.to);
+  const op = Number(TD.message.operation);
+  const nonce = String(TD.message.nonce);
+  const value = String(TD.message.value);
+  // recompute safeTxHash in-browser
+  const types712 = { SafeTx: TD.types.SafeTx };
+  safeTxHash = E.TypedDataEncoder.hash({chainId:dmChain, verifyingContract:safeAddr}, types712, TD.message);
+
+  $("sSafe").textContent = safeAddr;
+  badge($("sSafeBadge"), lc(safeAddr)===lc(SAFE_PROD)?"production Safe ✓":"NON-production Safe",
+        lc(safeAddr)===lc(SAFE_PROD)?'ok':'bad');
+  $("sNonce").textContent = nonce;
+  $("sTo").textContent = to;
+  badge($("sToBadge"), lc(to)===lc(MULTISEND)?"MultiSendCallOnly":labelFor(to),
+        lc(to)===lc(MULTISEND)||labelFor(to)!=="unknown"?'ok':'mut');
+  $("sOp").textContent = op+(op===1?" (delegatecall)":op===0?" (call)":"");
+  $("sValue").textContent = value;
+  $("sHash").textContent = safeTxHash;
+
+  // decode
+  const callsEl=$("calls"); callsEl.innerHTML="";
+  txKind='other';
+  if(lc(to)===lc(MULTISEND) && op===1){
+    let inner;
+    try{ inner = decodeInner(ifaceMS.parseTransaction({data:TD.message.data}).args[0]); }
+    catch(e){ inner=[]; log("multiSend decode failed: "+e.message,"bad"); }
+    const allAccept = inner.length>0 && inner.every(c=>c.data.slice(0,10)==="0x79ba5097");
+    if(allAccept) txKind='accept';
+    callsEl.innerHTML = `<div class="muted">MultiSend batch — ${inner.length} inner call(s):</div>`;
+    inner.forEach((c,n)=>{
+      callsEl.insertAdjacentHTML("beforeend",
+        `<div class="call">#${n+1} <span class="muted">op=${c.op} call</span> `+
+        `<b>${labelFor(c.to)}</b> ${c.to}<br>&nbsp;&nbsp;→ <code class="sel">${fnName(c.data)}</code> value=${c.val}</div>`);
+    });
+  } else {
+    const sel=(TD.message.data||"0x").slice(0,10);
+    let extra="";
+    if(sel==="0x618701e5"){ txKind='pause';
+      try{ const v=ifacePause.decodeFunctionData("setLaunchesPaused",TD.message.data)[0];
+        extra=` → <b>${v}</b>`; }catch(e){}
+    }
+    callsEl.innerHTML = `<div class="call"><b>${labelFor(to)}</b> ${to}<br>&nbsp;&nbsp;→ <code class="sel">${fnName(TD.message.data)}</code>${extra}</div>`;
+  }
+
+  // hash badge
+  const prodAccept = lc(safeAddr)===lc(SAFE_PROD) && lc(to)===lc(MULTISEND) && op===1;
+  if(prodAccept){
+    const m = lc(safeTxHash)===lc(KNOWN_ACCEPT_HASH);
+    badge($("sHashBadge"), m?"matches published accept hash ✓":"DOES NOT match published accept hash", m?'ok':'bad');
+  } else {
+    badge($("sHashBadge"), "recomputed locally (no published reference for this tx)", 'mut');
+  }
+  if(dmChain!==CHAIN_ID) log("warning: domain.chainId="+dmChain+" (expected 4663)","bad");
+
+  $("summary").style.display="";
+  log("loaded tx · nonce "+nonce+" · safeTxHash "+safeTxHash);
+  // refresh owners for the (possibly new) Safe address
+  loadOwners().then(()=>{ updateSignEnabled(); updateExecEnabled(); });
+}
+function loadFromText(text){ try{ TD=parseTD(text); renderSummary(); }
+  catch(e){ log("load failed: "+e.message,"bad"); } }
+
+/* ---------- sign ---------- */
+function updateSignEnabled(){ $("btnSign").disabled = !(TD && account); }
+async function sign(){
+  if(!TD||!account) return;
+  if(chainId!==CHAIN_ID){ log("switch MetaMask to chain 4663 first","bad"); return; }
+  if(!isOwner(account)){ log("REJECT: "+account+" is not a Safe owner — refusing to sign.","bad"); return; }
+  try{
+    log("requesting eth_signTypedData_v4 from "+account+" …","step");
+    const sig = await injected.request({ method:"eth_signTypedData_v4", params:[account, JSON.stringify(TD)] });
+    // local recover
+    const types712={SafeTx:TD.types.SafeTx};
+    const rec = E.verifyTypedData({chainId:Number(TD.domain.chainId), verifyingContract:safeAddr}, types712, TD.message, sig);
+    const ok = lc(rec)===lc(account);
+    mySig={addr:account, sig};
+    $("oAddr").textContent=account; $("oSig").textContent=sig;
+    badge($("oVerify"), ok?("recovered "+rec.slice(0,8)+"… == account ✓"):("recovered "+rec+" ≠ account!"), ok?'ok':'bad');
+    $("signOut").style.display="";
+    log("signed. signature="+sig, ok?'ok':'bad');
+    if(!ok) log("LOCAL VERIFY FAILED — do not use this signature","bad");
+  }catch(e){ log("sign rejected/failed: "+(e.message||e),"bad"); }
+}
+
+/* ---------- execute ---------- */
+function updateExecEnabled(){
+  const ready = TD && account && $("eSigA").value.trim() && $("eSigB").value.trim()
+      && $("eAddrA").value.trim() && $("eAddrB").value.trim();
+  $("btnVerify").disabled = !ready;
+}
+function flipV(sig){ const s=strip0x(sig); const v=parseInt(s.slice(-2),16)+4;
+  return "0x"+s.slice(0,128)+v.toString(16).padStart(2,"0"); }
+async function checkN(sig, n){
+  try{ await rawCall(safeAddr, ifaceSafe.encodeFunctionData("checkNSignatures",[safeTxHash,"0x",sig,n])); return true; }
+  catch(e){ return false; }
+}
+async function normalize(sig){
+  if(await checkN(sig,1)) return sig;
+  const f=flipV(sig); if(await checkN(f,1)) return f;
+  return null;
+}
+function collectSigners(){
+  return [
+    {addr:E.getAddress($("eAddrA").value.trim()), sig:$("eSigA").value.trim()},
+    {addr:E.getAddress($("eAddrB").value.trim()), sig:$("eSigB").value.trim()},
+  ];
+}
+async function buildCombined(){
+  const S=collectSigners();
+  if(lc(S[0].addr)===lc(S[1].addr)) throw new Error("the two signers must be different owners");
+  for(const s of S){ if(!isOwner(s.addr)) throw new Error(s.addr+" is not a Safe owner"); }
+  log("normalizing + verifying each signature against Safe.checkNSignatures…","step");
+  for(const s of S){
+    const n=await normalize(s.sig);
+    if(!n) throw new Error("signature from "+s.addr+" is not a valid owner signature for this hash");
+    s.norm=n; log("  "+s.addr+": valid");
+  }
+  S.sort((a,b)=> lc(a.addr)<lc(b.addr)?-1:1);     // ascending owner-address order
+  const combined = "0x"+S.map(s=>strip0x(s.norm)).join("");
+  log("combined set (ascending): "+S.map(s=>s.addr).join(" , "));
+  const ok = await checkN(combined, safeThreshold);
+  if(!ok) throw new Error("combined signatures failed checkNSignatures (threshold "+safeThreshold+")");
+  log("combined "+safeThreshold+"-of-"+(safeOwners?safeOwners.length:3)+" set VALID ✓","ok");
+  return combined;
+}
+function execData(combined){
+  const m=TD.message;
+  return ifaceSafe.encodeFunctionData("execTransaction",
+    [E.getAddress(m.to), BigInt(m.value), m.data, Number(m.operation), 0,0,0, ZERO, ZERO, combined]);
+}
+let COMBINED=null;
+async function verifyAndSimulate(){
+  try{
+    if(chainId!==CHAIN_ID){ log("switch MetaMask to chain 4663 first","bad"); return; }
+    COMBINED = await buildCombined();
+    const data = execData(COMBINED);
+    log("simulating execTransaction via eth_call…","step");
+    const ret = await rawCall(safeAddr, data, account);
+    const ok = ifaceSafe.decodeFunctionResult("execTransaction", ret)[0];
+    log("simulation returned success="+ok, ok?'ok':'bad');
+    if(ok){ $("btnExec").disabled=false; log("ready to broadcast.","ok"); }
+    else { $("btnExec").disabled=true; log("simulation says it would fail — not enabling broadcast","bad"); }
+  }catch(e){ $("btnExec").disabled=true; log("verify/simulate failed: "+(e.message||e),"bad"); }
+}
+async function execute(){
+  try{
+    if(!COMBINED){ log("run Verify & simulate first","bad"); return; }
+    const signer = await bp.getSigner(account);
+    const data = execData(COMBINED);
+    log("sending execTransaction via MetaMask…","step");
+    const tx = await signer.sendTransaction({ to: safeAddr, data });
+    $("execOut").style.display=""; $("xHash").innerHTML=`<a href="${EXPLORER}/tx/${tx.hash}" target="_blank">${tx.hash}</a>`;
+    badge($("xStatus"),"pending…",'mut'); log("broadcast "+tx.hash);
+    const rc = await tx.wait();
+    const ok = rc && rc.status===1;
+    badge($("xStatus"), ok?"confirmed ✓ (block "+rc.blockNumber+")":"REVERTED", ok?'ok':'bad');
+    log("receipt status="+(rc?rc.status:"?"), ok?'ok':'bad');
+    await showPostState();
+  }catch(e){ log("execute failed: "+(e.message||e),"bad"); badge($("xStatus"),"failed",'bad'); }
+}
+async function showPostState(){
+  const el=$("postState"); el.style.display=""; el.innerHTML='<div class="muted">on-chain state after execution:</div>';
+  for(const [name,addr] of COUR_CONTRACTS){
+    try{
+      const o=await rawCall(addr, ifaceOwn.encodeFunctionData("owner",[]));
+      const owner=ifaceOwn.decodeFunctionResult("owner",o)[0];
+      const isSafe=lc(owner)===lc(safeAddr);
+      el.insertAdjacentHTML("beforeend",
+        `<div class="call">${name} ${addr}<br>&nbsp;&nbsp;owner() = ${owner} `+
+        `<span class="badge ${isSafe?'b-ok':'b-mut'}">${isSafe?'== Safe ✓':'(≠ loaded Safe)'}</span></div>`);
+    }catch(e){ el.insertAdjacentHTML("beforeend",`<div class="call bad">${name}: owner() read failed</div>`); }
+  }
+  if(txKind==='pause'){
+    try{
+      const F=COUR_CONTRACTS[0][1];
+      const r=await rawCall(F, ifaceOwn.encodeFunctionData("launchesPaused",[]));
+      const paused=ifaceOwn.decodeFunctionResult("launchesPaused",r)[0];
+      el.insertAdjacentHTML("beforeend",`<div class="call">Factory.launchesPaused() = <b>${paused}</b></div>`);
+    }catch(e){}
+  }
+}
+
+/* ---------- wire up ---------- */
+$("btnConnect").onclick = ()=>connect().catch(e=>log("connect failed: "+(e.message||e),"bad"));
+$("btnChain").onclick   = ()=>addOrSwitchChain();
+$("btnLoadPaste").onclick=()=>loadFromText($("pasteJson").value);
+$("btnLoadFile").onclick =()=>{ const f=$("fileInput").files[0]; if(!f){log("choose a file first","bad");return;}
+  const r=new FileReader(); r.onload=()=>{ $("pasteJson").value=r.result; loadFromText(r.result); }; r.readAsText(f); };
+$("btnSign").onclick = ()=>sign();
+$("btnCopySig").onclick=()=>mySig&&copy(mySig.sig);
+$("btnCopyPair").onclick=()=>mySig&&copy(mySig.addr+":"+mySig.sig);
+$("btnUseMine").onclick=()=>{ if(!mySig){log("sign first","bad");return;} $("eAddrA").value=mySig.addr; $("eSigA").value=mySig.sig; updateExecEnabled(); };
+$("btnVerify").onclick=()=>verifyAndSimulate();
+$("btnExec").onclick=()=>execute();
+["eSigA","eSigB","eAddrA","eAddrB"].forEach(id=>$(id).addEventListener("input",()=>{ $("btnExec").disabled=true; updateExecEnabled(); }));
+$("providerPick").onchange=()=>{};
+
+log("ready. ethers v"+(E.version||"6"));
+// expose a tiny hook for automated testing (no effect on normal use)
+window.__COUR = { loadFromText, get state(){ return {account,chainId,safeAddr,safeTxHash,txKind}; } };
+})();
+</script>
+</body>
+</html>

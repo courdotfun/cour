@@ -91,6 +91,59 @@ From that point the Safe (2-of-3) can `setLaunchesPaused`, manage the allowlist,
 `deployments/safe-accept-ownership.json` Transaction-Builder file is also still
 provided if you ever use a custom-network Safe UI / safe-cli.)
 
+### ▶ Option (a) — same flow with **MetaMask** (no cast, no Ledger) — `script/safe/signer.html`
+
+The three Safe owners use **MetaMask**, not a hardware wallet, so there is no
+`cast wallet --ledger` and **no private key ever leaves MetaMask**. Instead of the
+shell, open **`script/safe/signer.html`** — a single self-contained static page
+(ethers is inlined; no backend, no CDN, nothing is sent to any server except the
+JSON-RPC calls MetaMask itself makes). Double-click the file or open it with
+`file://`; it also works fully offline for the signing step.
+
+Proven end-to-end on an anvil fork of 4663 with a real Safe + test owners driving the
+actual page in a headless browser (`bash script/safe/test/run-e2e.sh` → two owners
+sign, owner #1 executes, `owner()==Safe` on all four). To rebuild the page after
+editing `signer.src.html`: `node script/safe/build-signer.mjs`.
+
+**Step 0 — still generate the artifact with the shell** (owners need the JSON to sign):
+```bash
+RPC_URL=<your-4663-rpc> bash script/safe/accept-ownership.sh   # writes script/safe/out/accept-712.json
+```
+
+**Each owner (×2 of 3), in their own MetaMask browser:**
+1. Open `script/safe/signer.html`. Panel **1 · Wallet** → *Connect MetaMask*. If the
+   chain badge is red, paste your 4663 RPC in the field and click *Add / switch to
+   4663* (`wallet_addEthereumChain` + `wallet_switchEthereumChain`, symbol ETH,
+   explorer `https://robin.etherscan.io`).
+2. Panel **2 · Load transaction** → *Load file* and pick
+   `script/safe/out/accept-712.json` (or paste it). **Match the summary on screen:**
+   Safe = `0xDca6…7fA2` (green "production Safe ✓"), nonce, `to` = MultiSendCallOnly,
+   the four decoded `acceptOwnership()` calls (Factory / PriceReader / FeeVault /
+   Router), and **safeTxHash recomputed in-browser must read**
+   `0x50e1cbdcc3e4415524c4bde858850320f113c68209a5aa0bb1ecb54eaa2a6ed1`
+   with the green "matches published accept hash ✓" badge.
+3. Panel **3 · Sign** → *Sign with MetaMask* (MetaMask shows the SafeTx typed data;
+   `eth_signTypedData_v4`). The page refuses if your account is not a Safe owner, and
+   after signing it locally recovers the signer and shows "== account ✓". Copy the
+   signature (or *Copy address:signature*) and send it to owner #1.
+
+**Owner #1 executes** (needs gas), in the same page:
+4. Panel **4 · Execute** → paste both owners' **address + signature** (A and B; use
+   *Use my signature as A* for your own). Click **Verify & simulate** — the page sorts
+   the two by address, checks each and the combined 2-of-3 set against
+   `Safe.checkNSignatures`, and simulates `execTransaction` (eth_call). Only if the
+   simulation returns success does **Broadcast execTransaction** enable.
+5. Click **Broadcast execTransaction** → confirm in MetaMask. The page shows the tx
+   hash (linked to `robin.etherscan.io`) and, once confirmed, reads back `owner()` of
+   all four contracts — each must read `0xDca6…7fA2` ("== Safe ✓").
+
+**Incident runbook (pause) — identical page, identical flow.** Generate the artifact
+with `RPC_URL=<rpc> bash script/safe/pause.sh true` (or `false`) → it writes
+`script/safe/out/pause-true-712.json`. Load that file into `signer.html`: the summary
+decodes it as `COURFactory.setLaunchesPaused(true)` (single `operation=0` call). Two
+owners sign, owner #1 executes exactly as above; after confirmation the page also
+shows `Factory.launchesPaused()`.
+
 ### ▶ Later — before `setLaunchAllowlistEnabled(false)` (public launch)
 
 Run the 48h-Timelock handover (`04_HandOver` → `08_SafeHandoverTxs` → schedule →
