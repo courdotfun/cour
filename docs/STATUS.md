@@ -19,6 +19,15 @@
 > FeeVault/Router. **`DEPLOYER_PK` sudah dihapus dari `.env`.** Monitor sehat (`/health ok:true`,
 > snapshot `owners=Safe`). Sisa: (nanti) Timelock 48h sebelum buka publik. Owner sign via
 > MetaMask (`script/safe/signer.html`). Detail: `docs/HANDOVER.md`, `docs/REPORT_GOLIVE.md`.
+>
+> **2026-11-17 — APP BARU (`app/`, Next.js) sedang diport dari `design/cour-v8.html`:**
+> scaffold + backend (SIWE, profile, follow, token-updates, search, safe-tx, upload,
+> Postgres+Drizzle) SELESAI; view **Market, Token, Create** sudah diport ke React (kelas
+> CSS v8 verbatim, data nyata indexer/chain, perubahan §4 diterapkan, tanpa data demo).
+> Deployed sebagai **PREVIEW Vercel** (project `cour-app`, TERPISAH dari `frontend` →
+> cour.fun tetap frontend lama). BLOKIR: `APP_DATABASE_URL` belum (RAILWAY_TOKEN di `.env`
+> invalid). Sisa view (Profile/User/Pools/Stock/Collection/Wallet/QR/Oink), E2E, Lighthouse,
+> promote. Detail: `docs/UI_PORT_PLAN.md`, `docs/ARCHITECTURE.md`, `docs/visual-diff/`.
 
 ---
 
