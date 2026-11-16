@@ -21,3 +21,6 @@ test-results
 
 # drizzle local
 drizzle/.cache
+
+.vercel
+.env*

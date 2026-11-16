@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
+import { Header } from "@/components/shell/Header";
+import { ThemeScript } from "@/components/shell/ThemeScript";
 
 export const metadata: Metadata = {
   title: "COUR — launch stock-backed tokens",
@@ -22,7 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* v8 design CSS, served verbatim (see styles/globals.css note). */}
         <link rel="stylesheet" href="/v8.css" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ThemeScript />
+        <Header />
+        <main>{children}</main>
+      </body>
     </html>
   );
 }
