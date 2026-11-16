@@ -9,7 +9,8 @@ if (!url) {
   process.exit(1);
 }
 
-const sql = postgres(url, { max: 1, prepare: false });
+const ssl = /sslmode=require|proxy\.rlwy\.net|railway/.test(url) ? { rejectUnauthorized: false } : undefined;
+const sql = postgres(url, { max: 1, prepare: false, ssl });
 const db = drizzle(sql);
 
 // Ensure the app schema exists before migrating.
