@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { Header } from "@/components/shell/Header";
 import { ThemeScript } from "@/components/shell/ThemeScript";
+import { StageFit } from "@/components/shell/StageFit";
 
 export const metadata: Metadata = {
   title: "COUR — launch stock-backed tokens",
@@ -26,8 +27,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeScript />
-        <Header />
-        <main>{children}</main>
+        <div id="stage">
+          <Header />
+          <main>{children}</main>
+        </div>
+        <StageFit />
       </body>
     </html>
   );
