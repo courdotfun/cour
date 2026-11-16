@@ -1,0 +1,22 @@
+/*
+ * Global styles.
+ * The pixel-identical v8 CSS (~318 KB from design/cour-v8.html, 14 <style> blocks)
+ * is ported verbatim into app/styles/v8.css during the UI port step and imported
+ * below. This file holds only resets / app-shell glue so the port stays isolated.
+ */
+/* @import "./v8.css"; */
+
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0b0f14;
+  color: #e7edf3;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}

@@ -6,6 +6,8 @@ broadcast/
 
 # Dependencies (reproduce with ./bootstrap.sh)
 lib/
+# ...but the Next app's source lib/ (app/lib) is real source, not foundry deps
+!/app/lib/
 
 # Env & secrets
 .env

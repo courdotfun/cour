@@ -1,0 +1,23 @@
+# deps
+node_modules
+.pnpm-store
+
+# next
+.next
+out
+next-env.d.ts
+
+# env (secrets)
+.env
+.env.local
+.env*.local
+
+# test / build artifacts
+coverage
+playwright-report
+test-results
+.vercel
+*.tsbuildinfo
+
+# drizzle local
+drizzle/.cache
