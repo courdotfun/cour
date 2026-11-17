@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { connect, getWallet, disconnect } from "@/lib/chain/wallet";
 import { nativeBalance } from "@/lib/data/onchain";
 import { fromRaw, shortAddr } from "@/lib/ui/format";
-import { siweSignIn, currentSession } from "@/lib/auth-client";
 import { EditProfileModal } from "./EditProfileModal";
+import { LegalLinks } from "@/components/shell/RiskGate";
 
 type Portfolio = {
   totalValueUsd: number;
@@ -142,6 +142,7 @@ export function ProfileView() {
             </div>
           </aside>
         </div>
+        <LegalLinks />
       </div>
       {edit && <EditProfileModal addr={addr} profile={profile} onClose={() => setEdit(false)} onSaved={(p) => { setProfile(p); setEdit(false); }} />}
     </section>

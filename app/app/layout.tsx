@@ -4,6 +4,7 @@ import { Header } from "@/components/shell/Header";
 import { ThemeScript } from "@/components/shell/ThemeScript";
 import { StageFit } from "@/components/shell/StageFit";
 import { BottomNav } from "@/components/shell/BottomNav";
+import { RiskGate } from "@/components/shell/RiskGate";
 
 export const metadata: Metadata = {
   title: "COUR — launch stock-backed tokens",
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
         </div>
         <StageFit />
+        <RiskGate />
       </body>
     </html>
   );

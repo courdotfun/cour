@@ -2,6 +2,7 @@ import { Promos } from "./Promos";
 import { MarketRow } from "./MarketRow";
 import { type MarketData, FIXTURE } from "@/lib/server/market";
 import { shortAddr } from "@/lib/ui/format";
+import { LegalLinks } from "@/components/shell/RiskGate";
 
 function TopUsers({ users }: { users: MarketData["topUsers"] }) {
   if (!users.length) return null;
@@ -53,6 +54,7 @@ export function Market({ data }: { data: MarketData }) {
         )}
       </div>
       <TopUsers users={data.topUsers} />
+      <LegalLinks />
     </section>
   );
 }
