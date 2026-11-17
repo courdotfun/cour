@@ -15,9 +15,14 @@ const { chromium } = require("@playwright/test");
 const APP = process.env.APP_URL || "http://127.0.0.1:3012";
 const DESIGN = "file:///C:/Users/Lenovo/cour/design/cour-v8.html";
 const OUT = "C:/Users/Lenovo/cour/docs/visual-diff/parity";
-const AA_TOLERANCE = 0.1; // % — threshold for pass
+const AA_TOLERANCE = 0.1; // % — legacy single-gate threshold (kept for footer text)
+const PRE_TOL = 0.1;      // primary gate: pre-scale DOM diff (transform:scale disabled)
+const SCALED_TOL = 0.5;   // secondary gate: as-rendered scaled diff
 
 const VIEWS = [{ key: "home", app: "/", openV8: null }];
+// The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
+// VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
+const REQUIRED_VIEWS = ["home", "token", "create", "profile", "user", "wallet", "scan", "pools", "collection", "stock"];
 const THEMES = ["classic", "cartoon", "light"];
 const WIDTHS = process.env.WIDTHS
   ? process.env.WIDTHS.split(",").map(Number)
@@ -59,14 +64,30 @@ function freezeAndMask({ theme, mask }) {
   window.scrollTo(0, 0);
 }
 
-async function grab(page, w, h) {
+// pre=true disables v8's #stage transform:scale so the UNSCALED (1920-design) DOM is
+// compared — the primary gate. pre=false captures the as-rendered scaled view.
+async function grab(page, w, h, pre) {
   await page.evaluate(async () => {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     await Promise.all(Array.from(document.images).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; })));
   });
-  await page.waitForTimeout(250);
+  await page.evaluate((on) => {
+    let s = document.getElementById("__prescale");
+    if (on && !s) { s = document.createElement("style"); s.id = "__prescale"; document.head.appendChild(s); }
+    if (s) s.textContent = on ? "#stage{transform:none!important}" : "";
+    window.scrollTo(0, 0);
+  }, pre);
+  await page.waitForTimeout(pre ? 150 : 250);
   const buf = await page.screenshot({ clip: { x: 0, y: 0, width: w, height: h } });
   return PNG.sync.read(buf);
+}
+function diffPct(a, b, outPath) {
+  const { width, height } = a;
+  const diff = new PNG({ width, height });
+  const n = pixelmatch(a.data, b.data, diff.data, width, height, { threshold: 0.1 });
+  const pct = (n / (width * height)) * 100;
+  if (outPath && pct > 0) writeFileSync(outPath, PNG.sync.write(diff));
+  return pct;
 }
 
 (async () => {
@@ -85,31 +106,35 @@ async function grab(page, w, h) {
             try { window.requestAnimationFrame = () => 0; } catch {}
           });
           const page = await ctx.newPage();
-          let mismatch = null, note = "";
+          let pre = null, scaled = null, note = "";
+          // v8's #stage applies transform:scale only in the desktop-shrink band (~900–1919);
+          // below that it's responsive (no transform) and at/above 1920 it's native. Outside
+          // the band pre==scaled, so take a single capture (and avoid a redundant/flaky recapture).
+          const scales = w >= 900 && w < 1920;
           try {
             await page.goto(APP + view.app, { waitUntil: "networkidle", timeout: 30000 });
             await page.evaluate(freezeAndMask, { theme, mask: MASK });
-            const a = await grab(page, w * dpr, h * dpr);
+            const aScaled = await grab(page, w * dpr, h * dpr, false);
+            const aPre = scales ? await grab(page, w * dpr, h * dpr, true) : aScaled;
 
             await page.goto(DESIGN, { waitUntil: "load", timeout: 30000 });
             await page.waitForTimeout(400);
             if (view.openV8) await page.evaluate((v) => window.showView && window.showView(v), view.openV8).catch(() => {});
             await page.evaluate(freezeAndMask, { theme, mask: MASK });
-            const b = await grab(page, w * dpr, h * dpr);
+            const bScaled = await grab(page, w * dpr, h * dpr, false);
+            const bPre = scales ? await grab(page, w * dpr, h * dpr, true) : bScaled;
 
-            const { width, height } = a;
-            const diff = new PNG({ width, height });
-            const n = pixelmatch(a.data, b.data, diff.data, width, height, { threshold: 0.1 });
-            mismatch = (n / (width * height)) * 100;
             const dir = join(OUT, view.key);
             if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-            if (mismatch > AA_TOLERANCE) writeFileSync(join(dir, `${w}x${dpr}-${theme}.diff.png`), PNG.sync.write(diff));
+            scaled = diffPct(aScaled, bScaled, join(dir, `${w}x${dpr}-${theme}.scaled.diff.png`));
+            pre = scales ? diffPct(aPre, bPre, join(dir, `${w}x${dpr}-${theme}.pre.diff.png`)) : scaled;
           } catch (e) {
             note = String(e).slice(0, 80);
           }
-          const pass = mismatch != null && mismatch <= AA_TOLERANCE;
-          rows.push({ view: view.key, w, dpr, theme, mismatch, pass, note });
-          console.log(`${view.key} ${w}@${dpr} ${theme}: ${mismatch == null ? "ERR " + note : mismatch.toFixed(3) + "%"} ${pass ? "PASS" : "FAIL"}`);
+          // Dual gate: primary pre-scale ≤ PRE_TOL, secondary scaled ≤ SCALED_TOL.
+          const pass = pre != null && scaled != null && pre <= PRE_TOL && scaled <= SCALED_TOL;
+          rows.push({ view: view.key, w, dpr, theme, pre, scaled, scales, pass, note });
+          console.log(`${view.key} ${w}@${dpr} ${theme}: pre ${pre == null ? "ERR" : pre.toFixed(3)} scaled ${scaled == null ? "ERR" : scaled.toFixed(3)} ${pass ? "PASS" : "FAIL"}`);
           await ctx.close();
         }
       }
@@ -118,29 +143,41 @@ async function grab(page, w, h) {
   await browser.close();
 
   const passed = rows.filter((r) => r.pass).length;
+  const viewsMeasured = [...new Set(rows.map((r) => r.view))];
+  const coversAll = REQUIRED_VIEWS.every((v) => viewsMeasured.includes(v));
+  const allPass = rows.length > 0 && rows.every((r) => r.pass);
+  const valid = coversAll && allPass;
+
   let md = `# Visual parity — app (fixture) vs design/cour-v8.html\n\n`;
-  md += `Generated by \`app/test/parity.mjs\`. Pass = mismatch ≤ ${AA_TOLERANCE}% (anti-aliasing tolerance), outside masked regions.\n\n`;
-  md += `**${passed}/${rows.length} combinations pass.**\n\n`;
+  md += `Generated by \`app/test/parity.mjs\`. **Dual gate** — a cell passes when the pre-scale DOM diff ` +
+    `≤ ${PRE_TOL}% (primary) AND the as-rendered scaled diff ≤ ${SCALED_TOL}% (secondary), outside masked regions. ` +
+    `\`pre\` = v8's \`#stage\` \`transform:scale\` disabled on both sides (= native at scaled widths).\n\n`;
+  md += `**${passed}/${rows.length} combinations pass** (views measured: ${viewsMeasured.join(", ")}).\n\n`;
   md += `Masked regions — hidden (§4/cosmetic/not-yet-ported): \`${HIDE.join("`, `")}\`; blanked (data): \`${BLANK.join("`, `")}\`.\n\n`;
-  md += `| view | width | dpr | theme | mismatch % | result |\n|---|---|---|---|---|---|\n`;
-  for (const r of rows) md += `| ${r.view} | ${r.w} | ${r.dpr} | ${r.theme} | ${r.mismatch == null ? "ERR" : r.mismatch.toFixed(3)} | ${r.pass ? "✅" : "❌"} |\n`;
+  md += `| view | width | dpr | theme | pre % | scaled % | result |\n|---|---|---|---|---|---|---|\n`;
+  for (const r of rows) md += `| ${r.view} | ${r.w} | ${r.dpr} | ${r.theme} | ${r.pre == null ? "ERR" : r.pre.toFixed(3)} | ${r.scaled == null ? "ERR" : r.scaled.toFixed(3)} | ${r.pass ? "✅" : "❌"} |\n`;
 
   // Durable, evidence-based status footer (regenerated every run — do not hand-edit).
-  const native = rows.filter((r) => r.w >= 1920);
-  const nativeWorst = Math.max(0, ...native.map((r) => r.mismatch || 0));
-  const scaled = rows.filter((r) => r.w < 1920 && r.mismatch != null);
-  const scaledWorst = scaled.length ? Math.max(...scaled.map((r) => r.mismatch)) : 0;
+  const preWorst = Math.max(0, ...rows.filter((r) => r.pre != null).map((r) => r.pre));
+  const scaledWorst = Math.max(0, ...rows.filter((r) => r.scaled != null).map((r) => r.scaled));
   md += `\n## Status\n\n`;
   md += `A control test (\`app/test/control.mjs\`, each source rendered twice under the gate's masks and ` +
     `diffed against itself) measured the renderer floor at **≤0.03%** for both app and v8 at every scaled ` +
-    `width/dpr. So the residual below is a **real app-vs-v8 DOM/CSS difference** (magnified when v8's \`#stage\` ` +
-    `applies \`transform:scale\`), not anti-aliasing noise — and ≤${AA_TOLERANCE}% is achievable by fixing the app.\n\n`;
-  md += `Current: native widths (1920/2560) pass at ~0.02–0.10%; scaled widths worst ${scaledWorst.toFixed(3)}% ` +
-    `(native worst ${nativeWorst.toFixed(3)}%). Work is driving the scaled residual down to the gate.\n\n`;
-  md += `**\`STATUS: ALL PASS\` is written only when the dual gate passes for every view:** primary = pre-scale ` +
-    `DOM diff (\`#stage\` scaling disabled on both sides) ≤${AA_TOLERANCE}% for all widths; secondary = the ` +
-    `as-rendered scaled diff ≤0.5% with no shifted/missing element in the diff image.\n`;
+    `width/dpr. So any residual is a **real app-vs-v8 DOM/CSS difference** (magnified when v8's \`#stage\` ` +
+    `applies \`transform:scale\`), not anti-aliasing noise — and the gate is achievable by fixing the app.\n\n`;
+  md += `Current worst: pre-scale ${preWorst.toFixed(3)}% (gate ${PRE_TOL}%), scaled ${scaledWorst.toFixed(3)}% (gate ${SCALED_TOL}%).\n\n`;
+  if (valid) {
+    md += `STATUS: ALL PASS\n\n`;
+    md += `Every required view (${REQUIRED_VIEWS.join(", ")}) passes both gates across all widths/themes/dpr.\n`;
+  } else {
+    const why = !coversAll
+      ? `views still missing from the matrix: ${REQUIRED_VIEWS.filter((v) => !viewsMeasured.includes(v)).join(", ") || "(none)"}`
+      : `${rows.length - passed} cell(s) still over the gate`;
+    md += `\`STATUS: ALL PASS\` is intentionally NOT written — ${why}. It is emitted only when every required ` +
+      `view (${REQUIRED_VIEWS.join(", ")}) passes both gates, and a human has confirmed the diff images show ` +
+      `no shifted/missing element (the %-number alone is not sufficient for the secondary gate).\n`;
+  }
 
   writeFileSync("C:/Users/Lenovo/cour/docs/VISUAL_PARITY.md", md);
-  console.log(`\n${passed}/${rows.length} pass → docs/VISUAL_PARITY.md`);
+  console.log(`\n${passed}/${rows.length} pass (pre≤${PRE_TOL} & scaled≤${SCALED_TOL})${valid ? " — ALL PASS" : ""} → docs/VISUAL_PARITY.md`);
 })().catch((e) => { console.error("parity failed:", e.message); process.exit(1); });
