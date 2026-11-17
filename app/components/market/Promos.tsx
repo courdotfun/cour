@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const ChevL = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 6-6 6 6 6" /></svg>
@@ -14,6 +14,7 @@ const ChevR = (
 // points to the informational Pools page.
 export function Promos() {
   const [i, setI] = useState(0);
+  const router = useRouter();
   const n = 3;
   return (
     <div className="promo-wrap" id="promoWrap">
@@ -22,7 +23,7 @@ export function Promos() {
           <div className="promo-body">
             <h2>Launch on top of stock tokens.</h2>
             <p className="promo-sub">Pick a stock, deploy in seconds. Liquidity handled for you.</p>
-            <Link className="promo-btn" href="/create">Deploy now</Link>
+            <button className="promo-btn" onClick={() => router.push("/create")}>Deploy now</button>
           </div>
           <div className="promo-art">
             <div className="orbit" id="orbit">
@@ -36,7 +37,7 @@ export function Promos() {
             <div className="promo-tag">POOLS</div>
             <h2>Graduated tokens, real liquidity.</h2>
             <p className="promo-sub">When a token graduates, its liquidity moves on-chain and the LP is burned forever.</p>
-            <Link className="promo-btn" href="/pools">View pools</Link>
+            <button className="promo-btn" onClick={() => router.push("/pools")}>View pools</button>
           </div>
           <div className="promo-drops">
             <div className="lp-feed" id="lpFeed" />

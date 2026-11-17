@@ -1,5 +1,7 @@
 import { Promos } from "./Promos";
 import { MarketRow } from "./MarketRow";
+import { StockRow } from "./StockRow";
+import { STOCK_SYMS } from "@/lib/stocks";
 import { type MarketData, FIXTURE } from "@/lib/server/market";
 import { shortAddr } from "@/lib/ui/format";
 import { LegalLinks } from "@/components/shell/RiskGate";
@@ -47,6 +49,7 @@ export function Market({ data }: { data: MarketData }) {
           </p>
         ) : (
           <>
+            <StockRow syms={FIXTURE ? STOCK_SYMS : ["NVDA"]} />
             <MarketRow title="Trending" tokens={data.trending} />
             <MarketRow title="New launch" tokens={data.fresh} />
             <MarketRow title="Graduated" tokens={data.graduated} />

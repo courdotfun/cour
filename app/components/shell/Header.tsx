@@ -122,6 +122,10 @@ export function Header() {
           </svg>
           <span id="themeLbl">{themeLbl}</span>
         </button>
+        <button className="theme-btn snd-btn off" id="sndBtn" type="button" aria-label="Sound off" title="Sound off" onClick={(e) => e.currentTarget.classList.toggle("off")}>
+          <svg className="snd-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6" /><path d="M18.3 6.5a7.5 7.5 0 0 1 0 11" /></svg>
+          <svg className="snd-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="m16 9.5 5 5M21 9.5l-5 5" /></svg>
+        </button>
         <button className="btn-connect" onClick={connect}>
           {short ?? "Connect"}
         </button>

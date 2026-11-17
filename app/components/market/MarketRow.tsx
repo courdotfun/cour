@@ -23,7 +23,7 @@ export function MarketRow({ title, tokens }: { title: string; tokens: UiToken[] 
     if (el) el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.8, 600), behavior: "smooth" });
   };
   return (
-    <>
+    <div className="sec-card">
       <div className="row-head">
         <h2>
           {title} <span className="rh-count">{tokens.length}</span>
@@ -45,6 +45,6 @@ export function MarketRow({ title, tokens }: { title: string; tokens: UiToken[] 
           <TokenCard key={t.address} t={t} />
         ))}
       </div>
-    </>
+    </div>
   );
 }
