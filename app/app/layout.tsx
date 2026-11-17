@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "@/styles/globals.css";
 import { Header } from "@/components/shell/Header";
 import { ThemeScript } from "@/components/shell/ThemeScript";
@@ -45,6 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
         </div>
         <StageFit />
+        {/* Default token-avatar "Oink" look — dresses un-logo'd `.ava` after hydration,
+            exactly like design/cour-v8.html. Not the user-owned Oink Collection. */}
+        <Script src="/oink-ava.js" strategy="afterInteractive" />
         <RiskGate />
         <WalletModal />
         <ScanModal />

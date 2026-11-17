@@ -1,5 +1,7 @@
 // Port of the v8 spark(data,pos) helper → React SVG with identical geometry/classes.
-let _uid = 0;
+// Gradient id is derived from `pos` only (not a mutable counter): SSR and client
+// render the same id, so hydration matches and the fill ref never dangles. Both
+// up/down gradients are identical per direction, so sharing one id is lossless.
 export function Spark({ data, pos }: { data: number[]; pos: boolean }) {
   const w = 300;
   const h = 44;
@@ -8,7 +10,7 @@ export function Spark({ data, pos }: { data: number[]; pos: boolean }) {
   const rng = max - min || 1;
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / rng) * (h - 10) - 5}`).join(" ");
   const col = pos ? "#4ade80" : "#f87171";
-  const id = "g" + (_uid++).toString(36);
+  const id = "spark-" + (pos ? "up" : "dn");
   return (
     <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
       <defs>
