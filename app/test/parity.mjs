@@ -19,7 +19,20 @@ const AA_TOLERANCE = 0.1; // % — legacy single-gate threshold (kept for footer
 const PRE_TOL = 0.1;      // primary gate: pre-scale DOM diff (transform:scale disabled)
 const SCALED_TOL = 0.5;   // secondary gate: as-rendered scaled diff
 
-const VIEWS = [{ key: "home", app: "/", openV8: null }];
+const VIEWS = [
+  { key: "home", app: "/", openV8: null },
+  {
+    key: "token",
+    app: "/token/0x0000000000000000000000000000000000000005",
+    openV8: null,
+    v8Eval: "window.openToken && window.openToken('AUR')",
+    // Dynamic/divergent regions in the token view (random data + live animation +
+    // different chart impl + async updates): hide on both sides, compare the chrome.
+    hide: ["#tkChartWrap", "#tkChart", "#tkChartCanvas", "#tkUpd", "#tkUpdCard", "#tkTradeList",
+      "#tkTfs", ".tk-tfs", ".tk-athglow", ".tk-athchip", ".tk-spark", ".tk-sparkwrap"],
+    blank: ["#tkPrice", "#tkChg", ".tk-ttime", ".tk-stat-v"],
+  },
+];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
 // VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
 const REQUIRED_VIEWS = ["home", "token", "create", "profile", "user", "wallet", "scan", "pools", "collection", "stock"];
@@ -123,6 +136,7 @@ function diffPct(a, b, outPath) {
             await page.goto(DESIGN, { waitUntil: "load", timeout: 30000 });
             await page.waitForTimeout(400);
             if (view.openV8) await page.evaluate((v) => window.showView && window.showView(v), view.openV8).catch(() => {});
+            if (view.v8Eval) { await page.evaluate(view.v8Eval).catch(() => {}); await page.waitForTimeout(250); }
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const bScaled = await grab(page, w * dpr, h * dpr, false);
             const bPre = scales ? await grab(page, w * dpr, h * dpr, true) : bScaled;

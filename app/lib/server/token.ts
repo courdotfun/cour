@@ -33,7 +33,15 @@ async function ipfsMeta(uri: string | null): Promise<{ description: string | nul
   }
 }
 
+const FIXTURE = process.env.NEXT_PUBLIC_VISUAL_FIXTURE === "1";
+
 export async function loadToken(address: string): Promise<TokenDetail | null> {
+  if (FIXTURE) {
+    // Visual-parity mode: serve the same AUR token v8's openToken('AUR') shows, for
+    // any requested address. NEVER enabled in production.
+    const { FIXTURE_TOKEN_DETAIL } = await import("@/lib/fixtureToken");
+    return FIXTURE_TOKEN_DETAIL;
+  }
   const addr = address.toLowerCase();
   const tok = await indexerJson<TokenRow & { holderCount?: number }>(`/token/${addr}`);
   if (!tok || !(tok as any).address) return null;

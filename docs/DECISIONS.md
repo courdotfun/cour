@@ -74,3 +74,16 @@ One line each: decision + reason. Chronological.
   and add data-netbtn (v8 has it). App only supports Robinhood Chain, so the final
   state is rendered statically (no network-switcher JS needed). Safest option.
 - Effect: mobile 320-768 all themes dropped 0.2-0.6% -> 0.002-0.083% (all PASS).
+
+## 2026-11-17 — Token view (and other non-home views): porting approach
+- The app's non-home views (e.g. TokenView) are functional React rewrites whose
+  structure/stat-set differs from v8 (app stats: Market cap/Progress/Creator-fee/
+  Holders/Pair/Age; v8: Market cap/FDV/Volume/Holders/Liquidity/Supply). The project's
+  goal is pixel-parity with v8, so the app view is being aligned TO v8's design.
+- Genuinely dynamic/placeholder regions in v8 (chart = random OHLC + live animation +
+  different impl; trades/holders = random; Volume/Liquidity stats = Math.random; async
+  Updates; relative times) are MASKED in the harness — same policy as Home's stock
+  prices/sparks. We match the static chrome (header, stat labels, about, order panel).
+- Safest option: do NOT invent data to match v8's random placeholders; mask those
+  values. Match structure + deterministic fields (mc, FDV, Supply, Holders, pair, age).
+- Fixture: lib/fixtureToken.ts (AUR), served via FIXTURE branch in lib/server/token.ts.
