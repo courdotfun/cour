@@ -7,6 +7,7 @@ export type TokenDetail = {
   ui: UiToken;
   raw: TokenRow;
   holderCount: number;
+  liquidityUsd: number; // v8 token view's "Liquidity" stat (prod wiring TBD)
   candles: { o: number; h: number; l: number; c: number; v: number }[];
   trades: TradeRow[];
   holders: HolderRow[];
@@ -58,6 +59,7 @@ export async function loadToken(address: string): Promise<TokenDetail | null> {
     ui: mapToken(tok, { candles: candleRows }),
     raw: tok,
     holderCount: (tok as any).holderCount ?? holdersResp?.count ?? (holdersResp?.holders?.length ?? 0),
+    liquidityUsd: 0, // TODO: derive from pool/curve reserves
     candles: mapCandles(candleRows),
     trades: tradesResp?.trades ?? [],
     holders: holdersResp?.holders ?? [],

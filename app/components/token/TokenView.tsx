@@ -21,6 +21,19 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+// About-grid item — v8 uses .tk-ab-l/.tk-ab-v (distinct from the .tk-stat grid).
+function AbItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <div className="tk-ab-l">{label}</div>
+      <div className="tk-ab-v">{value}</div>
+    </div>
+  );
+}
+
+// v8's "$X.XXM" money format for the Volume/Liquidity stats.
+const moneyM = (n: number) => "$" + (n / 1e6).toFixed(2) + "M";
+
 export function TokenView({ d }: { d: TokenDetail }) {
   const t = d.ui;
   const pos = t.chg >= 0;
@@ -58,24 +71,25 @@ export function TokenView({ d }: { d: TokenDetail }) {
 
           <div className="tk-stats" id="tkStats">
             <Stat label="Market cap" value={`$${t.mc}`} />
-            <Stat label="Progress" value={d.raw.graduated ? "Graduated" : `${progress.toFixed(1)}%`} />
-            <Stat label="Creator fee" value={`${t.creatorFee}% · ${feeModeLabel(d.raw.mode)}`} />
+            <Stat label="FDV" value={t.fdv === "—" ? "—" : `$${t.fdv}`} />
+            <Stat label="24h Volume" value={moneyM(d.raw.volumeUsd)} />
             <Stat label="Holders" value={d.holderCount.toLocaleString()} />
-            <Stat label="Pair" value={t.pair} />
-            <Stat label="Age" value={`${t.age} ago`} />
+            <Stat label="Liquidity" value={moneyM(d.liquidityUsd)} />
+            <Stat label="Supply" value="1B" />
           </div>
 
           <TradesHolders trades={d.trades} holders={d.holders} stockDecimals={t.stockDecimals} />
 
           <div className="tk-card">
             <h3 className="tk-h3">About</h3>
-            <p className="tk-desc">{d.description || "No description provided."}</p>
-            <div className="tk-abgrid">
-              <Stat label="Contract" value={t.addr} />
-              <Stat label="Creator" value={<a href={`/u/${d.raw.creator}`}>{d.raw.creator.slice(0, 6)}…{d.raw.creator.slice(-4)}</a>} />
-              {d.raw.graduated && (
-                <Stat label="Liquidity" value={<span>Graduated · LP burned to {DEAD_ADDRESS.slice(0, 6)}…{DEAD_ADDRESS.slice(-4)}</span>} />
-              )}
+            <p className="tk-desc">{`${t.name} ($${t.tick}) is a tokenized asset trading 24/7 on Robinhood Chain — no broker, no market hours, settled fully on-chain.`}</p>
+            <div className="tk-abgrid" id="tkAbout">
+              <AbItem label="Creator" value={t.addr} />
+              <AbItem label="Contract" value={t.addr} />
+              <AbItem label="Total supply" value="1,000,000,000" />
+              <AbItem label="Pair" value={`ETH / ${t.tick}`} />
+              <AbItem label="Launched" value={`${t.age} ago`} />
+              <AbItem label="Creator fee" value={`${(t.creatorFee > 0 ? t.creatorFee : 1).toFixed(2)}%`} />
             </div>
           </div>
 

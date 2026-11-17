@@ -44,12 +44,15 @@ export const FIXTURE_TOKEN_DETAIL: TokenDetail = {
     lastPriceStock: 1,
     lastPriceUsd: 0.0197,
     volumeStock: 0,
-    volumeUsd: 0,
+    // v8 openToken('AUR') under Math.random=0.5 → 24h Volume $9.85M, Liquidity $2.46M,
+    // Holders 4,600 (mcNum=19.7e6; vol=mcNum*0.5/1e6, liq=mcNum*0.125/1e6, holders=600+4000).
+    volumeUsd: 9_850_000,
     tradeCount: 0,
     lastTradeAt: null,
     holderCount: 4600,
   },
   holderCount: 4600,
+  liquidityUsd: 2_462_500,
   // A few fixed candles so the chart card lays out (masked in the diff).
   candles: Array.from({ length: 24 }, (_, i) => {
     const base = 0.015 + i * 0.0002;
