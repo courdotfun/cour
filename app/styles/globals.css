@@ -19,3 +19,12 @@ a.card {
   color: inherit;
   text-decoration: none;
 }
+
+/*
+ * The token view's contract/explorer chips are <a> in the app where v8 used
+ * <button>. `.tk-chip` sets color but not text-decoration, so the anchor picks up
+ * the UA underline that v8's button lacks. Match v8: no underline.
+ */
+a.tk-chip {
+  text-decoration: none;
+}

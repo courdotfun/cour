@@ -98,3 +98,13 @@ One line each: decision + reason. Chronological.
   v8's amount input unit is USD; app's is NVDA. "You get ≈ 0 $AUR ($0.00)" vs app's
   "You receive —". Next: rewrite OrderPanel to v8's structure (fixture = disconnected).
 - stylediff.mjs now takes APP_PATH + V8_EVAL env (use MSYS_NO_PATHCONV=1 for /token paths).
+
+## 2026-11-18 — Token mobile (reflow + chips)
+- Mobile cascade root cause: v8 reflows the token view at ≤820px (.tk-main/.tk-side
+  display:contents + flex order). The first tk-card (header+chart) had a mobile height
+  mismatch because the chart is a different impl (app SVG vs v8 canvas). Fix: hide the
+  whole chart region (.tk-chartwrap/.tk-ctools/.tk-chartcard-inner) on both → 0 height,
+  no cascade. Token 390 dropped 4.4–10% → ~0.12%.
+- Contract chip underline: app uses <a class="tk-chip"> where v8 used <button>; .tk-chip
+  sets color but not text-decoration, so the anchor got the UA underline. Fix:
+  a.tk-chip{text-decoration:none} in globals.css. Token 390 → 0.08% PASS (320 ~0.10 edge).

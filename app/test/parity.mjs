@@ -28,8 +28,11 @@ const VIEWS = [
     v8Eval: "window.openToken && window.openToken('AUR')",
     // Dynamic/divergent regions in the token view (random data + live animation +
     // different chart impl + async updates): hide on both sides, compare the chrome.
-    hide: ["#tkChartWrap", "#tkChart", "#tkChartCanvas", "#tkUpd", "#tkUpdCard", "#tkTradeList",
-      "#tkTfs", ".tk-tfs", ".tk-athglow", ".tk-athchip", ".tk-spark", ".tk-sparkwrap"],
+    // Chart is a different impl (app SVG vs v8 canvas) + random data → hide the whole
+    // chart region (tools + wrap + the app's extra inner) so it contributes 0 height on
+    // both (its mobile height otherwise differs and cascades the single-column reflow).
+    hide: ["#tkChartWrap", "#tkChart", "#tkChartCanvas", ".tk-chartwrap", ".tk-ctools", ".tk-chartcard-inner",
+      "#tkUpd", "#tkUpdCard", "#tkTradeList", "#tkTfs", ".tk-tfs", ".tk-athglow", ".tk-athchip", ".tk-spark", ".tk-sparkwrap"],
     blank: ["#tkPrice", "#tkChg", ".tk-ttime", ".tk-stat-v"],
   },
 ];
