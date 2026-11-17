@@ -36,6 +36,9 @@ const HIDE = ["#topUsers", ".mascot", ".news-panel", ".navbar", "#mtrack", ".tic
 // default token-avatar look via /oink-ava.js, so they render pixel-identically.)
 const BLANK = [".stk-px", ".stk-chg", ".stk-sp", ".stk-card .badge"];
 const MASK = { HIDE, BLANK };
+// Per-view masks are merged onto the base: a VIEWS entry may carry `hide`/`blank`
+// arrays for that view's dynamic/not-yet-ported regions (chart canvas, time-ago, …).
+const maskFor = (view) => ({ HIDE: [...HIDE, ...(view.hide || [])], BLANK: [...BLANK, ...(view.blank || [])] });
 
 function resolveChrome() {
   const def = chromium.executablePath();
@@ -113,14 +116,14 @@ function diffPct(a, b, outPath) {
           const scales = w >= 900 && w < 1920;
           try {
             await page.goto(APP + view.app, { waitUntil: "networkidle", timeout: 30000 });
-            await page.evaluate(freezeAndMask, { theme, mask: MASK });
+            await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const aScaled = await grab(page, w * dpr, h * dpr, false);
             const aPre = scales ? await grab(page, w * dpr, h * dpr, true) : aScaled;
 
             await page.goto(DESIGN, { waitUntil: "load", timeout: 30000 });
             await page.waitForTimeout(400);
             if (view.openV8) await page.evaluate((v) => window.showView && window.showView(v), view.openV8).catch(() => {});
-            await page.evaluate(freezeAndMask, { theme, mask: MASK });
+            await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const bScaled = await grab(page, w * dpr, h * dpr, false);
             const bPre = scales ? await grab(page, w * dpr, h * dpr, true) : bScaled;
 
