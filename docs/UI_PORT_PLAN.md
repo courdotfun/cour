@@ -106,3 +106,12 @@ Same Vercel project (cour.fun). Env: server-only `PINATA_JWT`, `APP_DATABASE_URL
 - **Still TODO:** Profile/User, Wallet modal, Scan QR, Pools, Collection, Stock,
   Oink/tour/risk-gate, bottom nav, all modals/dropdowns, hash redirects; then drive
   the parity matrix to ≤0.1%, fork E2E, Lighthouse. No production promote; frontend/ kept.
+
+## Update 2 — 2026-11-17 (more views)
+Ported this round (real data, §4 applied): **Pools** (info-only), **Collection**
+(coming soon), **Profile** (/profile — portfolio/edit via SIWE), **User** (/u/[addr]
+— follow), **bottom nav + add-menu**, **risk gate + legal docs** (first-visit),
+**Wallet modal** (Receive+QR / Send ETH+ERC20 / Swap-soon), **Scan QR**
+(BarcodeDetector), **⌘K search** (basic), **hash redirects**.
+Still TODO: Stock page (tk-stock variant), Oink mascot + tour (cosmetic), full state
+matrix, and the parity fix-loop to ≤0.1% (home still ~6–32%, see VISUAL_PARITY.md).
