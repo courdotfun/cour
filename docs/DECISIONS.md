@@ -63,3 +63,14 @@ One line each: decision + reason. Chronological.
 - Effect: 1024 scaled 0.745%→0.036% (classic), cartoon/light →0.080%; all desktop-
   scaled widths now pass both gates. This was the "irreducible resampling" suspicion —
   it was a real color bug, confirming the measure-first methodology.
+
+## 2026-11-17 — network chip icon (header)
+- Finding (via test/stylediff.mjs @375/@1920): v8 JS-upgrades the chip's #netIc to a
+  <span class="net-ic"><img> Robinhood logo (20px); the app rendered a 13px <svg.rh>
+  leaf outline. The 7px width delta shifted the whole header right (theme-btn +7px),
+  dominating every mobile width and the cartoon chip border.
+- Fix: render the chip as v8's end-state — <span class="net-ic" data-k="robinhood">
+  with the verbatim NET_LOGO.robinhood image (extracted to components/shell/netLogo.ts),
+  and add data-netbtn (v8 has it). App only supports Robinhood Chain, so the final
+  state is rendered statically (no network-switcher JS needed). Safest option.
+- Effect: mobile 320-768 all themes dropped 0.2-0.6% -> 0.002-0.083% (all PASS).

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toggleTheme, nextThemeLabel } from "@/lib/theme";
 import { BRAND_WM } from "./brandLogo";
+import { NET_LOGO_ROBINHOOD } from "./netLogo";
 
 type SearchResults = {
   tokens: { address: string; name?: string | null; symbol?: string | null }[];
@@ -100,12 +101,8 @@ export function Header() {
           <span className="kbd">⌘K</span>
         </div>
         <div className="spacer" />
-        <div className="chain" id="netChip" role="button" tabIndex={0} aria-haspopup="menu">
-          <svg className="rh" viewBox="0 0 24 24" fill="none" stroke="#21e065" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
-            <path d="M16 8 2 22" />
-            <path d="M17.5 15H9" />
-          </svg>
+        <div className="chain" id="netChip" data-netbtn="" role="button" tabIndex={0} aria-haspopup="menu">
+          <span className="net-ic" id="netIc" data-k="robinhood" dangerouslySetInnerHTML={{ __html: NET_LOGO_ROBINHOOD }} />
           <span data-net>Robinhood Chain</span>
           <b className="net-dd">▾</b>
         </div>
