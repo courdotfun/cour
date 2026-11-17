@@ -25,9 +25,9 @@ const WIDTHS = process.env.WIDTHS
 const DPRS = process.env.DPRS ? process.env.DPRS.split(",").map(Number) : [1];
 // Removed from BOTH (display:none) — not-yet-ported in the app + non-deterministic
 // cosmetic animations (orbit/Oink) + the live ticker/news/toaster.
-const HIDE = ["#topUsers", ".mascot", ".news-panel", ".navbar", "#mtrack", ".ticker", ".marquee", ".toaster", "#csPanel", ".cs-panel", ".promo-art", ".orbit"];
-// Blanked but keeping layout (visibility:hidden) — §4 text + time/price data regions.
-const BLANK = [".promo-lp", ".stk-px", ".stk-chg", ".stk-sp", ".stk-card .badge", "#home .head-row p"];
+const HIDE = ["#topUsers", ".mascot", ".news-panel", ".navbar", "#mtrack", ".ticker", ".marquee", ".toaster", "#csPanel", ".cs-panel", ".promo-art", ".orbit", ".promo-lp", "#home .head-row p"];
+// Blanked but keeping layout (visibility:hidden) — time/price data regions only.
+const BLANK = [".stk-px", ".stk-chg", ".stk-sp", ".stk-card .badge"];
 const MASK = { HIDE, BLANK };
 
 function resolveChrome() {
