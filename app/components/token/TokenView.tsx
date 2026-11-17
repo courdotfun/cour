@@ -51,9 +51,11 @@ export function TokenView({ d }: { d: TokenDetail }) {
                 {/* Match v8's #tkAva exactly: gradient+letter (or logo), dressed in
                     place by /oink-ava.js (which targets #tkAva), so both render the
                     same 48px Oink avatar. */}
+                {/* No id="tkAva": v8 runs dressAvatars once at load (before openToken
+                    sets this), so its #tkAva stays an undressed gradient+letter. Omitting
+                    the id keeps oink-ava.js from dressing ours, matching v8. */}
                 <div
                   className="tk-ava"
-                  id="tkAva"
                   style={
                     t.logo
                       ? { background: `url(${t.logo}) center/cover` }
@@ -75,8 +77,8 @@ export function TokenView({ d }: { d: TokenDetail }) {
             </div>
             <div className="tk-priceline">
               <div>
-                <div className="tk-price">{price != null ? `$${price < 0.01 ? price.toPrecision(2) : price.toLocaleString(undefined, { maximumFractionDigits: 6 })}` : "—"}</div>
-                <div className={`tk-chg ${pos ? "up" : "down"}`}>{pos ? "▲" : "▼"} {Math.abs(t.chg)}%</div>
+                <div className="tk-price" id="tkPrice">{price != null ? `$${price < 0.01 ? price.toPrecision(2) : price.toLocaleString(undefined, { maximumFractionDigits: 6 })}` : "—"}</div>
+                <div className={`tk-chg ${pos ? "up" : "down"}`} id="tkChg">{pos ? "▲" : "▼"} {Math.abs(t.chg)}%</div>
               </div>
             </div>
             <Chart candles={d.candles} />
@@ -104,6 +106,8 @@ export function TokenView({ d }: { d: TokenDetail }) {
               <AbItem label="Launched" value={`${t.age} ago`} />
               <AbItem label="Creator fee" value={`${(t.creatorFee > 0 ? t.creatorFee : 1).toFixed(2)}%`} />
             </div>
+            {/* v8's tokNote() appends this inside the About card. */}
+            <div className="lg-note"><b>Community token.</b> Launched by its creator and not audited by COUR. The creator fee is set at launch and cannot be changed. Never invest more than you can lose.</div>
           </div>
 
           <Updates token={t.address} creator={d.raw.creator} />
