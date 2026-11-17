@@ -7,3 +7,15 @@
 :root {
   color-scheme: dark;
 }
+
+/*
+ * Token cards render as <a> (real navigation) where v8 used <div onclick>. The
+ * card's .name/.mc have no explicit color, so an anchor would inherit the UA
+ * dark-scheme link color (#9e9eff) instead of v8's body text color — making every
+ * community-card name + market-cap blue. Match v8's <div>: inherit text color, no
+ * underline. (Verified with test/stylediff.mjs: .name/.mc color 158,158,255 → body.)
+ */
+a.card {
+  color: inherit;
+  text-decoration: none;
+}

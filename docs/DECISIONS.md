@@ -52,3 +52,14 @@ One line each: decision + reason. Chronological.
 - **Search is implemented in-app** — the indexer exposes no `/search`; `/api/search` composes indexer `/tokens` (name/symbol/address match) + known stock list + `app.profiles` (name/address).
 - **Admin never sends owner tx from a wallet.** Owner is the Safe `0xDca6…7fA2`; `/api/safe-tx` builds an EIP-712 SafeTx JSON (nonce read from the Safe on-chain) compatible with `script/safe/signer.html`, and the UI shows the sign/execute instructions. Only `claimPlatform` (permissionless) may be sent directly.
 - **Base64 assets (47 data-URIs) extracted to `app/public/`** (SVGO/WebP), lazy-loaded, to shrink the HTML and improve Lighthouse. CSS keeps references by file path.
+
+## 2026-11-17 — card text color (community token cards)
+- Finding (via test/stylediff.mjs @1024): `.card .name`/`.mc` had no explicit color;
+  the app renders cards as `<a>` (navigation) so they inherited Chrome's dark
+  color-scheme default link color `#9e9eff`, vs v8's `<div>` body white `#eef2ee`.
+- Fix: app-layer `a.card{color:inherit;text-decoration:none}` in styles/globals.css
+  (did NOT touch verbatim public/v8.css). Safest option: normalize the anchor to the
+  div's inherited color rather than hardcoding a hex.
+- Effect: 1024 scaled 0.745%→0.036% (classic), cartoon/light →0.080%; all desktop-
+  scaled widths now pass both gates. This was the "irreducible resampling" suspicion —
+  it was a real color bug, confirming the measure-first methodology.
