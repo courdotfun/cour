@@ -67,11 +67,7 @@ export function Header() {
 
   return (
     <header>
-      <div className="brand">
-        <Link href="/" aria-label="COUR home">
-          <span dangerouslySetInnerHTML={{ __html: BRAND_WM }} />
-        </Link>
-      </div>
+      <div className="brand" role="link" aria-label="COUR home" onClick={() => router.push("/")} dangerouslySetInnerHTML={{ __html: BRAND_WM }} />
       <div className="bar">
         <div className="search-top">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
