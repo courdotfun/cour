@@ -48,7 +48,20 @@ export function TokenView({ d }: { d: TokenDetail }) {
             <div className="tk-top">
               <div className="tk-id">
                 <Link className="back-btn back-ic" href="/" aria-label="Back to market">{Back}</Link>
-                <div className="tk-ava"><Ava t={t} size={44} /></div>
+                {/* Match v8's #tkAva exactly: gradient+letter (or logo), dressed in
+                    place by /oink-ava.js (which targets #tkAva), so both render the
+                    same 48px Oink avatar. */}
+                <div
+                  className="tk-ava"
+                  id="tkAva"
+                  style={
+                    t.logo
+                      ? { background: `url(${t.logo}) center/cover` }
+                      : { background: `linear-gradient(135deg,hsl(${t.hue} 70% 58%),hsl(${(t.hue + 42) % 360} 72% 46%))` }
+                  }
+                >
+                  {t.logo ? "" : t.tick[0]}
+                </div>
                 <div>
                   <div className="tk-name">{t.name}</div>
                   <div className="tk-tick">${t.tick}</div>

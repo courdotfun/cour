@@ -87,3 +87,14 @@ One line each: decision + reason. Chronological.
 - Safest option: do NOT invent data to match v8's random placeholders; mask those
   values. Match structure + deterministic fields (mc, FDV, Supply, Holders, pair, age).
 - Fixture: lib/fixtureToken.ts (AUR), served via FIXTURE branch in lib/server/token.ts.
+
+## 2026-11-17 — Token view progress + OrderPanel
+- Aligned: avatar (#tkAva gradient+letter dressed by oink-ava.js, matches v8 48px),
+  stats grid, About grid, description. Token @1920 ~4.1% (from 4.9%).
+- Remaining Token blocker: OrderPanel. v8's panel (.tk-side) is 629px tall vs the app's
+  392px — v8 has extra elements the app lacks: "Buy with [ETH ⌄]" token selector,
+  "Connect to see balances / 1 ETH = $3200" row, swap-route ("ETH → WETH → AUR · 2 hops
+  · fee 0.65%"), and a disconnected "Connect wallet" button state (app shows "Buy AUR").
+  v8's amount input unit is USD; app's is NVDA. "You get ≈ 0 $AUR ($0.00)" vs app's
+  "You receive —". Next: rewrite OrderPanel to v8's structure (fixture = disconnected).
+- stylediff.mjs now takes APP_PATH + V8_EVAL env (use MSYS_NO_PATHCONV=1 for /token paths).

@@ -30,12 +30,15 @@ function setTheme(theme) {
   if (theme === "light") { B.classList.add("theme-light"); B.classList.add("l-pink"); }
   B.dataset.theme = theme;
 }
+const APP_PATH = process.env.APP_PATH || "/";
+const V8_EVAL = process.env.V8_EVAL || ""; // e.g. "window.openToken('AUR')"
 async function snap(browser, url, sels, props, theme) {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   await ctx.addInitScript(() => { try { localStorage.setItem("cour-risk-ok-v1", "1"); } catch {} try { Math.random = () => 0.5; } catch {} });
   const page = await ctx.newPage();
   await page.goto(url, { waitUntil: url === DESIGN ? "load" : "networkidle", timeout: 30000 });
   await page.waitForTimeout(url === DESIGN ? 500 : 300);
+  if (url === DESIGN && V8_EVAL) { await page.evaluate(V8_EVAL).catch(() => {}); await page.waitForTimeout(300); }
   await page.evaluate(setTheme, theme);
   await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
   await page.waitForTimeout(200);
@@ -56,7 +59,7 @@ async function snap(browser, url, sels, props, theme) {
 }
 (async () => {
   const browser = await chromium.launch({ executablePath: resolveChrome() });
-  const a = await snap(browser, APP + "/", SELECTORS, PROPS, THEME);
+  const a = await snap(browser, APP + APP_PATH, SELECTORS, PROPS, THEME);
   const v = await snap(browser, DESIGN, SELECTORS, PROPS, THEME);
   await browser.close();
   console.log(`# style/bbox diff @ ${W} ${THEME} (app vs v8)\n`);
