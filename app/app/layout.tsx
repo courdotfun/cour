@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import { Header } from "@/components/shell/Header";
 import { ThemeScript } from "@/components/shell/ThemeScript";
 import { StageFit } from "@/components/shell/StageFit";
+import { BottomNav } from "@/components/shell/BottomNav";
 
 export const metadata: Metadata = {
   title: "COUR — launch stock-backed tokens",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div id="stage">
           <Header />
           <main>{children}</main>
+          <BottomNav />
         </div>
         <StageFit />
       </body>
