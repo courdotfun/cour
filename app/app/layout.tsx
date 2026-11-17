@@ -5,6 +5,9 @@ import { ThemeScript } from "@/components/shell/ThemeScript";
 import { StageFit } from "@/components/shell/StageFit";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { RiskGate } from "@/components/shell/RiskGate";
+import { HashRedirect } from "@/components/shell/HashRedirect";
+import { WalletModal } from "@/components/wallet/WalletModal";
+import { ScanModal } from "@/components/wallet/ScanModal";
 
 export const metadata: Metadata = {
   title: "COUR — launch stock-backed tokens",
@@ -36,6 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <StageFit />
         <RiskGate />
+        <WalletModal />
+        <ScanModal />
+        <HashRedirect />
       </body>
     </html>
   );
