@@ -108,3 +108,15 @@ One line each: decision + reason. Chronological.
 - Contract chip underline: app uses <a class="tk-chip"> where v8 used <button>; .tk-chip
   sets color but not text-decoration, so the anchor got the UA underline. Fix:
   a.tk-chip{text-decoration:none} in globals.css. Token 390 → 0.08% PASS (320 ~0.10 edge).
+
+## 2026-11-18 — Token 320/360 cartoon AA edge (unresolved, documented)
+- Token passes 87/90 (all widths/themes/dpr) EXCEPT: 320@1 classic 0.100, 320@1
+  cartoon 0.109, 360@1 cartoon 0.105 — all a hair over the 0.1% primary gate.
+- Investigated per "measure, don't guess": masked-render geometry at 320 is BYTE-
+  IDENTICAL app vs v8 (addr chip, contract, header, avatar, name, priceline all exact
+  same x/y/w/h); the address-chip glyphs are visually identical in a cropped capture.
+- Conclusion: genuine imperceptible sub-pixel AA at the narrowest widths (cartoon's
+  2.5px ink borders on a dense layout push the per-pixel sum ~0.005% over). No app
+  change reduces it (geometry already identical). Safest option: do NOT loosen the
+  gate and do NOT mask real content to hit a number — leave these 3 cells failing and
+  keep STATUS: ALL PASS withheld. Revisit as a gate-tolerance call once all views land.
