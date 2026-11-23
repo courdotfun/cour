@@ -77,6 +77,7 @@ export function ScanModal() {
           <div className="sc-view" id="scView"><video ref={videoRef} id="scVideo" playsInline muted /><div className="sc-frame" /></div>
           <div className="sc-msg" id="scMsg">{msg}</div>
           <div className="sc-alt">
+            <label className="wl-ghost sc-altb">Take photo<input type="file" accept="image/*" capture="environment" hidden onChange={onFile} /></label>
             <label className="wl-ghost sc-altb">Upload image<input type="file" accept="image/*" hidden onChange={onFile} /></label>
           </div>
         </div>

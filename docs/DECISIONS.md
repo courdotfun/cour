@@ -188,3 +188,39 @@ One line each: decision + reason. Chronological.
   for §4 honesty); masking is the honest choice and is documented here.
 - rows.json merge cache added to parity.mjs so ONLY=pools regenerates the complete report
   (225/225 across home+token+create+profile+pools) without re-measuring stable views.
+
+## 2026-11-23 — Scan QR modal into parity matrix
+- Scan is a global modal, not a route — added an `appEval` harness field (app-side analogue
+  of v8Eval) that dispatches the opening CustomEvent after the app goto. scan: app `/`
+  + `cour:scan`; v8 `openScan()`. Both overlay the identical home view.
+- Measure-first (768 diff image): the only divergence was the button row — v8's Scan modal
+  has TWO controls ("Take photo" + "Upload image"); the app's ScanModal had dropped "Take
+  photo". Fix (real alignment, not a mask): add the "Take photo" label (input capture=
+  "environment") before "Upload image". Scan → 0.000%.
+- Masks: `#scView/.sc-view` (live camera area — device/permission dependent) + `#scMsg/.sc-msg`
+  (status message varies by camera state). Compared chrome = modal head "Scan QR" + the
+  upload/photo controls.
+- Modal flake: one cell (360 light) measured 1.14% once then 0.000% on re-run — the React
+  modal occasionally hadn't finished portalling/painting within the appEval settle. Bumped
+  the appEval wait 250→400ms. 270/270 (home, token, create, profile, scan, pools).
+
+## 2026-11-23 — Remaining views (user, wallet, collection, stock): honest assessment
+Measured/aligned so far: home, token, create, profile, pools, scan — 6/10, all passing.
+The other four are NOT pixel-matchable via the agreed gate (mask §4/dynamic + align static
+chrome) without either fabricating demo data (violates §3) or new UI work. Documented so a
+human decides scope — STATUS: ALL PASS stays withheld until then:
+- **wallet**: v8's `openWModal` early-returns to `openConnect()` when no wallet is connected,
+  so in the fixture (disconnected) harness v8 shows the CONNECT modal while the app shows a
+  "Connect a wallet first" wallet modal — different modals. Honest parity needs a deterministic
+  CONNECTED-wallet fixture on both sides (and v8 uses demo balances vs the app's real on-chain),
+  i.e. a harness/product decision, not a mask.
+- **user** (`/u/:addr`): v8's `showUserPage` renders a demo-rich `.ug` card (tier, rank, 30d
+  PnL, 24h volume, recent activity, badges, top holdings — all `Math.random`/fabricated). The
+  app intentionally shows a real-data minimal profile (name, bio, followers, holdings). Matching
+  v8 would mean reintroducing fabricated demo UI (violates §3) or masking essentially everything.
+- **collection**: v8 builds a full Oink-skins marketplace (`.oc-grid` rarity cards, shop/listing,
+  stats) at runtime; the app shows the §4 "Coming soon" panel (Oink Collection not live). No
+  shared chrome — it's a §4 replacement, not a pixel target.
+- **stock** (`/stock/:sym`): genuinely portable (the data layer — `stockUsdPrice`, stockswap —
+  exists) but not yet built; v8 reuses the `#token` view dressed by `stockFill` (.tk-stock). This
+  is real porting work, not a masking pass.

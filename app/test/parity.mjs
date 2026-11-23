@@ -75,6 +75,16 @@ const VIEWS = [
     hide: ["#plMine", ".pl-sub", ".pl-note", "#plHours", ".pl-hours", "#plGrid", ".pl-grid"],
     blank: ["#plCount"],
   },
+  {
+    key: "scan",
+    app: "/",
+    appEval: "window.dispatchEvent(new CustomEvent('cour:scan'))",
+    v8Eval: "window.openScan && window.openScan()",
+    // The Scan QR modal overlays the (identical) home view. The live camera area (#scView
+    // video) + its status message diverge by device/permission state, so mask them; compare
+    // the modal chrome (head "Scan QR" + the upload control).
+    hide: ["#scView", ".sc-view", "#scMsg", ".sc-msg"],
+  },
 ];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
 // VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
@@ -228,6 +238,10 @@ function diffPct(a, b, outPath) {
           note = "";
           try {
             await page.goto(APP + view.app, { waitUntil: "networkidle", timeout: 30000 });
+            // appEval: open an app overlay that isn't its own route (wallet/scan modals are
+            // global, triggered by a CustomEvent) before capturing — the app-side analogue
+            // of v8Eval/openV8.
+            if (view.appEval) { await page.evaluate(view.appEval).catch(() => {}); await page.waitForTimeout(400); } // modals portal+paint
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const aScaled = await grab(page, w * dpr, h * dpr, false);
             appEls = await page.evaluate(collectEls);
