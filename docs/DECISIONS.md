@@ -172,3 +172,19 @@ One line each: decision + reason. Chronological.
   "Earn … swap fees" claim removed per FRONTEND_CHANGES, and the app narrowed the stock
   list). Added a `ONLY=<views>` env to parity.mjs for fast single-view fix loops (the
   committed report is always a full run; ONLY leaves coversAll=false → ALL PASS withheld).
+
+## 2026-11-23 — Pools view into parity matrix
+- Added `pools` (app `/pools`, v8 `showView('pools')`). The app's Pools is INFORMATIONAL
+  per §4 (COUR pools have LP fee 0 + burned LP — no deposit/zap), whereas v8's Pools is
+  demo-data: a live market-hours chip (#plHours), the "Provide liquidity … earn a share of
+  every swap fee" subtitle (.pl-sub), a risk note (.pl-note), my-positions (#plMine) and a
+  grid of demo pool cards (#plGrid). Each is either a §4 honesty rewrite in the app or
+  rendered from real (empty) data, so there is no honest pixel match for them.
+- Safest option (same policy as home's ticker/news/mascot and the token chart): mask the
+  §4/dynamic regions on BOTH sides — `#plMine, .pl-sub, .pl-note, #plHours, .pl-hours,
+  #plGrid, .pl-grid` (hide) + `#plCount` (blank) — and compare the static shared chrome:
+  the `<h1>` "Liquidity pools" and the "All pools" section header. 45/45 at 0.000–0.001%.
+- Did NOT reintroduce v8's "earn swap fees" copy to force a match (that claim is removed
+  for §4 honesty); masking is the honest choice and is documented here.
+- rows.json merge cache added to parity.mjs so ONLY=pools regenerates the complete report
+  (225/225 across home+token+create+profile+pools) without re-measuring stable views.

@@ -61,6 +61,20 @@ const VIEWS = [
     // Compared chrome = the empty-state heading + paragraph + Connect button (identical).
     hide: [".wl-empty-ic", ".wl-pillars"],
   },
+  {
+    key: "pools",
+    app: "/pools",
+    openV8: "pools",
+    // §4: the app's Pools is INFORMATIONAL (COUR pools have LP fee 0 + burned LP, no
+    // deposit/zap). v8's Pools is demo-data: a live market-hours chip (#plHours), the
+    // "Provide liquidity … earn a share of every swap fee" subtitle (.pl-sub), a risk note
+    // (.pl-note), my-positions (#plMine) and a grid of demo pools (#plGrid) — all of which
+    // the app either rewrote for §4 honesty or renders from real (empty) data. Mask those
+    // dynamic/§4 regions on both sides and compare the static chrome: the <h1> "Liquidity
+    // pools" and the "All pools" section header (count blanked).
+    hide: ["#plMine", ".pl-sub", ".pl-note", "#plHours", ".pl-hours", "#plGrid", ".pl-grid"],
+    blank: ["#plCount"],
+  },
 ];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
 // VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
