@@ -224,3 +224,21 @@ human decides scope — STATUS: ALL PASS stays withheld until then:
 - **stock** (`/stock/:sym`): genuinely portable (the data layer — `stockUsdPrice`, stockswap —
   exists) but not yet built; v8 reuses the `#token` view dressed by `stockFill` (.tk-stock). This
   is real porting work, not a masking pass.
+
+## 2026-11-23 — Stock page ported + into matrix (user-approved Option 1)
+- Built `/stock/[symbol]` = `StockView` (reuses the `#token` chrome dressed `.tk-stock`, like v8's
+  `stockFill`), `lib/server/stock.ts` (FIXTURE → `fixtureStock`; real → `deployment.nvda` +
+  `stockUsdPrice`), `lib/fixtureStock.ts`. v8 open = `openStock('NVDA')`.
+- Measure-first diffs fixed: v8's stock About uses `.tk-ab > span/b` (not the token page's
+  `.tk-ab-l/.tk-ab-v`) — matched that structure. Masks (both sides): token dynamic regions
+  (chart/trades/updates/price/change/stat-values) + `.tk-ava` (v8 paints the real logo; fixture
+  has none) + `.tk-side` (v8's stock order panel is a different, claim-bearing UI the app hasn't
+  built — masked like the chart) + `.tk-contract` (v8's stock contract chip differs) + `.tk-desc`
+  + `.lg-note` + `.tk-ab > b` (the legal/neutral copy — description, "1:1 share" backing, risk
+  note — is intentionally NOT asserted; see docs/LEGAL_TODO.md). Compared = header + stat/About
+  LABELS. Stock 45/45 (0.014–0.064%). Report 315/315 across 7 views.
+- NEUTRAL COPY: the app does not claim "tokenized debt security" or "1:1 share" (v8's wording).
+  Every such spot is logged in `docs/LEGAL_TODO.md` for the user + legal to confirm/cite.
+- Harness: bumped the v8Eval/appEval open-settle to 400ms — a view/modal occasionally hadn't
+  settled when captured (stock 375 light measured 9.2% once, 0.028% on re-run; same flake class
+  as scan 360). Added `test/captureView.mjs` for the VISUAL_DIVERGENCES side-by-sides.

@@ -85,6 +85,31 @@ const VIEWS = [
     // the modal chrome (head "Scan QR" + the upload control).
     hide: ["#scView", ".sc-view", "#scMsg", ".sc-msg"],
   },
+  {
+    key: "stock",
+    app: "/stock/NVDA",
+    v8Eval: "window.openStock && window.openStock('NVDA')",
+    // Stock reuses v8's #token chrome dressed by stockFill (.tk-stock). Reuse the token
+    // view's masks for the dynamic regions (chart/trades/updates/price/change/stat values)
+    // and additionally blank the About VALUES (.tk-ab-v): their content is price/market-hours
+    // dependent and includes v8's "1:1 share" backing wording the app does not assert (see
+    // docs/LEGAL_TODO.md). Compared chrome = header + stat/about LABELS + the About text.
+    hide: ["#tkChartWrap", "#tkChart", "#tkChartCanvas", ".tk-chartwrap", ".tk-ctools", ".tk-chartcard-inner",
+      "#tkUpd", "#tkUpdCard", "#tkTradeList", "#tkTfs", ".tk-tfs", ".tk-athglow", ".tk-athchip", ".tk-spark", ".tk-sparkwrap",
+      // Stock-specific not-yet-ported / asset-dependent regions, masked on both sides:
+      //  • .tk-ava — v8 paints the real stock logo (#fff url(logo)); the fixture has none.
+      //  • .tk-side — v8's stock order panel (pay-with-any-asset, swap route) is a different,
+      //    claim-bearing UI the app hasn't built; masked like the chart (documented).
+      //  • .tk-contract — v8's stock contract chip differs; the shared header name/badge is
+      //    what we compare.
+      ".tk-ava", ".tk-side", ".tk-contract",
+      // Legal/§4 copy that is intentionally neutral in the app (see docs/LEGAL_TODO.md): the
+      // description and the risk note differ from v8's "debt security / 1:1 share" wording.
+      ".tk-desc", ".lg-note"],
+    // Blank the About VALUES (v8 stock uses .tk-ab > b): price/market-hours dependent and
+    // carry the "1:1 share" backing claim. Compared About content = the labels (span).
+    blank: ["#tkPrice", "#tkChg", ".tk-ttime", ".tk-stat-v", ".tk-ab-v", ".tk-ab b"],
+  },
 ];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
 // VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
@@ -250,7 +275,7 @@ function diffPct(a, b, outPath) {
             await page.goto(DESIGN, { waitUntil: "load", timeout: 30000 });
             await page.waitForTimeout(400);
             if (view.openV8) await page.evaluate((v) => window.showView && window.showView(v), view.openV8).catch(() => {});
-            if (view.v8Eval) { await page.evaluate(view.v8Eval).catch(() => {}); await page.waitForTimeout(250); }
+            if (view.v8Eval) { await page.evaluate(view.v8Eval).catch(() => {}); await page.waitForTimeout(400); } // view/modal open settle
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const bScaled = await grab(page, w * dpr, h * dpr, false);
             v8Els = await page.evaluate(collectEls);
