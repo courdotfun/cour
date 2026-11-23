@@ -58,6 +58,10 @@ export function ProfileView() {
             <div><b>Trade</b><span>Buy and sell on bonding curves and graduated pools.</span></div>
           </div>
         </div>
+        {/* v8 appends .legal-links to the bottom of BOTH home and profile (links() in
+            design/cour-v8.html) — render it in the disconnected state too so the footer
+            matches (it was only in the connected branch, diverging on the empty profile). */}
+        <LegalLinks />
       </section>
     );
   }

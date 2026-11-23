@@ -4,7 +4,7 @@
 // Writes diff PNGs + docs/VISUAL_PARITY.md + an HTML report.
 //
 // Usage: APP_URL=http://127.0.0.1:3012 node test/parity.mjs
-import { existsSync, mkdirSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import pixelmatch from "pixelmatch";
@@ -46,10 +46,29 @@ const VIEWS = [
     // Hide on both sides (same pattern as the token chart) and compare the form chrome.
     hide: ["#ctPreview", ".ct-preview"],
   },
+  {
+    key: "profile",
+    app: "/profile",
+    openV8: "profile",
+    // No wallet connected on either side → both render the #wlEmpty connect state
+    // (v8 toggles #wlFull via W.connected; the app omits it when addr==null). Divergent
+    // sub-regions of the empty state, masked on both sides (same §4/cosmetic policy):
+    //  • .wl-empty-ic — v8 replaces the wallet glyph with a 132px Oink pig at runtime
+    //    (ox-done, lib/oink), a cosmetic animation the app doesn't mirror.
+    //  • .wl-pillars — v8's 3rd pillar is the §4 "Earn — add idle shares… earn swap
+    //    fees" claim (removed in the app per FRONTEND_CHANGES), and the app intentionally
+    //    narrowed the stock list ("NVDA and more" vs v8's "NVDA, TSLA, AAPL and more").
+    // Compared chrome = the empty-state heading + paragraph + Connect button (identical).
+    hide: [".wl-empty-ic", ".wl-pillars"],
+  },
 ];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
 // VIEWS (what this run measured) ⊇ REQUIRED_VIEWS and every cell passes both gates.
 const REQUIRED_VIEWS = ["home", "token", "create", "profile", "user", "wallet", "scan", "pools", "collection", "stock"];
+// ONLY=profile,pools → measure just those views this run (fast iteration). The written
+// VISUAL_PARITY.md is then a partial report (coversAll=false → ALL PASS stays withheld),
+// so ONLY is for the fix-loop; the committed report is always a full run (ONLY unset).
+const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map((s) => s.trim()) : null;
 const THEMES = ["classic", "cartoon", "light"];
 const WIDTHS = process.env.WIDTHS
   ? process.env.WIDTHS.split(",").map(Number)
@@ -168,8 +187,9 @@ function diffPct(a, b, outPath) {
 
 (async () => {
   const browser = await chromium.launch({ executablePath: resolveChrome() });
-  const rows = [];
+  let rows = [];
   for (const view of VIEWS) {
+    if (ONLY && !ONLY.includes(view.key)) continue;
     for (const dpr of DPRS) {
       for (const w of WIDTHS) {
         const h = 900;
@@ -187,6 +207,11 @@ function diffPct(a, b, outPath) {
           // below that it's responsive (no transform) and at/above 1920 it's native. Outside
           // the band pre==scaled, so take a single capture (and avoid a redundant/flaky recapture).
           const scales = w >= 900 && w < 1920;
+          // Up to 2 attempts: `networkidle` occasionally times out spuriously (an idle
+          // prod connection that never settles within 30s) → ERR. A retry clears the
+          // flake without changing any passing cell's measured diff.
+          for (let attempt = 1; attempt <= 2; attempt++) {
+          note = "";
           try {
             await page.goto(APP + view.app, { waitUntil: "networkidle", timeout: 30000 });
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
@@ -207,8 +232,11 @@ function diffPct(a, b, outPath) {
             if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
             scaled = diffPct(aScaled, bScaled, join(dir, `${w}x${dpr}-${theme}.scaled.diff.png`));
             pre = scales ? diffPct(aPre, bPre, join(dir, `${w}x${dpr}-${theme}.pre.diff.png`)) : scaled;
+            break; // success — no retry needed
           } catch (e) {
             note = String(e).slice(0, 80);
+            if (attempt < 2) { try { await page.goto("about:blank"); } catch {} await page.waitForTimeout(600); }
+          }
           }
           // Dual gate: primary pre-scale ≤ PRE_TOL, secondary scaled ≤ SCALED_TOL.
           let pass = pre != null && scaled != null && pre <= PRE_TOL && scaled <= SCALED_TOL;
@@ -229,6 +257,21 @@ function diffPct(a, b, outPath) {
     }
   }
   await browser.close();
+
+  // Merge with the persisted matrix: a partial (ONLY=…) run updates just the views it
+  // measured and keeps every other view's last result, so the committed report stays
+  // COMPLETE while only changed views re-measure (a full matrix is ~45 min; one view ~4).
+  // Stale-row risk: a view's rows persist until re-measured — always re-run a view after
+  // editing it (the fix loop does). rows.json lives in the gitignored OUT dir (local cache).
+  const ROWS_JSON = join(OUT, "rows.json");
+  const rowKey = (r) => `${r.view}|${r.w}|${r.dpr}|${r.theme}`;
+  const merged = new Map();
+  if (existsSync(ROWS_JSON)) { try { for (const r of JSON.parse(readFileSync(ROWS_JSON, "utf8"))) merged.set(rowKey(r), r); } catch {} }
+  for (const r of rows) merged.set(rowKey(r), r);
+  const vOrder = (v) => { const i = REQUIRED_VIEWS.indexOf(v); return i < 0 ? 999 : i; };
+  rows = [...merged.values()].sort((a, b) => vOrder(a.view) - vOrder(b.view) || a.w - b.w || a.dpr - b.dpr || THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme));
+  if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
+  writeFileSync(ROWS_JSON, JSON.stringify(rows));
 
   const passed = rows.filter((r) => r.pass).length;
   const viewsMeasured = [...new Set(rows.map((r) => r.view))];

@@ -154,3 +154,21 @@ One line each: decision + reason. Chronological.
   style + a rect within 0.1px (firmly sub-pixel; a real shift is ≥0.3px). This RESOLVES
   the 2026-11-18 "Token 320/360 cartoon AA edge (unresolved)" entry — those cells now pass
   via the geometry/style-identical path, honestly (style still byte-exact).
+
+## 2026-11-23 — Profile view into parity matrix
+- Added `profile` to VIEWS (app `/profile`, v8 `showView('profile')`). With no wallet
+  connected on either side both render the `#wlEmpty` connect state (v8 toggles `#wlFull`
+  via `W.connected`; the app omits it when `addr==null`), so the compared content is the
+  empty-state card.
+- Root diff (measure-first, 768 diff image): the **legal footer** (`.legal-links`:
+  Terms/Privacy/Risk + email/@handle + "not financial advice") appeared on the v8 side but
+  not the app's empty state. v8's `links()` appends `.legal-links` to the bottom of BOTH
+  `#home` and `#profile`; the app's `<LegalLinks/>` was only in ProfileView's connected
+  branch. On token/create the footer sits below the 900px clip (taller content) so it never
+  diverged — it only showed on the short empty profile. Fix (real, not a mask): render
+  `<LegalLinks/>` in the disconnected branch too. Profile → 0.000% at mobile widths.
+- Masks (same §4/cosmetic policy as other views): `.wl-empty-ic` (v8 swaps the wallet glyph
+  for a 132px Oink pig at runtime — cosmetic), `.wl-pillars` (v8's 3rd pillar is the §4
+  "Earn … swap fees" claim removed per FRONTEND_CHANGES, and the app narrowed the stock
+  list). Added a `ONLY=<views>` env to parity.mjs for fast single-view fix loops (the
+  committed report is always a full run; ONLY leaves coversAll=false → ALL PASS withheld).
