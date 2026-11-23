@@ -26,6 +26,7 @@ export function CreateForm() {
   const [links, setLinks] = useState({ website: "", x: "", telegram: "", discord: "" });
   const [account, setAccount] = useState<string | null>(null);
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [bad, setBad] = useState({ name: false, tick: false, img: false });
   const [phase, setPhase] = useState<number>(-1); // -1 idle, 0..3 steps, 4 done
   const [result, setResult] = useState<{ token: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -47,6 +48,18 @@ export function CreateForm() {
     setAccount(s.address);
     setAllowed(await isLaunchAllowed(s.address as Hex));
     return s.address;
+  }
+
+  // Matches v8's #ctNext: the Continue button is always enabled (so it renders at full
+  // opacity, like the design) and validates on click — name, ticker and image are
+  // required; invalid fields get `.bad` (which reveals their `.err`) and the step does
+  // not advance. (The app previously `disabled` the button, which dimmed it to opacity
+  // .6 and broke visual parity with v8 at every width.)
+  function goNext() {
+    const nb = { name: !name.trim(), tick: !tick.trim().replace(/^\$/, ""), img: !file };
+    setBad(nb);
+    if (nb.name || nb.tick || nb.img) return;
+    setStep(2);
   }
 
   async function launch() {
@@ -128,29 +141,32 @@ export function CreateForm() {
 
       {step === 1 ? (
         <div className="ct-stepwrap" data-step="1">
-          <div className="field">
+          <div className={`field${bad.name ? " bad" : ""}`} id="fName">
             <label>Token name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Nova Protocol" maxLength={22} />
+            <input value={name} onChange={(e) => { setName(e.target.value); if (bad.name) setBad({ ...bad, name: false }); }} placeholder="e.g. Nova Protocol" maxLength={22} />
+            <div className="err">Give your token a name.</div>
           </div>
-          <div className="field">
+          <div className={`field${bad.tick ? " bad" : ""}`} id="fTick">
             <label>Ticker</label>
-            <input value={tick} onChange={(e) => setTick(e.target.value)} placeholder="$NOVA" maxLength={8} />
+            <input value={tick} onChange={(e) => { setTick(e.target.value); if (bad.tick) setBad({ ...bad, tick: false }); }} placeholder="$NOVA" maxLength={8} />
+            <div className="err">Ticker is required.</div>
           </div>
           <div className="field">
             <label>Description</label>
             <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="What is your token about?" maxLength={160} />
             <div className="ct-cnt">{desc.length} / 160</div>
           </div>
-          <div className="field" id="fImg">
+          <div className={`field${bad.img ? " bad" : ""}`} id="fImg">
             <label>Token image</label>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { setFile(e.target.files?.[0] ?? null); if (bad.img) setBad({ ...bad, img: false }); }} />
             <div className="drop" onClick={() => fileRef.current?.click()}>
               <div className="ic">⇪</div>
               {file ? file.name : "Drop an image or click to upload"}
-              <small>PNG, JPG or GIF — up to 2MB</small>
+              <small>PNG, JPG or GIF — up to 5MB</small>
             </div>
+            <div className="err">Upload a token image.</div>
           </div>
-          <button className="launch" type="button" disabled={!name || !tick} onClick={() => setStep(2)}>Continue →</button>
+          <button className="launch" type="button" onClick={goNext}>Continue →</button>
         </div>
       ) : (
         <div className="ct-stepwrap" data-step="2">

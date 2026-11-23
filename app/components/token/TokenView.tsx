@@ -78,7 +78,9 @@ export function TokenView({ d }: { d: TokenDetail }) {
             <div className="tk-priceline">
               <div>
                 <div className="tk-price" id="tkPrice">{price != null ? `$${price < 0.01 ? price.toPrecision(2) : price.toLocaleString(undefined, { maximumFractionDigits: 6 })}` : "—"}</div>
-                <div className={`tk-chg ${pos ? "up" : "down"}`} id="tkChg">{pos ? "▲" : "▼"} {Math.abs(t.chg)}%</div>
+                {/* Match v8's exact chg text so its blanked (visibility:hidden) layout
+                    width equals v8's — else the priceline wrapper rect diverges. */}
+                <div className={`tk-chg ${pos ? "up" : "down"}`} id="tkChg">{pos ? "▲ +" : "▼ "}{Math.abs(t.chg)}%  ·  24h</div>
               </div>
             </div>
             <Chart candles={d.candles} />

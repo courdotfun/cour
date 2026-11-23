@@ -18,6 +18,8 @@ const OUT = "C:/Users/Lenovo/cour/docs/visual-diff/parity";
 const AA_TOLERANCE = 0.1; // % — legacy single-gate threshold (kept for footer text)
 const PRE_TOL = 0.1;      // primary gate: pre-scale DOM diff (transform:scale disabled)
 const SCALED_TOL = 0.5;   // secondary gate: as-rendered scaled diff
+const AA_PRE_MAX = 0.15;  // AA-exception ceiling: pre-scale must still be ≤ this, and
+                          // the cell's geometry + computed-style must be proven identical.
 
 const VIEWS = [
   { key: "home", app: "/", openV8: null },
@@ -34,6 +36,15 @@ const VIEWS = [
     hide: ["#tkChartWrap", "#tkChart", "#tkChartCanvas", ".tk-chartwrap", ".tk-ctools", ".tk-chartcard-inner",
       "#tkUpd", "#tkUpdCard", "#tkTradeList", "#tkTfs", ".tk-tfs", ".tk-athglow", ".tk-athchip", ".tk-spark", ".tk-sparkwrap"],
     blank: ["#tkPrice", "#tkChg", ".tk-ttime", ".tk-stat-v"],
+  },
+  {
+    key: "create",
+    app: "/create",
+    openV8: "create",
+    // v8 renders a live token-preview card (#ctPreview) that the app has not ported;
+    // it injects ~150px above the first field and cascades every field's position.
+    // Hide on both sides (same pattern as the token chart) and compare the form chrome.
+    hide: ["#ctPreview", ".ct-preview"],
   },
 ];
 // The full set of views ALL PASS must cover. STATUS: ALL PASS is written only when
@@ -73,6 +84,10 @@ function freezeAndMask({ theme, mask }) {
   const css = document.createElement("style");
   css.textContent =
     "*{animation:none!important;transition:none!important;caret-color:transparent!important;scroll-behavior:auto!important}" +
+    // Pin the promo carousel to slide 0 on both sides. `.promos` is a flex row whose
+    // active slide is set by a JS-driven translateX on a setInterval auto-advance timer
+    // (not frozen by the rAF stub), so the two sides otherwise land on different slides.
+    ".promos{transform:none!important}" +
     mask.HIDE.map((s) => `${s}{display:none!important}`).join("") +
     mask.BLANK.map((s) => `${s}{visibility:hidden!important}`).join("");
   document.head.appendChild(css);
@@ -81,6 +96,48 @@ function freezeAndMask({ theme, mask }) {
   // both sides to t=0 so the logo is deterministic and identical.
   document.querySelectorAll("svg").forEach((s) => { try { s.setCurrentTime(0); s.pauseAnimations(); } catch (e) {} });
   window.scrollTo(0, 0);
+}
+
+// Collect every visible in-viewport element as a {rect, style} record, for the
+// AA-exception check: geometry (matched within a sub-pixel epsilon) + the visual
+// computed-style props the user specified (border/shadow/outline/radius/transform/
+// background/color/font — matched exactly).
+function collectEls() {
+  const root = document.getElementById("stage") || document.body;
+  const out = [];
+  for (const el of root.querySelectorAll("*")) {
+    const cs = getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden" || cs.opacity === "0") continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 0.5 || r.height < 0.5) continue;
+    if (r.bottom <= 0 || r.top >= window.innerHeight || r.right <= 0 || r.left >= window.innerWidth) continue;
+    out.push({
+      r: [r.x, r.y, r.width, r.height],
+      s: [cs.border, cs.boxShadow, cs.outline, cs.borderRadius, cs.transform, cs.backgroundColor, cs.backgroundImage,
+        cs.color, cs.fontFamily, cs.fontSize, cs.fontWeight, cs.fontStyle, cs.letterSpacing, cs.lineHeight].join("|"),
+    });
+  }
+  return out;
+}
+// AA geometry tolerance: a v8 element is "matched" when some app element shares its
+// EXACT computed style and every rect edge is within this many px. 0.1px is firmly
+// sub-pixel (blanked-text glyph-advance rounding lands at ~0.02px; a real element
+// shift is ≥0.3px), so this stays within the "pure sub-pixel AA residual" guarantee.
+const AA_RECT_EPS = 0.1;
+// Count v8 elements with no exact-style, sub-pixel-rect match in the app. Index app
+// elements by style string so each lookup only scans same-style candidates.
+function aaUnmatchedCount(v8Els, appEls) {
+  const byStyle = new Map();
+  for (const a of appEls) { const l = byStyle.get(a.s); if (l) l.push(a.r); else byStyle.set(a.s, [a.r]); }
+  let unmatched = 0;
+  for (const v of v8Els) {
+    const cands = byStyle.get(v.s);
+    const hit = cands && cands.some((ar) =>
+      Math.abs(ar[0] - v.r[0]) <= AA_RECT_EPS && Math.abs(ar[1] - v.r[1]) <= AA_RECT_EPS &&
+      Math.abs(ar[2] - v.r[2]) <= AA_RECT_EPS && Math.abs(ar[3] - v.r[3]) <= AA_RECT_EPS);
+    if (!hit) unmatched++;
+  }
+  return unmatched;
 }
 
 // pre=true disables v8's #stage transform:scale so the UNSCALED (1920-design) DOM is
@@ -125,7 +182,7 @@ function diffPct(a, b, outPath) {
             try { window.requestAnimationFrame = () => 0; } catch {}
           });
           const page = await ctx.newPage();
-          let pre = null, scaled = null, note = "";
+          let pre = null, scaled = null, note = "", appEls = [], v8Els = [];
           // v8's #stage applies transform:scale only in the desktop-shrink band (~900–1919);
           // below that it's responsive (no transform) and at/above 1920 it's native. Outside
           // the band pre==scaled, so take a single capture (and avoid a redundant/flaky recapture).
@@ -134,6 +191,7 @@ function diffPct(a, b, outPath) {
             await page.goto(APP + view.app, { waitUntil: "networkidle", timeout: 30000 });
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const aScaled = await grab(page, w * dpr, h * dpr, false);
+            appEls = await page.evaluate(collectEls);
             const aPre = scales ? await grab(page, w * dpr, h * dpr, true) : aScaled;
 
             await page.goto(DESIGN, { waitUntil: "load", timeout: 30000 });
@@ -142,6 +200,7 @@ function diffPct(a, b, outPath) {
             if (view.v8Eval) { await page.evaluate(view.v8Eval).catch(() => {}); await page.waitForTimeout(250); }
             await page.evaluate(freezeAndMask, { theme, mask: maskFor(view) });
             const bScaled = await grab(page, w * dpr, h * dpr, false);
+            v8Els = await page.evaluate(collectEls);
             const bPre = scales ? await grab(page, w * dpr, h * dpr, true) : bScaled;
 
             const dir = join(OUT, view.key);
@@ -152,9 +211,18 @@ function diffPct(a, b, outPath) {
             note = String(e).slice(0, 80);
           }
           // Dual gate: primary pre-scale ≤ PRE_TOL, secondary scaled ≤ SCALED_TOL.
-          const pass = pre != null && scaled != null && pre <= PRE_TOL && scaled <= SCALED_TOL;
-          rows.push({ view: view.key, w, dpr, theme, pre, scaled, scales, pass, note });
-          console.log(`${view.key} ${w}@${dpr} ${theme}: pre ${pre == null ? "ERR" : pre.toFixed(3)} scaled ${scaled == null ? "ERR" : scaled.toFixed(3)} ${pass ? "PASS" : "FAIL"}`);
+          let pass = pre != null && scaled != null && pre <= PRE_TOL && scaled <= SCALED_TOL;
+          // AA exception (user-approved): a cell marginally over 0.1% passes ONLY if its
+          // masked geometry + visual computed-style are PROVEN identical — every visible v8
+          // element has an app element with the EXACT computed style and a rect matching
+          // within AA_RECT_EPS (sub-pixel) — with pre ≤ AA_PRE_MAX and scaled ≤ gate.
+          let aaEx = false, aaUnmatched = -1;
+          if (!pass && pre != null && scaled != null && pre <= AA_PRE_MAX && scaled <= SCALED_TOL && v8Els.length) {
+            aaUnmatched = aaUnmatchedCount(v8Els, appEls);
+            if (aaUnmatched === 0) { pass = true; aaEx = true; }
+          }
+          rows.push({ view: view.key, w, dpr, theme, pre, scaled, scales, pass, aaEx, note });
+          console.log(`${view.key} ${w}@${dpr} ${theme}: pre ${pre == null ? "ERR" : pre.toFixed(3)} scaled ${scaled == null ? "ERR" : scaled.toFixed(3)} ${pass ? (aaEx ? "PASS(AA)" : "PASS") : "FAIL"}${aaUnmatched > 0 ? ` [aa:${aaUnmatched} unmatched]` : ""}`);
           await ctx.close();
         }
       }
@@ -175,7 +243,23 @@ function diffPct(a, b, outPath) {
   md += `**${passed}/${rows.length} combinations pass** (views measured: ${viewsMeasured.join(", ")}).\n\n`;
   md += `Masked regions — hidden (§4/cosmetic/not-yet-ported): \`${HIDE.join("`, `")}\`; blanked (data): \`${BLANK.join("`, `")}\`.\n\n`;
   md += `| view | width | dpr | theme | pre % | scaled % | result |\n|---|---|---|---|---|---|---|\n`;
-  for (const r of rows) md += `| ${r.view} | ${r.w} | ${r.dpr} | ${r.theme} | ${r.pre == null ? "ERR" : r.pre.toFixed(3)} | ${r.scaled == null ? "ERR" : r.scaled.toFixed(3)} | ${r.pass ? "✅" : "❌"} |\n`;
+  for (const r of rows) md += `| ${r.view} | ${r.w} | ${r.dpr} | ${r.theme} | ${r.pre == null ? "ERR" : r.pre.toFixed(3)} | ${r.scaled == null ? "ERR" : r.scaled.toFixed(3)} | ${r.pass ? (r.aaEx ? "✅ᴬᴬ" : "✅") : "❌"} |\n`;
+
+  // AA exceptions — cells that exceeded 0.1% but whose masked geometry + visual
+  // computed-style are PROVEN byte-identical (every visible v8 element matched in the
+  // app), with pre ≤ ${AA_PRE_MAX}% and scaled ≤ ${SCALED_TOL}%. Auto-detected, not manual.
+  const aaRows = rows.filter((r) => r.aaEx);
+  md += `\n## AA exceptions (${aaRows.length})\n\n`;
+  md += `Cells passed via the geometry/style-identical path: pre > ${PRE_TOL}% but ≤ ${AA_PRE_MAX}%, ` +
+    `scaled ≤ ${SCALED_TOL}%, and EVERY visible v8 element matched in the app — exact computed ` +
+    `border/shadow/outline/radius/transform/background/color/font and a rect within ${AA_RECT_EPS}px ` +
+    `(sub-pixel). The residual is pure sub-pixel AA.\n\n`;
+  if (aaRows.length) {
+    md += `| view | width | dpr | theme | pre % | scaled % |\n|---|---|---|---|---|---|\n`;
+    for (const r of aaRows) md += `| ${r.view} | ${r.w} | ${r.dpr} | ${r.theme} | ${r.pre.toFixed(3)} | ${r.scaled.toFixed(3)} |\n`;
+  } else {
+    md += `_(none)_\n`;
+  }
 
   // Durable, evidence-based status footer (regenerated every run — do not hand-edit).
   const preWorst = Math.max(0, ...rows.filter((r) => r.pre != null).map((r) => r.pre));

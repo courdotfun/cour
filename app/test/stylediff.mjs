@@ -15,7 +15,7 @@ const SELECTORS = (process.env.SELECTORS ||
 ).split(",").map((s) => s.trim());
 const PROPS = ["fontFamily", "fontSize", "fontWeight", "fontStyle", "letterSpacing", "lineHeight", "textTransform",
   "color", "padding", "margin", "border", "borderRadius", "boxShadow", "outline", "background", "transform",
-  "width", "height", "display", "flex", "gap", "alignItems", "justifyContent", "whiteSpace", "fontVariationSettings", "fontFeatureSettings"];
+  "width", "height", "display", "flex", "gap", "alignItems", "justifyContent", "whiteSpace", "fontVariationSettings", "fontFeatureSettings", "textDecoration", "textDecorationLine"];
 function resolveChrome() {
   const def = chromium.executablePath();
   if (existsSync(def)) return def;
